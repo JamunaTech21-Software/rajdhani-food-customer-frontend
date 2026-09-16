@@ -4,7 +4,15 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
-import rajdhani from './eslint-rules/no-colour-literals.js'
+import { noColourLiterals } from './eslint-rules/no-colour-literals.js'
+import { configOnlyEnv } from './eslint-rules/config-only-env.js'
+
+const rajdhani = {
+  rules: {
+    'no-colour-literals': noColourLiterals,
+    'config-only-env': configOnlyEnv,
+  },
+}
 
 export default defineConfig([
   globalIgnores(['dist']),
@@ -24,6 +32,9 @@ export default defineConfig([
       // §6 rule 4 and acceptance §18.2: no component may name a colour, or an
       // admin changing primary_color leaves a patch of the old brand behind.
       'rajdhani/no-colour-literals': 'error',
+      // RTPP-57: configuration flows through one module, so a renamed variable
+      // is one edit rather than a silent `undefined` at some other call site.
+      'rajdhani/config-only-env': 'error',
     },
   },
   {
@@ -40,6 +51,6 @@ export default defineConfig([
     // source necessarily contains the patterns it matches.
     files: ['vite.config.js', 'eslint.config.js', 'eslint-rules/*.js'],
     languageOptions: { globals: globals.node },
-    rules: { 'rajdhani/no-colour-literals': 'off' },
+    rules: { 'rajdhani/no-colour-literals': 'off', 'rajdhani/config-only-env': 'off' },
   },
 ])

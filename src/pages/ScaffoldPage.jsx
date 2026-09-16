@@ -1,24 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
-
 import { CloudinaryImage } from "../components/CloudinaryImage.jsx";
-import { publicApi } from "../lib/api.js";
+import { retryBootstrap } from "../lib/bootstrap.js";
 import { SIZES } from "../lib/cloudinary.js";
+import { useSiteStore } from "../stores/siteStore.js";
 
 /**
  * A scaffold check, not a page.
  *
- * It proves the three things RTPP-56 is accountable for, on screen rather than
- * in a test: the theme arrived from the API, the tokens are driving the colours,
- * and an image is being served through the Cloudinary helper. RTPP-57 replaces
- * this route with the real home page.
+ * It shows the three things RTPP-56 and RTPP-57 are accountable for, on screen
+ * rather than only in a test: the theme arrived from the API and is driving the
+ * tokens, an image went through the Cloudinary helper, and the page is readable
+ * in all three boot states. RTPP-59 replaces this route with the real home page.
  */
 export function ScaffoldPage() {
-  const layout = useQuery({
-    queryKey: ["public", "layout"],
-    queryFn: () => publicApi.get("/public/layout"),
-  });
+  const status = useSiteStore((s) => s.status);
+  const site = useSiteStore((s) => s.site);
+  const menus = useSiteStore((s) => s.menus);
+  const social = useSiteStore((s) => s.social);
 
-  const site = layout.data?.site;
+  const failed = status === "fallback";
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-16">
@@ -26,15 +25,34 @@ export function ScaffoldPage() {
       <h1 className="mt-2 text-4xl font-semibold text-ink">
         {site?.name ?? "Rajdhani Food Products"}
       </h1>
-      <p className="mt-2 text-ink-muted">{site?.tagline ?? "Loading the site profile…"}</p>
+      <p className="mt-2 text-ink-muted">
+        {site?.tagline ?? (failed ? "Showing built-in defaults." : "Loading the site profile…")}
+      </p>
 
       <div className="mt-6 h-1 w-16 rounded-full bg-gold" />
+
+      {failed ? (
+        <div role="alert" className="mt-8 rounded-md bg-warning-tint p-4 text-sm text-warning">
+          <p className="font-medium">The site profile could not be loaded.</p>
+          <p className="mt-1">
+            Everything below is rendering from the built-in fallback colours — the page is usable,
+            it is just not reading the admin&apos;s current settings.
+          </p>
+          <button
+            type="button"
+            onClick={() => retryBootstrap()}
+            className="mt-3 rounded-md bg-brand px-3 py-1.5 text-sm font-medium text-on-brand"
+          >
+            Try again
+          </button>
+        </div>
+      ) : null}
 
       <section className="mt-10">
         <h2 className="text-lg font-semibold text-ink">Theme, from the API</h2>
         <p className="mt-1 text-sm text-ink-muted">
-          These swatches read the CSS custom properties that <code>applyTheme</code> wrote at boot.
-          Change a colour in the dashboard and reload — they follow, with no code change.
+          These swatches read the CSS custom properties the boot wrote. Change a colour in the
+          dashboard and reload — they follow, with no code change.
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -51,14 +69,18 @@ export function ScaffoldPage() {
         </div>
 
         <dl className="mt-4 grid gap-1 text-sm">
-          <div className="flex gap-2">
-            <dt className="text-ink-muted">primary_color</dt>
-            <dd className="font-mono text-ink">{site?.theme?.primary ?? "—"}</dd>
-          </div>
-          <div className="flex gap-2">
-            <dt className="text-ink-muted">secondary_color</dt>
-            <dd className="font-mono text-ink">{site?.theme?.secondary ?? "—"}</dd>
-          </div>
+          {[
+            ["Boot status", status],
+            ["primary_color", site?.theme?.primary ?? "—"],
+            ["secondary_color", site?.theme?.secondary ?? "—"],
+            ["Header links", menus ? String(menus.header?.length ?? 0) : "—"],
+            ["Social links", String(social.length)],
+          ].map(([label, value]) => (
+            <div key={label} className="flex gap-2">
+              <dt className="w-36 shrink-0 text-ink-muted">{label}</dt>
+              <dd className="font-mono text-ink">{value}</dd>
+            </div>
+          ))}
         </dl>
       </section>
 
@@ -66,8 +88,8 @@ export function ScaffoldPage() {
         <h2 className="text-lg font-semibold text-ink">Image pipeline</h2>
         <p className="mt-1 text-sm text-ink-muted">
           The logo, through <code>CloudinaryImage</code>. The seeded URLs are placeholders rather
-          than Cloudinary assets, so this one passes through untransformed — which is the point:
-          an external URL must not have <code>f_auto</code> spliced into it.
+          than Cloudinary assets, so this one passes through untransformed — which is the point: an
+          external URL must not have <code>f_auto</code> spliced into it.
         </p>
 
         <div className="mt-4 w-48 overflow-hidden rounded-lg border border-line">
@@ -81,12 +103,6 @@ export function ScaffoldPage() {
           />
         </div>
       </section>
-
-      {layout.isError ? (
-        <p role="alert" className="mt-8 rounded-md bg-danger-tint p-3 text-sm text-danger">
-          Could not reach the API — the tokens.css fallback is what you are seeing.
-        </p>
-      ) : null}
     </main>
   );
 }
