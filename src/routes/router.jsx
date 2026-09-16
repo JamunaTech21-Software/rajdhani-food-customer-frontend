@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router";
 
 import { SiteLayout } from "../components/layout/SiteLayout.jsx";
 import { DealerPage } from "../pages/DealerPage.jsx";
+import { GalleryPage } from "../pages/GalleryPage.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
 import { ProductDetailPage } from "../pages/ProductDetailPage.jsx";
 import { ProductsPage } from "../pages/ProductsPage.jsx";
@@ -18,6 +19,8 @@ export const router = createBrowserRouter([
     children: [
       { path: "/", element: <HomePage /> },
       { path: "/dealer", element: <DealerPage /> },
+      { path: "/gallery", element: <GalleryPage /> },
+      { path: "/gallery/:slug", element: <GalleryPage /> },
       { path: "/products", element: <ProductsPage /> },
       { path: "/products/:slug", element: <ProductDetailPage /> },
       { path: "/scaffold", element: <ScaffoldPage /> },
