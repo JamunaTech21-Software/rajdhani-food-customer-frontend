@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router";
 
 import { SiteLayout } from "../components/layout/SiteLayout.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
+import { ProductsPage } from "../pages/ProductsPage.jsx";
 import { ScaffoldPage } from "../pages/ScaffoldPage.jsx";
 
 /**
@@ -14,6 +15,7 @@ export const router = createBrowserRouter([
     element: <SiteLayout />,
     children: [
       { path: "/", element: <HomePage /> },
+      { path: "/products", element: <ProductsPage /> },
       { path: "/scaffold", element: <ScaffoldPage /> },
     ],
   },
