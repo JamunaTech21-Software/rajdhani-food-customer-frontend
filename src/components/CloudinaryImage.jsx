@@ -64,7 +64,13 @@ export function CloudinaryImage({
       // marking nothing: the browser has no ordering left to act on.
       fetchPriority={priority ? "high" : "auto"}
       decoding={priority ? "sync" : "async"}
-      className={cn("block h-full w-full object-cover", imgClassName)}
+      // `className` is merged here, not dropped. It used to apply only to the
+      // no-src placeholder, so a caller sizing the image with `size-10` got
+      // silently ignored and `w-full` filled whatever flex parent it landed in
+      // — a 40px logo rendered 700px tall. tailwind-merge resolves the defaults
+      // against whatever the caller passes, so `size-10` beats `h-full w-full`
+      // and `object-contain` beats `object-cover`.
+      className={cn("block h-full w-full object-cover", className, imgClassName)}
       style={{ aspectRatio: aspectRatio ?? (width && height ? `${width} / ${height}` : undefined) }}
       {...props}
     />

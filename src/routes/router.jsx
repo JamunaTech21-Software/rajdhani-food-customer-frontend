@@ -1,10 +1,20 @@
 import { createBrowserRouter } from "react-router";
 
+import { SiteLayout } from "../components/layout/SiteLayout.jsx";
+import { HomePage } from "../pages/HomePage.jsx";
 import { ScaffoldPage } from "../pages/ScaffoldPage.jsx";
 
 /**
- * Routes arrive with their screens, from RTPP-57 onward. This scaffold carries
- * one route so the shell, the theme boot and the image component are all
- * reachable and verifiable now rather than at the end of the phase.
+ * The remaining pages arrive from RTPP-60 onward. `/scaffold` stays until the
+ * phase is done — it is the only place the theme and image pipeline are visible
+ * in isolation, which is what makes RTPP-56 and RTPP-57 checkable by hand.
  */
-export const router = createBrowserRouter([{ path: "/", element: <ScaffoldPage /> }]);
+export const router = createBrowserRouter([
+  {
+    element: <SiteLayout />,
+    children: [
+      { path: "/", element: <HomePage /> },
+      { path: "/scaffold", element: <ScaffoldPage /> },
+    ],
+  },
+]);
