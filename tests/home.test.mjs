@@ -124,8 +124,15 @@ test("a badge colour from the API gets a readable text colour computed", () => {
 test("no section breaks when its slice of the payload is empty", () => {
   // The live payload has one banner, one news post and no promo — a section
   // with nothing in it must render nothing rather than an empty heading.
+  // The guard's shape differs by payload slice — an array checks `.length`, a
+  // single object (`welcome`) checks the object itself — so this looks for any
+  // early return rather than one spelling.
   for (const file of homeFiles) {
-    assert.match(file.source, /if \(![\w.?]+\??\.length\) return null|if \(slides\.length === 0\) return null/, `${file.path} has no empty guard`);
+    assert.match(
+      file.source,
+      /if \(![\w.?]+(\??\.length)?\) return null|if \(slides\.length === 0\) return null/,
+      `${file.path} has no empty guard`,
+    );
   }
 });
 
@@ -173,4 +180,70 @@ test("the header row cannot be forced wider than the viewport", () => {
   assert.match(headerSource, /min-w-0 shrink items-center/, "the brand block gives way");
   assert.match(headerSource, /truncate text-sm font-bold/, "and the wordmark truncates");
   assert.match(headerSource, /ml-auto hidden shrink-0 lg:block/, "the nav does not get squeezed");
+});
+
+// ── The bands RTPP-92 unblocked ───────────────────────────────────────────
+
+test("the USP strip and welcome block read the new payload keys", () => {
+  // RTPP-92 added usp_items, welcome and promo_banner to /public/home. They
+  // must come from that same single request, not new ones.
+  assert.match(page, /data\.usp_items/);
+  assert.match(page, /data\.welcome/);
+  assert.match(page, /data\.promo_banner/);
+});
+
+test("an editor-chosen icon background gets a computed foreground", () => {
+  // icon_bg_color is a per-item hex from the dashboard. The live value is the
+  // dark brand green, but the field takes anything — a pale choice with an
+  // assumed white glyph would be invisible.
+  const usp = strip(read("components/home/UspStrip.jsx"));
+
+  assert.match(usp, /readableOn\(background\)/);
+  assert.match(usp, /backgroundColor: background/);
+});
+
+test("an uploaded USP icon wins over a named one", () => {
+  // The admin allows either; preferring the name would ignore a deliberate
+  // upload.
+  const usp = strip(read("components/home/UspStrip.jsx"));
+  assert.match(usp, /item\.icon\?\.url \?/);
+});
+
+test("the welcome body is rendered as the sanitised HTML it is", () => {
+  // RichText::sanitize() runs server-side and the schema says so. Re-sanitising
+  // here would be theatre — the server is the authority.
+  const welcome = strip(read("components/home/WelcomeBlock.jsx"));
+  assert.match(welcome, /dangerouslySetInnerHTML=\{\{ __html: block\.body \}\}/);
+});
+
+test("the video iframe only exists while the modal is open", () => {
+  // A hidden YouTube frame loads its player, sets cookies and runs scripts on
+  // every page view whether or not anyone watches.
+  const welcome = strip(read("components/home/WelcomeBlock.jsx"));
+
+  assert.match(welcome, /Dialog\.Content/);
+  const contentAt = welcome.indexOf("Dialog.Content");
+  const iframeAt = welcome.indexOf("<iframe");
+  assert.ok(iframeAt > contentAt, "the iframe must be inside the dialog content");
+});
+
+test("both new bands disappear cleanly when their content is unpublished", () => {
+  // Live right now: welcome is null and promo_banner is []. Neither may render
+  // an empty heading or crash.
+  const usp = strip(read("components/home/UspStrip.jsx"));
+  const welcome = strip(read("components/home/WelcomeBlock.jsx"));
+
+  assert.match(usp, /if \(!items\?\.length\) return null/);
+  assert.match(welcome, /if \(!block\) return null/);
+  assert.match(welcome, /promo\?\.\[0\] \?\? null/, "a missing promo falls back, not throws");
+});
+
+test("every icon the live payload names is registered", async () => {
+  // Three have already been missed this way — calendar, map and mountain each
+  // fell back to a neutral glyph without erroring.
+  const { REGISTRY } = await import("../src/components/ui/icon-registry.js");
+
+  for (const name of ["mountain", "coffee", "shield-check", "truck", "calendar", "map", "users", "leaf"]) {
+    assert.ok(name in REGISTRY, `"${name}" is used by live data but not registered`);
+  }
 });

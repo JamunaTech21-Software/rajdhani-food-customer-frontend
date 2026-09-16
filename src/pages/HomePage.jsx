@@ -4,6 +4,8 @@ import { FeaturedProducts } from "../components/home/FeaturedProducts.jsx";
 import { Hero } from "../components/home/Hero.jsx";
 import { LatestNews } from "../components/home/LatestNews.jsx";
 import { StatsBand } from "../components/home/StatsBand.jsx";
+import { UspStrip } from "../components/home/UspStrip.jsx";
+import { WelcomeBlock } from "../components/home/WelcomeBlock.jsx";
 import { Testimonials } from "../components/home/Testimonials.jsx";
 import { publicApi } from "../lib/api.js";
 
@@ -30,10 +32,12 @@ function Skeleton() {
  * acceptance criterion. The chrome around it was already fetched at boot, so a
  * cold home page is two requests in total and neither waits on the other.
  *
- * Two bands from the approved comp are missing, and it is not an oversight:
- * the USP strip (`FeatureItem`) and the welcome teaser (`PageBlock home/welcome`)
- * have no public endpoint at all — not in this payload, and nowhere else in the
- * API. See the ticket for the detail.
+ * Section order follows the approved comp: hero, USP strip, products, the
+ * welcome teaser, stats, testimonials, news.
+ *
+ * One band of the signed-off design is still absent: "From Garden To Your Cup"
+ * needs `ProcessStep`, which has admin routes but no public endpoint. Every
+ * other section renders as soon as its content is published.
  */
 export function HomePage() {
   const home = useQuery({
@@ -66,7 +70,9 @@ export function HomePage() {
   return (
     <>
       <Hero banners={data.banners} />
+      <UspStrip items={data.usp_items} />
       <FeaturedProducts products={data.featured_products} />
+      <WelcomeBlock block={data.welcome} promo={data.promo_banner} />
       <StatsBand stats={data.stats} />
       <Testimonials testimonials={data.testimonials} />
       <LatestNews posts={data.news} />
