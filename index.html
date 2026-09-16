@@ -2,9 +2,51 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>customer</title>
+
+    <!--
+      RTPP-73 — the PHP shell renderer injects per-page metadata between the two
+      markers below, replacing everything inside them. It must be able to do
+      that against this one file, with no second template to keep in sync.
+
+      The contract, so neither side has to guess:
+
+        * Both markers are HTML comments, on their own line, spelled exactly as
+          written. The renderer matches the literal strings.
+        * Everything between them is replaceable. Nothing outside them is
+          touched — the charset, the viewport, the stylesheet and the module
+          script all survive.
+        * What sits between them now is the fallback: what a crawler sees if the
+          renderer is bypassed, and what a developer sees running Vite locally.
+          It must therefore be valid, generic, and never page-specific.
+        * The renderer emits title, description, canonical, Open Graph, Twitter
+          and JSON-LD. Do not add competing tags of those kinds outside the
+          markers, or a page will carry two titles and crawlers pick their own.
+        * <div id="root"> is where React mounts and is not part of the shell's
+          contract — but the renderer must leave it, and must not inject
+          anything after it that scripts would have to step over.
+    -->
+    <!-- RAJDHANI:HEAD:START -->
+    <title>Rajdhani Food Products — Premium Tea from Bangladesh</title>
+    <meta
+      name="description"
+      content="Premium quality tea blended with purity, quality and trust. Explore our range of black, green, masala and cardamom teas."
+    />
+    <!-- RAJDHANI:HEAD:END -->
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!--
+      Fonts are preconnected rather than merely linked: the display serif is in
+      the first heading of every page, so the connection cost lands on the LCP
+      path if it is not opened early.
+    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+    />
   </head>
   <body>
     <div id="root"></div>

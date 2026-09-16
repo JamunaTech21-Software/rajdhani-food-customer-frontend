@@ -1,2 +1,41 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@import "./shared/theme/tokens.css";
+
+/**
+ * daisyUI is deliberately absent (decision D2). It carries its own theme layer
+ * that competes with the site_profile-driven custom properties, and §18.2
+ * requires those to win — an admin changing primary_color must restyle the
+ * running site. Headless primitives cover the interactive parts instead.
+ */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* The comps set every heading in the display serif — this is the one place
+     the customer site and the dashboard deliberately diverge (decision D1). */
+  h1, h2, h3 {
+    font-family: var(--font-display);
+  }
+
+  /* A visible focus ring on every interactive element, since §18 requires AA
+     and the default ring disappears against the brand green. */
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
