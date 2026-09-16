@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router";
 
 import { SiteLayout } from "../components/layout/SiteLayout.jsx";
+import { DealerPage } from "../pages/DealerPage.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
 import { ProductDetailPage } from "../pages/ProductDetailPage.jsx";
 import { ProductsPage } from "../pages/ProductsPage.jsx";
@@ -16,6 +17,7 @@ export const router = createBrowserRouter([
     element: <SiteLayout />,
     children: [
       { path: "/", element: <HomePage /> },
+      { path: "/dealer", element: <DealerPage /> },
       { path: "/products", element: <ProductsPage /> },
       { path: "/products/:slug", element: <ProductDetailPage /> },
       { path: "/scaffold", element: <ScaffoldPage /> },

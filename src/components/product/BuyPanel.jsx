@@ -13,7 +13,7 @@ import { Stars } from "../ui/Stars.jsx";
  * `packDetails(pack)` call rather than being read field-by-field. A price that
  * moves while the SKU beside it does not is the failure that guards against.
  */
-export function BuyPanel({ product, pack, onSelectPack, quantity, onQuantity, brochure, onShare }) {
+export function BuyPanel({ product, pack, onSelectPack, quantity, onQuantity, brochure, onShare, onEnquire }) {
   const packs = sortedPackSizes(product.pack_sizes);
   const details = packDetails(pack);
 
@@ -150,6 +150,7 @@ export function BuyPanel({ product, pack, onSelectPack, quantity, onQuantity, br
       <div className="mt-6 flex flex-wrap gap-3">
         <button
           type="button"
+          onClick={onEnquire}
           className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-md bg-brand px-6 text-sm font-medium text-on-brand transition-colors duration-(--duration-fast) hover:bg-brand-dark sm:flex-none"
         >
           Enquire Now

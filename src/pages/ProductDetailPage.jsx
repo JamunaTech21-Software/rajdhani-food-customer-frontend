@@ -5,6 +5,7 @@ import { Link, useParams } from "react-router";
 
 import { ProductCard } from "../components/ProductCard.jsx";
 import { BuyPanel } from "../components/product/BuyPanel.jsx";
+import { EnquiryModal } from "../components/product/EnquiryModal.jsx";
 import { Gallery } from "../components/product/Gallery.jsx";
 import { ProductTabs } from "../components/product/ProductTabs.jsx";
 import { useDownload } from "../hooks/useDownload.js";
@@ -75,6 +76,7 @@ export function ProductDetailPage() {
   const [pack, setPack] = useState(null);
   const [seededFor, setSeededFor] = useState(null);
   const [quantity, setQuantity] = useState(1);
+  const [enquiryOpen, setEnquiryOpen] = useState(false);
 
   const product = useQuery({
     queryKey: ["public", "product", slug],
@@ -162,8 +164,20 @@ export function ProductDetailPage() {
           onQuantity={setQuantity}
           brochure={brochure.data}
           onShare={share}
+          onEnquire={() => setEnquiryOpen(true)}
         />
       </div>
+
+      {/* Keyed on what it opens with, so each open starts from the current
+          pack and quantity rather than whatever was there last time. */}
+      <EnquiryModal
+        key={enquiryOpen ? `${pack?.id ?? "none"}-${quantity}` : "closed"}
+        open={enquiryOpen}
+        onOpenChange={setEnquiryOpen}
+        product={data}
+        pack={pack}
+        quantity={quantity}
+      />
 
       <div className="mt-14">
         <ProductTabs tabs={tabs} renderPanel={() => <ReviewsPanel product={data} />} />
