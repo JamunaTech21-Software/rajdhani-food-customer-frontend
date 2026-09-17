@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router";
 
 import { CloudinaryImage } from "../CloudinaryImage.jsx";
 import { cn } from "../../lib/cn.js";
+import { brandLogo } from "../../lib/brand.js";
 import { isActiveLink, isExternal } from "../../lib/nav.js";
 import { SIZES } from "../../lib/cloudinary.js";
 import { useCategories } from "../../hooks/useCategories.js";
@@ -27,7 +28,7 @@ export function Header() {
   const links = menus?.header ?? [];
 
   const phone = site?.contact?.phone_primary;
-  const logo = site?.logos?.light;
+  const logo = brandLogo(site?.logos?.light, site?.name);
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface">
@@ -35,18 +36,16 @@ export function Header() {
         {/* min-w-0 so the wordmark can truncate instead of forcing the row
             wider than the viewport on a narrow phone. */}
         <Link to="/" className="flex min-w-0 shrink items-center gap-2.5 py-3">
-          {logo?.url ? (
-            <CloudinaryImage
-              src={logo.url}
-              alt={logo.alt ?? site?.name ?? "Home"}
-              width={40}
-              height={40}
-              sizes={SIZES.thumbnail}
-              priority
-              className="size-9 shrink-0 sm:size-10"
-              imgClassName="object-contain"
-            />
-          ) : null}
+          <CloudinaryImage
+            src={logo.url}
+            alt={logo.alt}
+            width={40}
+            height={40}
+            sizes={SIZES.thumbnail}
+            priority
+            className="size-9 shrink-0 sm:size-10"
+            imgClassName="object-contain"
+          />
           {/*
             The wordmark holds at 16px until `xl`. Between 1024 and about 1150
             the nav and the CTA take everything, and at 18px the name truncated

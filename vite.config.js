@@ -7,16 +7,22 @@ import { defineConfig, loadEnv } from "vite";
 import { contentSecurityPolicy, originOf } from "./csp.js";
 
 /**
- * The API origin, under whichever name the deployment was able to set it.
+ * Every value the browser needs, under whichever name the deployment could set.
  *
  * Vite only auto-exposes `VITE_`-prefixed variables to the browser, but that is
  * a rule about *exposure*, not about what the build can see: the host hands
  * every project variable to the build as an ordinary `process.env` entry
- * whatever it is called. Same arrangement as the dashboard, so the two apps can
- * be configured the same way.
+ * whatever it is called. So the prefix is optional here — the build reads any of
+ * these names and maps it to the one `config.js` uses. Same arrangement as the
+ * dashboard, so both apps are configured the same way.
+ *
+ * **Nothing on this site requires the `VITE_` prefix.** The reCAPTCHA key did
+ * until now: it had no `define` entry and leaned on Vite's automatic exposure,
+ * which happens under the prefix and only under the prefix.
  */
 const API_URL_NAMES = ["VITE_BASE_URL", "VITE_API_BASE_URL", "API_BASE_URL", "BASE_URL"];
 const SITE_URL_NAMES = ["VITE_SITE_URL", "SITE_URL"];
+const RECAPTCHA_NAMES = ["VITE_RECAPTCHA_SITE_KEY", "RECAPTCHA_SITE_KEY"];
 
 function resolve(env, names) {
   for (const name of names) {
@@ -70,6 +76,7 @@ export default defineConfig(({ command, mode }) => {
 
   const api = resolve(env, API_URL_NAMES);
   const site = resolve(env, SITE_URL_NAMES);
+  const recaptcha = resolve(env, RECAPTCHA_NAMES);
 
   // Say which name was used: the failure this guards against is silent — a
   // misspelled variable builds cleanly and 404s on every request at runtime.
@@ -77,6 +84,14 @@ export default defineConfig(({ command, mode }) => {
     api
       ? `[env] API base URL from ${api.name}=${api.value}`
       : `[env] no API base URL set (tried ${API_URL_NAMES.join(", ")}) — falling back to localhost`,
+  );
+  console.log(
+    site ? `[env] site URL from ${site.name}=${site.value}` : "[env] no site URL set — using the default",
+  );
+  console.log(
+    recaptcha
+      ? `[env] reCAPTCHA site key from ${recaptcha.name}`
+      : "[env] no reCAPTCHA site key set — the forms post without a token, which the API allows",
   );
 
   /*
@@ -116,8 +131,17 @@ export default defineConfig(({ command, mode }) => {
     */
     publicDir: "static",
     define: {
+      // config.js reads these three names and no others. Everything in the
+      // *_NAMES lists above is just how a given deployment happened to spell
+      // them — the mapping happens here, once, at build time.
+      //
+      // The reCAPTCHA key needs this entry as much as the other two do. Vite
+      // auto-exposes VITE_-prefixed variables, so it used to work without one —
+      // but only under that prefix, which made it the single variable on the
+      // site that could not be set from a host that refuses the prefix.
       "import.meta.env.VITE_BASE_URL": literal(api),
       "import.meta.env.VITE_SITE_URL": literal(site),
+      "import.meta.env.VITE_RECAPTCHA_SITE_KEY": literal(recaptcha),
     },
     resolve: {
       alias: {
