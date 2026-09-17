@@ -2,9 +2,19 @@ import { useQuery } from "@tanstack/react-query";
 import { CircleCheck } from "lucide-react";
 
 import { Certifications } from "../components/content/Certifications.jsx";
+import { FeatureGrid } from "../components/content/FeatureGrid.jsx";
+import { ProcessTimeline } from "../components/content/ProcessTimeline.jsx";
+import { SectionHeading } from "../components/content/SectionHeading.jsx";
 import { PageBlockBody, PageBlockSection } from "../components/content/PageBlockSection.jsx";
 import { PageHero } from "../components/layout/PageHero.jsx";
-import { blocksOf, useCertifications, usePageBlocks } from "../hooks/usePageContent.js";
+import {
+  blocksOf,
+  itemsOf,
+  useCertifications,
+  useFeatureItems,
+  usePageBlocks,
+  useProcessSteps,
+} from "../hooks/usePageContent.js";
 import { publicApi } from "../lib/api.js";
 import { blockFor, bulletsOf, PAGE_KEYS } from "../lib/pageContent.js";
 
@@ -71,6 +81,8 @@ export function QualityPage() {
 
   const blocks = usePageBlocks(PAGE_KEYS.quality);
   const certifications = useCertifications();
+  const commitments = useFeatureItems("QUALITY_COMMITMENT");
+  const process = useProcessSteps("QUALITY_PROCESS");
 
   const all = blocksOf(blocks);
 
@@ -78,7 +90,26 @@ export function QualityPage() {
     <>
       <PageHero banner={hero.data?.items?.[0]} title="Quality" breadcrumb="Quality" />
 
-      <PageBlockSection block={blockFor(all, "commitment")} id="commitment" />
+      {/* The six commitment cards sit beside the block's text, where a block
+          would otherwise put its image. Absent, the block keeps its own. */}
+      <PageBlockSection block={blockFor(all, "commitment")} id="commitment">
+        {itemsOf(commitments).length ? <FeatureGrid items={itemsOf(commitments)} /> : undefined}
+      </PageBlockSection>
+
+      {itemsOf(process).length ? (
+        <section aria-labelledby="quality-process-heading" className="bg-ground py-(--space-section)">
+          <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
+            <SectionHeading
+              block={blockFor(all, "process")}
+              id="quality-process-heading"
+              heading="Our Quality Process"
+              subheading="Every step is carefully monitored to ensure the highest quality in every cup."
+            />
+
+            <ProcessTimeline steps={itemsOf(process)} className="mt-12" />
+          </div>
+        </section>
+      ) : null}
 
       <Certifications
         items={certifications.data?.items}

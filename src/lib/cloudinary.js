@@ -286,6 +286,15 @@ export const SIZES = {
   splitWide: BULK_CTA_SIZES,
 
   /**
+   * One card of a process timeline.
+   *
+   * A wrapping flex row rather than a column grid, so `gridSizes` does not
+   * model it: five across once the row stops wrapping, and roughly two at
+   * phone width where each card holds its 10rem minimum.
+   */
+  processStep: "(min-width: 1280px) 227px, (min-width: 768px) calc((100vw - 144px) / 5), 160px",
+
+  /**
    * The zoomed product image: a square dialog capped at 56rem, and capped
    * again by the viewport height, which `sizes` has no way to express. The
    * width condition is the honest half — it was being given `SIZES.content`,

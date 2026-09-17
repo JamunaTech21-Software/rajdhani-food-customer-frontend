@@ -122,19 +122,22 @@ test("a legal page with no text says so rather than showing a blank column", () 
   assert.match(legal, /aria-busy="true"/, "with a skeleton while it is still loading");
 });
 
-// ── The endpoints that do not exist yet ───────────────────────────────────
+// ── Endpoints that may not be routed ──────────────────────────────────────
 
 test("a missing endpoint reads as no content, not as an error page", () => {
-  // /public/page-blocks/{pageKey} and /public/certifications are not routed
-  // yet. A 404 from a route that was never wired up must not take down a page
-  // whose banner and heading arrived perfectly well.
+  // All five are live since RTPP-67's backend update. The guard stays: these
+  // hooks are the first thing a new environment hits, and a 404 from a route
+  // that is not wired up there must not take down a page whose banner and
+  // heading arrived perfectly well.
   assert.match(content, /error\.code === ErrorCode\.NOT_FOUND \|\| error\.status === 404/);
   assert.match(content, /if \(isMissing\(error\)\) return null;/);
   assert.match(content, /throw error;/, "and anything else still surfaces");
 });
 
 test("a 404 is not retried four times on every page view", () => {
-  assert.equal((content.match(/retry: false/g) ?? []).length, 2);
+  // One per query: page blocks, certifications, and the shared section query
+  // behind feature items, process steps and stats.
+  assert.equal((content.match(/retry: false/g) ?? []).length, 3);
 });
 
 test("the shapes are the ones the schema already documents", () => {
@@ -144,7 +147,7 @@ test("the shapes are the ones the schema already documents", () => {
   assert.match(section, /block\.eyebrow/);
   assert.match(section, /block\.subheading/);
   assert.match(section, /block\.cta_label && block\.cta_url/);
-  assert.match(certifications, /certificate_file: file/);
+  assert.match(certifications, /certificate_url: certificate/);
 });
 
 // ── Certifications ────────────────────────────────────────────────────────
@@ -157,9 +160,16 @@ test("a certification with no logo looks deliberate, not broken", () => {
 });
 
 test("a certificate PDF becomes a link only when there is one", () => {
-  // certificate_file_id is nullable and null everywhere today. A link to
-  // nothing is worse than no link.
-  assert.match(certifications, /file\?\.url \? \(/);
+  // `certificate_url` is null on every row today. A link to nothing is worse
+  // than no link.
+  //
+  // The name matters. The public endpoint sends `certificate_url`, a string,
+  // where the admin schema has `certificate_file_id`; reading the admin's name
+  // here gave `undefined`, so the link would never have appeared — and only
+  // once somebody uploaded a PDF and wondered where it went.
+  assert.match(certifications, /\{certificate \? \(/);
+  assert.match(certifications, /href=\{certificate\}/);
+  assert.doesNotMatch(certifications, /certificate_file/, "the admin's field name, not the public one");
   assert.match(certifications, /opens in a new tab/);
 });
 
@@ -182,4 +192,86 @@ test("the assurance panel's checklist moves to its own column", () => {
   // PageBlockBody draws bullets under the text; the comp puts them beside it.
   assert.match(quality, /bullet_points: \[\]/);
   assert.match(quality, /bulletsOf\(block\)/);
+});
+
+// ── The sections RTPP-67's backend update unblocked ───────────────────────
+
+const featureGrid = strip(read("components/content/FeatureGrid.jsx"));
+const timeline = strip(read("components/content/ProcessTimeline.jsx"));
+
+test("the three section resources are each filtered, and the filter is required", () => {
+  // The API answers an absent or unrecognised section with 422, not an empty
+  // list — which is the right way round: a typo surfaces instead of looking
+  // like "nobody has written this yet".
+  assert.match(content, /\/public\/feature-items\?section=\$\{encodeURIComponent\(section\)\}/);
+  assert.match(content, /\/public\/process-steps\?group=\$\{encodeURIComponent\(group\)\}/);
+  assert.match(content, /\/public\/stats\?group=\$\{encodeURIComponent\(group\)\}/);
+  assert.match(content, /enabled: Boolean\(value\)/, "no request before the group is known");
+});
+
+test("About reads the groups its comp asks for", () => {
+  assert.match(about, /useStats\("ABOUT"\)/);
+  assert.match(about, /useProcessSteps\("MANUFACTURING_PROCESS"\)/);
+});
+
+test("Quality reads the groups its comp asks for", () => {
+  assert.match(quality, /useFeatureItems\("QUALITY_COMMITMENT"\)/);
+  assert.match(quality, /useProcessSteps\("QUALITY_PROCESS"\)/);
+});
+
+test("a section with no rows yet is absent, not an empty heading", () => {
+  // Every one of these groups is empty in the database today, so this is the
+  // state the pages are actually in.
+  assert.match(featureGrid, /if \(!items\?\.length\) return null;/);
+  assert.match(timeline, /if \(!steps\?\.length\) return null;/);
+  assert.match(quality, /\{itemsOf\(process\)\.length \? \(/);
+  assert.match(about, /\{itemsOf\(manufacturing\)\.length \? \(/);
+});
+
+test("a block and its panel can be absent independently", () => {
+  // The strength block draws the manufacturing steps where a block would put
+  // its image. No block and the section does not render; no steps and the
+  // block falls back to its own image — `undefined`, not `null`, because
+  // `children ?? image` is what chooses.
+  assert.match(about, /<ProcessTimeline steps=\{itemsOf\(manufacturing\)\} compact \/>\s*\n\s*\) : undefined\}/);
+  assert.match(quality, /<FeatureGrid items=\{itemsOf\(commitments\)\} \/> : undefined\}/);
+  assert.match(section, /\{children \?\?/);
+});
+
+test("a step is numbered by its row, not by its position", () => {
+  // `step_number` is unique per group in the database and an editor reordering
+  // steps changes it. Numbering from the index would renumber a step the
+  // moment another was inserted above it.
+  assert.match(timeline, /\{step\.step_number\}/);
+  assert.doesNotMatch(timeline, /\{index \+ 1\}/);
+});
+
+test("a step with no image still reserves its box", () => {
+  // No seeded row carries one, so this is every step today.
+  assert.match(timeline, /grid aspect-\[4\/3\] w-full place-items-center rounded-lg bg-brand-tint/);
+  assert.match(timeline, /aspectRatio="4 \/ 3"/, "and one that does, reserves the same shape");
+});
+
+test("the chevrons between steps are decorative and do not become list items", () => {
+  // A list item whose only content is a chevron is an item with no content,
+  // and a screen reader counts it.
+  assert.match(timeline, /separated \? \(/);
+  assert.match(timeline, /<ChevronRight[\s\S]*?aria-hidden="true"/);
+  assert.match(timeline, /separated=\{index < steps\.length - 1\}/, "and the last step has none");
+});
+
+test("two stats bands on one site do not share a landmark name", () => {
+  const stats = strip(read("components/home/StatsBand.jsx"));
+
+  assert.match(stats, /label = "Rajdhani by the numbers"/);
+  assert.match(stats, /aria-label=\{label\}/);
+  assert.match(about, /label="Rajdhani in numbers"/);
+});
+
+test("one renderer draws a feature item, wherever it appears", () => {
+  // The USP strip, Quality's commitment grid and the dealer benefits are the
+  // same payload. It lived inside UspStrip until the other two had an endpoint.
+  assert.match(strip(read("components/home/UspStrip.jsx")), /<FeatureItem key=\{item\.id\}/);
+  assert.match(featureGrid, /export function FeatureItem/);
+  assert.match(quality, /<FeatureGrid items=/);
 });

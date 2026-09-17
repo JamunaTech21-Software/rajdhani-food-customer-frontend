@@ -196,17 +196,19 @@ test("an editor-chosen icon background gets a computed foreground", () => {
   // icon_bg_color is a per-item hex from the dashboard. The live value is the
   // dark brand green, but the field takes anything — a pale choice with an
   // assumed white glyph would be invisible.
-  const usp = strip(read("components/home/UspStrip.jsx"));
+  // The row moved to FeatureGrid in RTPP-67, when Quality's commitment grid and
+  // the dealer benefits got an endpoint and started drawing the same payload.
+  const item = strip(read("components/content/FeatureGrid.jsx"));
 
-  assert.match(usp, /readableOn\(background\)/);
-  assert.match(usp, /backgroundColor: background/);
+  assert.match(item, /readableOn\(background\)/);
+  assert.match(item, /backgroundColor: background/);
+  assert.match(strip(read("components/home/UspStrip.jsx")), /<FeatureItem key=\{item\.id\}/);
 });
 
 test("an uploaded USP icon wins over a named one", () => {
   // The admin allows either; preferring the name would ignore a deliberate
   // upload.
-  const usp = strip(read("components/home/UspStrip.jsx"));
-  assert.match(usp, /item\.icon\?\.url \?/);
+  assert.match(strip(read("components/content/FeatureGrid.jsx")), /item\.icon\?\.url \?/);
 });
 
 test("the welcome body is rendered as the sanitised HTML it is", () => {

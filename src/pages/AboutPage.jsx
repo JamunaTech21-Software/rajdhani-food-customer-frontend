@@ -2,11 +2,20 @@ import { useQuery } from "@tanstack/react-query";
 import { Gem, Eye, Target } from "lucide-react";
 
 import { Certifications } from "../components/content/Certifications.jsx";
+import { ProcessTimeline } from "../components/content/ProcessTimeline.jsx";
 import { PageBlockSection } from "../components/content/PageBlockSection.jsx";
 import { RichText } from "../components/content/RichText.jsx";
 import { SectionHeading } from "../components/content/SectionHeading.jsx";
 import { PageHero } from "../components/layout/PageHero.jsx";
-import { blocksOf, useCertifications, usePageBlocks } from "../hooks/usePageContent.js";
+import { StatsBand } from "../components/home/StatsBand.jsx";
+import {
+  blocksOf,
+  itemsOf,
+  useCertifications,
+  usePageBlocks,
+  useProcessSteps,
+  useStats,
+} from "../hooks/usePageContent.js";
 import { publicApi } from "../lib/api.js";
 import { blockFor, bulletsOf, PAGE_KEYS } from "../lib/pageContent.js";
 
@@ -76,6 +85,8 @@ export function AboutPage() {
 
   const blocks = usePageBlocks(PAGE_KEYS.about);
   const certifications = useCertifications();
+  const stats = useStats("ABOUT");
+  const manufacturing = useProcessSteps("MANUFACTURING_PROCESS");
 
   const all = blocksOf(blocks);
   const foundations = ["mission", "vision", "values"]
@@ -107,7 +118,17 @@ export function AboutPage() {
         </section>
       ) : null}
 
-      <PageBlockSection block={blockFor(all, "strength")} id="strength" reversed tone="ground" />
+      <StatsBand stats={itemsOf(stats)} label="Rajdhani in numbers" />
+
+      {/* The strength block draws the manufacturing steps beside its text, in
+          place of the image a block would otherwise take. Both halves can be
+          absent independently: no block and the section does not render at all;
+          no steps and the block falls back to its own image. */}
+      <PageBlockSection block={blockFor(all, "strength")} id="strength" reversed tone="ground">
+        {itemsOf(manufacturing).length ? (
+          <ProcessTimeline steps={itemsOf(manufacturing)} compact />
+        ) : undefined}
+      </PageBlockSection>
 
       <Certifications
         items={certifications.data?.items}

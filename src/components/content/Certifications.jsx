@@ -11,12 +11,17 @@ import { SIZES } from "../../lib/cloudinary.js";
  * marks is the client's job under RTPP-86 — so a card without a logo has to look
  * deliberate rather than broken. It falls back to a shield, not to a blank box.
  *
- * `certificate_file_id` is likewise null on every row today. When a certificate
+ * `certificate_url` is likewise null on every row today. When a certificate
  * PDF is attached the card becomes a link to it; until then it is a plain card,
  * because a link to nothing is worse than no link.
+ *
+ * Note the name: the public endpoint sends `certificate_url` — a string — where
+ * the admin schema has `certificate_file_id`. Reading the admin's name here
+ * produced `undefined`, so the link would simply never have appeared, and only
+ * once somebody uploaded a PDF and wondered where it went.
  */
 function Certification({ certification }) {
-  const { name, subtitle, logo, certificate_file: file } = certification;
+  const { name, subtitle, logo, certificate_url: certificate } = certification;
 
   const card = (
     <>
@@ -43,9 +48,9 @@ function Certification({ certification }) {
 
   return (
     <li className="rounded-xl border border-line bg-surface p-5 text-center">
-      {file?.url ? (
+      {certificate ? (
         <a
-          href={file.url}
+          href={certificate}
           target="_blank"
           rel="noreferrer noopener"
           className="block rounded-md hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"

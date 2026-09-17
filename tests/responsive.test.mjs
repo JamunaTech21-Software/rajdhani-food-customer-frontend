@@ -369,6 +369,8 @@ const NO_768_STEP = [
   ["components/product/BuyPanel.jsx", "already four across from `sm`"],
   ["components/content/Certifications.jsx", "already three across from `sm`; the new step is at `lg`, where five was squeezing to 182px"],
   ["components/home/FeaturedProducts.jsx", "a scroll strip of fixed 240px tracks below `lg` — how many are visible already follows the viewport, so a breakpoint there would decide nothing"],
+  ["components/content/FeatureGrid.jsx", "the columns are the caller's — the USP strip asks for four and Quality's commitment grid for two"],
+  ["components/content/ProcessTimeline.jsx", "a wrapping flex row, not a grid: it stops wrapping at `sm` when compact and `md` when not, which is its breakpoint"],
   ["pages/HomePage.jsx", "its skeleton mirrors that strip, and has to keep mirroring it"],
 ];
 
