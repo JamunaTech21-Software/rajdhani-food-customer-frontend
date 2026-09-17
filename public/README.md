@@ -14,5 +14,7 @@ in the repository. The images an editor actually uploads live in Cloudinary and
 reach the site through the API (§12); nothing in the bundle should come from
 here.
 
-`icons.svg` is an unused leftover from the Vite starter — no source file
-references it.
+`icons.svg` is an unused leftover from the Vite starter, and `favicon.svg` is
+the leaf mark that was the tab icon until `rajdhani-logo.png` replaced it. Both
+are kept and neither is referenced, which is why they are here rather than in
+`static/` — that folder holds what the site serves and nothing else.

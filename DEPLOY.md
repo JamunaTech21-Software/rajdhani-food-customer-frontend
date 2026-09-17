@@ -27,34 +27,40 @@ matters.
 **Preview** (a preview build with no variables fails the same way a production
 one does — see §4).
 
-| Name | Required | Value |
+**No `VITE_` prefix is required.** Vite only auto-exposes `VITE_` variables to
+the browser, but that is a rule about *exposure*, not about what the build can
+read — Vercel hands every project variable to the build whatever it is called.
+`vite.config.js` takes the first name it finds from each row and maps it to the
+one `config.js` uses:
+
+| Purpose | Required | Set any one of |
 |---|---|---|
-| `VITE_BASE_URL` | **yes** | The API origin **including `/api/v1`** — e.g. `https://api.rajdhanifood.com/api/v1` |
-| `VITE_SITE_URL` | no | This site's own origin, for canonical URLs and JSON-LD. Defaults to `https://rajdhanifood.com` |
-| `VITE_RECAPTCHA_SITE_KEY` | no | reCAPTCHA v3 **site** key. The forms work without it |
+| **API origin**, including `/api/v1` | **yes** | `BASE_URL` · `API_BASE_URL` · `VITE_API_BASE_URL` · `VITE_BASE_URL` |
+| **Site origin**, for canonical URLs and JSON-LD | no | `SITE_URL` · `VITE_SITE_URL` |
+| **reCAPTCHA v3 site key** | no | `RECAPTCHA_SITE_KEY` · `VITE_RECAPTCHA_SITE_KEY` |
+
+Use the short names. They are listed first because they are the ones that work
+everywhere; the prefixed spellings are kept so nobody's existing setup breaks.
+
+The build log names the one it read, for all three:
+
+```
+[env] API base URL from BASE_URL=https://api.rajdhanifood.com/api/v1
+[env] site URL from SITE_URL=https://rajdhanifood.com
+[env] no reCAPTCHA site key set — the forms post without a token, which the API allows
+```
+
+Check those lines after changing anything. If a variable does not appear the way
+you set it, the name is wrong or it was scoped to the wrong environment.
 
 `.env.local` is gitignored, so it never reaches GitHub and Vercel never sees it.
 It configures your machine only. `.env.example` is the documentation.
 
-**If Vercel will not accept the `VITE_` prefix**, the name is negotiable. Vite
-only auto-exposes `VITE_` variables to the browser, but the *build* can read
-anything Vercel sets, so `vite.config.js` takes the first of these it finds:
-
-| Purpose | Accepted names, most specific first |
-|---|---|
-| API origin | `VITE_BASE_URL`, `VITE_API_BASE_URL`, `API_BASE_URL`, `BASE_URL` |
-| Site origin | `VITE_SITE_URL`, `SITE_URL` |
-
-The build log names the one it used:
-
-```
-[env] API base URL from VITE_BASE_URL=https://api.rajdhanifood.com/api/v1
-```
-
-Check that line after changing a variable. **Everything with a `VITE_` prefix is
-compiled verbatim into the public JavaScript bundle** — no secret belongs in any
-of them. The Cloudinary API secret and the reCAPTCHA *secret* key live in
-`backend/api/.env` on the API server and nowhere else.
+**Every one of these is compiled verbatim into the public JavaScript bundle** —
+under *either* spelling. The prefix is not what makes a value public; reaching
+the browser is. No secret belongs in any of them: the Cloudinary API secret and
+the reCAPTCHA *secret* key live in `backend/api/.env` on the API server and
+nowhere else.
 
 ---
 

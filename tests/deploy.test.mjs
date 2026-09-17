@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
@@ -64,8 +64,15 @@ test("the 161 MB of design references cannot reach a deployment", () => {
 });
 
 test("the one asset that does ship is where the build will look for it", () => {
-  assert.match(read("static/favicon.svg"), /^<svg/);
-  assert.match(read("index.html"), /href="\/favicon\.svg"/);
+  // `static/` holds exactly what the site serves, and nothing else — which is
+  // how `icons.svg` came to sit in a public directory unreferenced for months.
+  const served = readdirSync(fileURLToPath(new URL("../static/", import.meta.url)));
+  const html = read("index.html");
+
+  assert.deepEqual(served, ["rajdhani-logo.png"]);
+  for (const file of served) {
+    assert.ok(html.includes(`/${file}`), `static/${file} is served but nothing references it`);
+  }
 });
 
 test("the environment is documented where a deployer will find it", () => {
@@ -79,4 +86,59 @@ test("the environment is documented where a deployer will find it", () => {
 
 test("the node version is declared, not inferred", () => {
   assert.match(json("package.json").engines.node, /^>=2\d/);
+});
+
+test("nothing the browser needs requires the VITE_ prefix", () => {
+  // The prefix is a rule about Vite's *automatic* exposure, not about what a
+  // build can read — and a host that refuses it must still be able to
+  // configure the site. Every value therefore has a short name too.
+  //
+  // The reCAPTCHA key was the exception until this was written: it had no
+  // `define` entry and leaned on the automatic exposure, which happens under
+  // the prefix and only under the prefix.
+  const config = read("vite.config.js");
+
+  for (const [name, short] of [
+    ["API_URL_NAMES", "BASE_URL"],
+    ["SITE_URL_NAMES", "SITE_URL"],
+    ["RECAPTCHA_NAMES", "RECAPTCHA_SITE_KEY"],
+  ]) {
+    // Sliced rather than matched: the list is bracketed, and a regex for it
+    // needs escapes that do not survive being written by hand.
+    const from = config.indexOf(`const ${name} = [`);
+    assert.notEqual(from, -1, `${name} is gone`);
+    const list = config.slice(from, config.indexOf("]", from));
+
+    assert.ok(list.includes(`"${short}"`), `${name} has no prefix-free spelling`);
+  }
+});
+
+test("every env value the app reads is mapped at build time", () => {
+  // Anything read from `import.meta.env` without a matching `define` works only
+  // under the VITE_ prefix, which is the trap this whole arrangement exists to
+  // avoid. The two lists have to match exactly.
+  // Comments stripped first: `config.js` opens by explaining why the value is
+  // not called `BASE_URL`, and the explanation is not a read.
+  const source = read("src/config.js")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+
+  const read_ = new Set(
+    [...source.matchAll(/import\.meta\.env\.([A-Z0-9_]+)/g)].map((m) => m[1]),
+  );
+  const defined = new Set(
+    [...read("vite.config.js").matchAll(/"import\.meta\.env\.([A-Z0-9_]+)":/g)].map((m) => m[1]),
+  );
+
+  assert.deepEqual([...read_].sort(), [...defined].sort());
+});
+
+test("the build log accounts for all three, not just the required one", () => {
+  // A variable set under a name nothing reads is silent. The log is the only
+  // place a deployer can confirm what the build actually saw.
+  const config = read("vite.config.js");
+
+  assert.match(config, /\[env\] API base URL from/);
+  assert.match(config, /\[env\] site URL from/);
+  assert.match(config, /\[env\] reCAPTCHA site key from/);
 });

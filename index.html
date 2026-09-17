@@ -34,7 +34,15 @@
     />
     <!-- RAJDHANI:HEAD:END -->
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!--
+      The brand mark in the tab, and the only icon declared.
+
+      The leaf SVG was here as well until now, and listing both did not mean
+      "prefer the PNG" — Chrome and Firefox pick an SVG over a raster whenever
+      one is offered, whatever the order, so the PNG would never have been the
+      icon anyone saw.
+    -->
+    <link rel="icon" type="image/png" href="/rajdhani-logo.png" />
 
     <!--
       Fonts are preconnected rather than merely linked: the display serif is in
