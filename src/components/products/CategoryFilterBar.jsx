@@ -2,6 +2,7 @@ import { LayoutGrid } from "lucide-react";
 
 import { Icon } from "../ui/Icon.jsx";
 import { cn } from "../../lib/cn.js";
+import { useScrollEdges } from "../../hooks/useScrollEdges.js";
 
 /**
  * The sticky category bar (§10.2), driven by `Category`.
@@ -18,17 +19,20 @@ import { cn } from "../../lib/cn.js";
  * created in admin is invisible to the person who just created it.
  */
 export function CategoryFilterBar({ categories, active, onSelect }) {
+  const [stripRef, stripProps] = useScrollEdges();
   const items = categories ?? [];
 
   return (
     // top-16 matches the header's own height, so the bar comes to rest directly
     // under it rather than sliding beneath or leaving a strip of page showing.
     // z-30 sits below the header's z-40 for the same reason.
-    <div className="sticky top-16 z-30 -mx-4 border-b border-line bg-surface/95 px-4 backdrop-blur-sm sm:-mx-6 sm:px-6">
+    <div className="sticky top-16 z-30 -ml-(--gutter-l) -mr-(--gutter-r) border-b border-line bg-surface/95 pl-(--gutter-l) pr-(--gutter-r) backdrop-blur-sm">
       {/* Horizontally scrollable on a phone rather than wrapped into three
           rows, which would push the products themselves off-screen. */}
       <ul
-        className="flex gap-1 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        ref={stripRef}
+        {...stripProps}
+        className="scroll-fade flex gap-1 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         aria-label="Filter by category"
       >
         <li>

@@ -47,6 +47,13 @@ export default defineConfig([
     rules: { 'rajdhani/no-colour-literals': 'off' },
   },
   {
+    // The browser-console instrument from the responsive sweep (plan.md R8).
+    // Never imported, never bundled — it is pasted into DevTools by hand.
+    files: ['tests/viewport-audit.js'],
+    languageOptions: { globals: globals.browser },
+    rules: { 'rajdhani/no-colour-literals': 'off', 'rajdhani/config-only-env': 'off' },
+  },
+  {
     // Build configuration and the rule itself run in Node, and the rule's own
     // source necessarily contains the patterns it matches.
     files: ['vite.config.js', 'eslint.config.js', 'eslint-rules/*.js'],

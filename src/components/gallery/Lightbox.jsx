@@ -55,7 +55,7 @@ export function Lightbox({ images, index, onIndexChange, onClose }) {
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/90" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 sm:p-8"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center pt-4 sm:pt-8 pb-[max(1rem,env(safe-area-inset-bottom))] sm:pb-[max(2rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] sm:pl-[max(2rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:pr-[max(2rem,env(safe-area-inset-right))]"
         >
           <Dialog.Title className="sr-only">{caption}</Dialog.Title>
 
@@ -65,20 +65,33 @@ export function Lightbox({ images, index, onIndexChange, onClose }) {
             Image {index + 1} of {total}: {caption}
           </p>
 
-          <div className="relative flex max-h-full w-full max-w-5xl flex-col">
-            <div className="overflow-hidden rounded-lg bg-ink">
+          {/*
+            The media area flexes and the caption row does not.
+
+            A fixed 3:2 box `w-full` inside this column was 405px tall on a
+            640px-wide screen — half again as tall as a landscape phone, with
+            the caption below that. Letting the image take whatever height is
+            left and `object-contain` inside it means the picture is always as
+            large as fits and never larger. `min-h-0` is what allows a flex
+            child to shrink below its content at all.
+
+            No background on the box any more: letterboxing against the
+            overlay's own dark ground is invisible, where a black panel around a
+            portrait image is not.
+          */}
+          <div className="relative flex h-full w-full max-w-5xl flex-col">
+            <div className="min-h-0 flex-1">
               <CloudinaryImage
                 src={image?.image?.url}
                 alt={image?.image?.alt ?? caption}
-                aspectRatio="3 / 2"
-                sizes={SIZES.content}
+                sizes={SIZES.lightbox}
                 priority
                 className="size-full"
                 imgClassName="object-contain"
               />
             </div>
 
-            <div className="mt-4 flex items-center justify-between gap-4">
+            <div className="mt-4 flex shrink-0 items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="truncate font-medium text-ink-inverse">{caption}</p>
                 {image?.category?.name ? (

@@ -33,23 +33,34 @@ export function galleryTabs(categories) {
 /**
  * Aspect ratios for the masonry tiles.
  *
- * **The payload carries no image dimensions** — only `url` and `alt` — so the
- * true heights are unknowable before each image loads. A grid that waits to
- * find out reflows every tile below it as they arrive, which is exactly the
- * layout shift criterion two forbids.
+ * **Real dimensions are used when the payload has them.** It now carries
+ * `width` and `height` (added 2026-09-16), so each tile reserves the shape the
+ * image actually is — nothing is cropped and nothing moves when it loads.
  *
- * So each tile reserves a ratio chosen from this set, and the image is cropped
- * to fill it. The rhythm reads as masonry, nothing moves, and the lightbox shows
- * the picture uncropped. If the API ever returns dimensions, this is the one
- * place that changes.
+ * The cycling fallback below is kept for anything still without them: the site
+ * logo has no dimensions, and older rows may not. A grid that waits to discover
+ * a height reflows every tile beneath it as images arrive, which is exactly the
+ * layout shift criterion two forbids — so there must always be *some* reserved
+ * ratio, even a guessed one.
  */
-const RATIOS = ["3 / 4", "1 / 1", "4 / 5", "1 / 1", "4 / 3", "3 / 4"];
+const FALLBACK_RATIOS = ["3 / 4", "1 / 1", "4 / 5", "1 / 1", "4 / 3", "3 / 4"];
 
 /**
- * Deterministic per item, so the layout is identical on every render and after
- * a refetch — a random ratio would reshuffle the whole grid on each paint.
+ * The fallback is deterministic per index, so the layout is identical on every
+ * render and after a refetch — a random ratio would reshuffle the whole grid on
+ * each paint, creating the shift by itself.
  */
-export const ratioFor = (index) => RATIOS[index % RATIOS.length];
+export function ratioFor(index, image) {
+  const { width, height } = image?.image ?? image ?? {};
+
+  // Guard against zero and nonsense as well as absence: a height of 0 would
+  // produce `aspect-ratio: 1200 / 0`, which collapses the tile to nothing.
+  if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+    return `${width} / ${height}`;
+  }
+
+  return FALLBACK_RATIOS[index % FALLBACK_RATIOS.length];
+}
 
 /**
  * Where a keyboard move lands in the lightbox.

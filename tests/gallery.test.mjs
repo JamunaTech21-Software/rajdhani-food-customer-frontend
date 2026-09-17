@@ -41,11 +41,33 @@ test("no categories still gives an All tab", () => {
 
 // ── Criterion 2: no layout shift ──────────────────────────────────────────
 
-test("every tile has a reserved ratio, whatever its index", () => {
-  // The payload carries no image dimensions, so nothing can be measured before
-  // load. Without a reserved box every tile below reflows as images arrive.
+test("every tile has a reserved ratio, with or without dimensions", () => {
+  // Without a reserved box every tile below reflows as images arrive.
   for (let i = 0; i < 25; i += 1) {
     assert.match(ratioFor(i), /^\d+ \/ \d+$/, `index ${i} has no usable ratio`);
+  }
+});
+
+test("the real width and height are used when the payload has them", () => {
+  // Added by the backend 2026-09-16. The true shape means nothing is cropped
+  // and the reserved box matches the image exactly — better than a guess.
+  assert.equal(ratioFor(0, { image: { width: 1200, height: 800 } }), "1200 / 800");
+  assert.equal(ratioFor(3, { width: 1000, height: 1000 }), "1000 / 1000", "either shape is accepted");
+});
+
+test("nonsense dimensions fall back rather than collapsing the tile", () => {
+  // `aspect-ratio: 1200 / 0` collapses the tile to nothing and takes the column
+  // layout with it.
+  for (const image of [
+    { width: 1200, height: 0 },
+    { width: 0, height: 800 },
+    { width: "wide", height: 800 },
+    { width: 1200 },
+    null,
+  ]) {
+    const ratio = ratioFor(0, { image });
+    assert.match(ratio, /^\d+ \/ \d+$/, `${JSON.stringify(image)} gave ${ratio}`);
+    assert.notEqual(ratio, "1200 / 0");
   }
 });
 

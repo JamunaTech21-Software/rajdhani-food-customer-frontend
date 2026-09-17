@@ -1,9 +1,10 @@
 import { ArrowRight, ChevronLeft, ChevronRight, Download } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router";
 
 import { CloudinaryImage } from "../CloudinaryImage.jsx";
 import { cn } from "../../lib/cn.js";
+import { advance, swipeIntent } from "../../lib/carousel.js";
 import { SIZES } from "../../lib/cloudinary.js";
 import { isExternal } from "../../lib/nav.js";
 
@@ -50,7 +51,9 @@ function Slide({ banner, priority }) {
   const overlay = Math.min(Math.max(banner.overlay_opacity ?? 40, 0), 100) / 100;
 
   return (
-    <div className="relative isolate min-h-[32rem] overflow-hidden lg:min-h-[38rem]">
+    // `--hero-min` caps 32rem against the viewport height, so a phone held
+    // sideways can still show one whole slide. See index.css.
+    <div className="relative isolate min-h-(--hero-min) overflow-hidden">
       {image?.url ? (
         <CloudinaryImage
           src={image.url}
@@ -69,7 +72,7 @@ function Slide({ banner, priority }) {
         style={{ opacity: overlay }}
       />
 
-      <div className="mx-auto flex h-full max-w-[1280px] flex-col justify-center px-4 py-20 sm:px-6">
+      <div className="mx-auto flex h-full max-w-(--container-max) flex-col justify-center py-20 pl-(--gutter-l) pr-(--gutter-r)">
         <div className="max-w-xl">
           {banner.eyebrow_text ? (
             <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-gold">
@@ -118,53 +121,101 @@ function Slide({ banner, priority }) {
 export function Hero({ banners }) {
   const slides = banners ?? [];
   const [index, setIndex] = useState(0);
+  const start = useRef(null);
 
   if (slides.length === 0) return null;
 
   const many = slides.length > 1;
   const current = slides[Math.min(index, slides.length - 1)];
 
+  /*
+    Swipe, in about ten lines and no dependency (plan.md D3).
+
+    Pointer events rather than touch events, so a trackpad drag and a stylus
+    work the same way. The judgement — was that a swipe, and which way — is in
+    `swipeIntent`, where it can be tested; what is left here is remembering
+    where the finger went down.
+  */
+  const onPointerDown = (event) => {
+    start.current = event.pointerType === "mouse" ? null : { x: event.clientX, y: event.clientY };
+  };
+
+  const onPointerUp = (event) => {
+    const from = start.current;
+    start.current = null;
+    if (!from) return;
+
+    const direction = swipeIntent(event.clientX - from.x, event.clientY - from.y);
+    if (direction) setIndex((i) => advance(i, slides.length, direction === "next" ? 1 : -1));
+  };
+
   return (
-    <section aria-label="Highlights" className="relative">
+    <section
+      aria-label="Highlights"
+      className="relative"
+      {...(many
+        ? { onPointerDown, onPointerUp, onPointerCancel: () => (start.current = null) }
+        : null)}
+    >
       <Slide banner={current} priority />
 
       {many ? (
-        <>
-          <div className="pointer-events-none absolute inset-x-0 top-1/2 mx-auto flex max-w-[1280px] -translate-y-1/2 justify-between px-2 sm:px-4">
-            <button
-              type="button"
-              aria-label="Previous slide"
-              onClick={() => setIndex((i) => (i - 1 + slides.length) % slides.length)}
-              className="pointer-events-auto grid size-10 place-items-center rounded-full bg-surface/85 text-ink shadow-card hover:bg-surface"
-            >
-              <ChevronLeft size={18} strokeWidth={2} aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              aria-label="Next slide"
-              onClick={() => setIndex((i) => (i + 1) % slides.length)}
-              className="pointer-events-auto grid size-10 place-items-center rounded-full bg-surface/85 text-ink shadow-card hover:bg-surface"
-            >
-              <ChevronRight size={18} strokeWidth={2} aria-hidden="true" />
-            </button>
-          </div>
+        /*
+          One control row rather than arrows floating at the sides.
 
-          <div className="absolute inset-x-0 bottom-6 flex justify-center gap-2">
-            {slides.map((slide, i) => (
-              <button
-                key={slide.id}
-                type="button"
-                aria-label={`Go to slide ${i + 1}`}
-                aria-current={i === index ? "true" : undefined}
-                onClick={() => setIndex(i)}
+          The side arrows sat at `top-1/2` over a headline that is full-width on
+          a phone, so on the screens where they mattered most they covered the
+          thing they were pointing at. The comps show no hero controls at all —
+          the approved design is a single banner — so there is nothing here to
+          contradict by collecting them at the bottom instead.
+
+          `bottom-16` and not `bottom-6`: the USP strip is pulled up 48px over
+          the hero and carries `z-10`, so the dots were rendering *behind* it.
+        */
+        <div className="absolute inset-x-0 bottom-16 flex items-center justify-center gap-1">
+          <button
+            type="button"
+            aria-label="Previous slide"
+            onClick={() => setIndex((i) => advance(i, slides.length, -1))}
+            className="grid size-11 place-items-center rounded-full text-ink-inverse hover:bg-ink-inverse/15"
+          >
+            <ChevronLeft size={20} strokeWidth={2} aria-hidden="true" />
+          </button>
+
+          {slides.map((slide, i) => (
+            /*
+              The button is the 44px target; the span is the 8px dot the comps
+              draw. Growing the dot itself to meet 2.5.8 would have changed the
+              design — padding it does not.
+            */
+            <button
+              key={slide.id}
+              type="button"
+              aria-label={`Go to slide ${i + 1}`}
+              aria-current={i === index ? "true" : undefined}
+              onClick={() => setIndex(i)}
+              className="group grid h-11 place-items-center px-1"
+            >
+              <span
                 className={cn(
-                  "h-2 rounded-full transition-all duration-(--duration-fast)",
-                  i === index ? "w-6 bg-gold" : "w-2 bg-ink-inverse/50 hover:bg-ink-inverse/80",
+                  "block h-2 rounded-full transition-all duration-(--duration-fast)",
+                  i === index
+                    ? "w-6 bg-gold"
+                    : "w-2 bg-ink-inverse/50 group-hover:bg-ink-inverse/80",
                 )}
               />
-            ))}
-          </div>
-        </>
+            </button>
+          ))}
+
+          <button
+            type="button"
+            aria-label="Next slide"
+            onClick={() => setIndex((i) => advance(i, slides.length, 1))}
+            className="grid size-11 place-items-center rounded-full text-ink-inverse hover:bg-ink-inverse/15"
+          >
+            <ChevronRight size={20} strokeWidth={2} aria-hidden="true" />
+          </button>
+        </div>
       ) : null}
     </section>
   );

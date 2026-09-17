@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Design references, not site assets. 161 MB between them, and they used to sit
+# in the Vite public directory — so every build copied them into dist/ and a
+# deploy would have published the lot. They stay on the machines that have them;
+# the images the site actually shows come from Cloudinary through the API.
+public/RajdhaniWebsiteReferenceImages/
+public/RajdhaniPagesRequireImages/

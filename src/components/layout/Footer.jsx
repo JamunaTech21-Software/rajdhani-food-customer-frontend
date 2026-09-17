@@ -6,8 +6,20 @@ import { isExternal } from "../../lib/nav.js";
 import { useSiteStore } from "../../stores/siteStore.js";
 import { SocialIcon } from "../ui/SocialIcon.jsx";
 
+/**
+ * A footer link.
+ *
+ * `inline-block py-1` is the target, not the styling: a bare line of 14px text
+ * is a 20px-tall thing to hit, which fails WCAG 2.5.8 even at its relaxed 24px
+ * floor once the rows sit 10px apart. The padding takes each row to 28px and
+ * `LinkColumn` gives back the same 8px from its gap, so the rhythm on screen is
+ * exactly what it was and only the hit area changed.
+ */
 function FooterLink({ link, className }) {
-  const classes = cn("text-sm text-ink-inverse/75 transition-colors hover:text-ink-inverse", className);
+  const classes = cn(
+    "inline-block py-1 text-sm text-ink-inverse/75 transition-colors hover:text-ink-inverse",
+    className,
+  );
 
   if (isExternal(link.url)) {
     return (
@@ -37,7 +49,7 @@ function LinkColumn({ title, links }) {
   return (
     <nav aria-label={title}>
       <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-inverse">{title}</h2>
-      <ul className="mt-4 flex flex-col gap-2.5">
+      <ul className="mt-4 flex flex-col gap-0.5">
         {links.map((link) => (
           <li key={link.id ?? link.url}>
             <FooterLink link={link} />
@@ -59,11 +71,22 @@ export function Footer() {
 
   return (
     <footer className="mt-16 bg-brand-deep text-ink-inverse">
-      {/* Steps 1 → 2 → 3 → 5 columns. Going straight from one column to five at
-          `lg` leaves a tablet with a single very tall stack, and squeezes five
-          columns into 1024px the moment it crosses. */}
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-3 xl:grid-cols-[1.4fr_1fr_1fr_1.2fr_1.2fr]">
-        <div>
+      {/*
+        Five blocks: the brand, three link lists and the newsletter.
+
+        The old ramp stepped 1 → 2 → 3 → 5, and the three-column stop was the
+        problem: five items in three columns is a full row and then two
+        stranded ones, which reads as a mistake rather than as a layout. Each
+        step here divides the five evenly instead — the brand block takes a row
+        of its own until there is room for all five beside it, and the four
+        lists split two-and-two or four across.
+
+        768 deliberately keeps the 640 arrangement. Four link lists across a
+        tablet would leave the newsletter's email field about 110px wide, which
+        is narrower than the text people type into it.
+      */}
+      <div className="mx-auto grid max-w-(--container-max) gap-10 py-14 pl-(--gutter-l) pr-(--gutter-r) sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[1.4fr_1fr_1fr_1.2fr_1.2fr]">
+        <div className="sm:col-span-2 lg:col-span-4 xl:col-span-1">
           <p className="font-display text-xl font-semibold">{site?.name ?? "Rajdhani Food Products"}</p>
           {site?.footer?.about ? (
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-inverse/75">
@@ -82,7 +105,7 @@ export function Footer() {
                       // The platform name, not "social link" — a list of five
                       // identical labels tells a screen-reader user nothing.
                       aria-label={`${account.platform} (opens in a new tab)`}
-                      className="grid size-9 place-items-center rounded-full border border-ink-inverse/25 text-ink-inverse transition-colors hover:border-ink-inverse hover:bg-ink-inverse/10"
+                      className="grid size-11 place-items-center rounded-full border border-ink-inverse/25 text-ink-inverse transition-colors hover:border-ink-inverse hover:bg-ink-inverse/10"
                     >
                       <SocialIcon platform={account.platform} size={16} />
                     </a>
@@ -167,7 +190,7 @@ export function Footer() {
       </div>
 
       <div className="border-t border-ink-inverse/15">
-        <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-between gap-3 px-4 py-5 text-sm text-ink-inverse/70 sm:px-6">
+        <div className="mx-auto flex max-w-(--container-max) flex-wrap items-center justify-between gap-3 py-5 pl-(--gutter-l) pr-(--gutter-r) pb-[max(1.25rem,env(safe-area-inset-bottom))] text-sm text-ink-inverse/70">
           <p>{site?.footer?.copyright ?? `© ${new Date().getFullYear()} Rajdhani Food Products`}</p>
 
           {menus?.legal?.length ? (

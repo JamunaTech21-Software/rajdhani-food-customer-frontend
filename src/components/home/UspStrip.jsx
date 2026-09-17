@@ -59,8 +59,8 @@ export function UspStrip({ items }) {
   if (!items?.length) return null;
 
   return (
-    <section aria-label="Why Rajdhani" className="relative z-10 -mt-12 px-4 sm:px-6">
-      <ul className="mx-auto grid max-w-[1280px] gap-6 rounded-xl bg-surface p-6 shadow-modal sm:grid-cols-2 sm:p-8 lg:grid-cols-4">
+    <section aria-label="Why Rajdhani" className="relative z-10 -mt-12 pl-(--gutter-l) pr-(--gutter-r)">
+      <ul className="mx-auto grid max-w-(--container-max) gap-6 rounded-xl bg-surface p-6 shadow-modal sm:grid-cols-2 sm:p-8 lg:grid-cols-4">
         {items.map((item) => (
           <UspItem key={item.id} item={item} />
         ))}

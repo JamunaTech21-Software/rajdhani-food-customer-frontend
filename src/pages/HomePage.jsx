@@ -12,10 +12,10 @@ import { publicApi } from "../lib/api.js";
 function Skeleton() {
   return (
     <div role="status" aria-label="Loading the home page" aria-busy="true">
-      <div className="min-h-[32rem] animate-pulse bg-ground lg:min-h-[38rem]" />
-      <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6">
+      <div className="min-h-(--hero-min) animate-pulse bg-ground" />
+      <div className="mx-auto max-w-(--container-max) py-(--space-section) pl-(--gutter-l) pr-(--gutter-r)">
         <div className="h-8 w-64 animate-pulse rounded bg-ground" />
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-8 grid auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-5 overflow-hidden pb-4 lg:grid-flow-row lg:grid-cols-4">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-ground" />
           ))}
@@ -49,7 +49,7 @@ export function HomePage() {
 
   if (home.isError) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-24 text-center">
+      <div className="mx-auto max-w-lg py-24 text-center pl-(--gutter-l) pr-(--gutter-r)">
         <h1 className="font-display text-2xl font-bold text-ink">We could not load this page</h1>
         <p className="mt-2 text-ink-muted">
           Something went wrong at our end. The rest of the site is still available.

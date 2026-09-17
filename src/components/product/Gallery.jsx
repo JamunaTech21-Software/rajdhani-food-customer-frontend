@@ -32,7 +32,7 @@ export function Gallery({ images, alt, priority = false }) {
           src={current?.url}
           alt={current?.alt ?? alt ?? ""}
           aspectRatio="1 / 1"
-          sizes={SIZES.half}
+          sizes={SIZES.productMedia}
           priority={priority}
           className="size-full"
           imgClassName="object-contain"
@@ -105,7 +105,8 @@ export function Gallery({ images, alt, priority = false }) {
           <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/80" />
           <Dialog.Content
             aria-describedby={undefined}
-            className="fixed left-1/2 top-1/2 z-50 w-[min(56rem,100vw-2rem)] -translate-x-1/2 -translate-y-1/2"
+            // Square, so the height budget caps the width one-for-one.
+            className="fixed left-1/2 top-1/2 z-50 w-[min(56rem,calc(100dvh-2rem))] max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2"
           >
             <Dialog.Title className="sr-only">{alt ?? "Product image"}</Dialog.Title>
 
@@ -114,7 +115,7 @@ export function Gallery({ images, alt, priority = false }) {
                 src={current?.url}
                 alt={current?.alt ?? alt ?? ""}
                 aspectRatio="1 / 1"
-                sizes={SIZES.content}
+                sizes={SIZES.zoom}
                 // Already on screen at a smaller size, so the browser is not
                 // being asked to fetch this cold.
                 priority
@@ -125,7 +126,7 @@ export function Gallery({ images, alt, priority = false }) {
 
             <Dialog.Close
               aria-label="Close image"
-              className="absolute -top-12 right-0 grid size-10 place-items-center rounded-full bg-surface text-ink"
+              className="absolute right-2 top-2 grid size-11 place-items-center rounded-full bg-ink/70 text-ink-inverse backdrop-blur-sm hover:bg-ink/90"
             >
               <X size={18} strokeWidth={2} aria-hidden="true" />
             </Dialog.Close>

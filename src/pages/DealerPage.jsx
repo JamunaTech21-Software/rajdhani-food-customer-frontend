@@ -29,7 +29,7 @@ function Hero({ banner }) {
       )}
       <div aria-hidden="true" className="absolute inset-0 -z-10 bg-ink" style={{ opacity: overlay }} />
 
-      <div className="mx-auto max-w-[1280px] px-4 py-20 sm:px-6 lg:py-28">
+      <div className="mx-auto max-w-(--container-max) py-20 lg:py-28 pl-(--gutter-l) pr-(--gutter-r)">
         <div className="max-w-xl">
           {banner.eyebrow_text ? (
             <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-gold">
@@ -85,7 +85,7 @@ export function DealerPage() {
     <>
       <Hero banner={hero.data?.items?.[0]} />
 
-      <div className="mx-auto max-w-[1280px] px-4 py-16 sm:px-6">
+      <div className="mx-auto max-w-(--container-max) py-(--space-section) pl-(--gutter-l) pr-(--gutter-r)">
         <div className="mx-auto max-w-2xl">
           <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
             Become a Dealer / Distributor

@@ -19,8 +19,8 @@ function Grid({ products, isPlaceholder }) {
     <ul
       className={
         isPlaceholder
-          ? "grid gap-5 opacity-60 transition-opacity sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          : "grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          ? "grid gap-5 opacity-60 transition-opacity sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
+          : "grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4"
       }
     >
       {products.map((product, index) => (
@@ -35,7 +35,7 @@ function Grid({ products, isPlaceholder }) {
 
 function GridSkeleton() {
   return (
-    <div role="status" aria-label="Loading products" aria-busy="true" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div role="status" aria-label="Loading products" aria-busy="true" className="grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
       {Array.from({ length: 8 }, (_, i) => (
         <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-ground" />
       ))}
@@ -89,7 +89,7 @@ export function ProductsPage() {
   const activeCategory = (categories.data ?? []).find((c) => c.slug === filters.category);
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 pb-16 sm:px-6">
+    <div className="mx-auto max-w-(--container-max) pb-16 pl-(--gutter-l) pr-(--gutter-r)">
       <header className="py-10">
         <h1 className="font-display text-3xl font-bold text-ink sm:text-4xl">
           {activeCategory?.name ?? "Our Products"}
@@ -108,7 +108,7 @@ export function ProductsPage() {
 
       <div className="py-8">
         {query.isError ? (
-          <div role="alert" className="rounded-xl border border-line p-10 text-center">
+          <div role="alert" className="rounded-xl border border-line p-6 text-center sm:p-10">
             <p className="font-display text-xl font-semibold text-ink">
               We could not load the catalogue
             </p>
@@ -124,7 +124,7 @@ export function ProductsPage() {
         ) : query.isPending ? (
           <GridSkeleton />
         ) : products.length === 0 ? (
-          <div className="rounded-xl border border-line p-10 text-center">
+          <div className="rounded-xl border border-line p-6 text-center sm:p-10">
             <p className="font-display text-xl font-semibold text-ink">
               {filtered ? "Nothing here yet" : "No products yet"}
             </p>

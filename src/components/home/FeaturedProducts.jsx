@@ -2,6 +2,8 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 
 import { ProductCard } from "../ProductCard.jsx";
+import { SIZES } from "../../lib/cloudinary.js";
+import { useScrollEdges } from "../../hooks/useScrollEdges.js";
 
 /**
  * The premium collection carousel (§10.1).
@@ -15,11 +17,13 @@ import { ProductCard } from "../ProductCard.jsx";
  * so the common case never needs interaction at all.
  */
 export function FeaturedProducts({ products }) {
+  const [stripRef, stripProps] = useScrollEdges();
+
   if (!products?.length) return null;
 
   return (
-    <section aria-labelledby="featured-heading" className="py-16">
-      <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
+    <section aria-labelledby="featured-heading" className="py-(--space-section)">
+      <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">
@@ -40,13 +44,15 @@ export function FeaturedProducts({ products }) {
         </div>
 
         <ul
-          className="mt-8 grid auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-5 overflow-x-auto pb-4 [scrollbar-width:thin] snap-x snap-mandatory lg:grid-flow-row lg:grid-cols-4 lg:overflow-visible"
+          ref={stripRef}
+          {...stripProps}
+          className="scroll-fade mt-8 grid auto-cols-[minmax(15rem,1fr)] grid-flow-col gap-5 overflow-x-auto pb-4 [scrollbar-width:thin] snap-x snap-mandatory lg:grid-flow-row lg:grid-cols-4 lg:overflow-visible"
         >
           {products.map((product, index) => (
             <li key={product.id} className="snap-start">
               {/* The first two are likely above the fold on a wide screen, so
                   they load eagerly; the rest stay lazy. */}
-              <ProductCard product={product} priority={index < 2} />
+              <ProductCard product={product} priority={index < 2} sizes={SIZES.carouselCard} />
             </li>
           ))}
         </ul>

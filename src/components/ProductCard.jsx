@@ -18,7 +18,7 @@ import { readableOn } from "@shared/theme/color.js";
  * assumed white — a gold badge with white text fails AA, and the admin lets an
  * editor pick any colour at all.
  */
-export function ProductCard({ product, priority = false }) {
+export function ProductCard({ product, priority = false, sizes = SIZES.productCard }) {
   if (!product?.slug) return null;
 
   const badge = product.badge_text?.trim();
@@ -29,7 +29,7 @@ export function ProductCard({ product, priority = false }) {
         <CloudinaryImage
           src={product.image?.url}
           alt={product.image?.alt ?? product.name ?? ""}
-          sizes={SIZES.card}
+          sizes={sizes}
           priority={priority}
           className="size-full transition-transform duration-(--duration-slow) group-hover:scale-105"
         />

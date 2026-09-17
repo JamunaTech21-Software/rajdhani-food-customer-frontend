@@ -54,7 +54,7 @@ export function BulkSupplyCta({ banner }) {
             src={banner.desktop_image.url}
             alt={banner.desktop_image.alt ?? ""}
             aspectRatio="4 / 3"
-            sizes={SIZES.half}
+            sizes={SIZES.splitWide}
             className="size-full"
           />
         ) : null}

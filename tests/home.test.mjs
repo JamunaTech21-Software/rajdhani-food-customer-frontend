@@ -212,8 +212,16 @@ test("an uploaded USP icon wins over a named one", () => {
 test("the welcome body is rendered as the sanitised HTML it is", () => {
   // RichText::sanitize() runs server-side and the schema says so. Re-sanitising
   // here would be theatre — the server is the authority.
+  //
+  // The text column moved to PageBlockBody in RTPP-67: About and Quality render
+  // the same PageBlock payload, and one renderer is how the three stay in step.
   const welcome = strip(read("components/home/WelcomeBlock.jsx"));
-  assert.match(welcome, /dangerouslySetInnerHTML=\{\{ __html: block\.body \}\}/);
+  const body = strip(read("components/content/PageBlockSection.jsx"));
+  const richText = strip(read("components/content/RichText.jsx"));
+
+  assert.match(welcome, /<PageBlockBody block=\{block\} headingId="welcome-heading" \/>/);
+  assert.match(body, /<RichText html=\{block\.body\}/);
+  assert.match(richText, /dangerouslySetInnerHTML=\{\{ __html: html \}\}/);
 });
 
 test("the video iframe only exists while the modal is open", () => {

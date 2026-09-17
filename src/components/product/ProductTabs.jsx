@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 
 import { cn } from "../../lib/cn.js";
+import { useScrollEdges } from "../../hooks/useScrollEdges.js";
 
 /**
  * The product's content tabs (§10.2).
@@ -17,6 +18,7 @@ import { cn } from "../../lib/cn.js";
 export function ProductTabs({ tabs, renderPanel }) {
   const baseId = useId();
   const [active, setActive] = useState(0);
+  const [stripRef, stripProps] = useScrollEdges();
 
   if (!tabs?.length) return null;
 
@@ -47,7 +49,9 @@ export function ProductTabs({ tabs, renderPanel }) {
         role="tablist"
         aria-label="Product information"
         onKeyDown={onKeyDown}
-        className="flex gap-1 overflow-x-auto border-b border-line px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        ref={stripRef}
+        {...stripProps}
+        className="scroll-fade flex gap-1 overflow-x-auto border-b border-line px-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((tab, i) => (
           <button

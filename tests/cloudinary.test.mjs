@@ -94,9 +94,16 @@ test("no srcSet for an image that cannot have variants", () => {
 test("every sizes value is a usable media-condition list", () => {
   // A wrong `sizes` silently downloads the wrong variant — the browser reads it
   // before layout, so nothing on screen reveals the mistake.
+  //
+  // Since RTPP responsive Phase R1 these are derived from the grids they serve
+  // rather than written by hand, so most of them end in a `calc()` — the width
+  // of one column, gutters and gaps deducted. `tests/responsive.test.mjs` owns
+  // the arithmetic; this only checks each value is a well-formed list.
   for (const [name, value] of Object.entries(SIZES)) {
-    assert.match(value, /(vw|px)$/, `SIZES.${name} does not end in a length`);
+    assert.match(value, /(vw|px|\))$/, `SIZES.${name} does not end in a length`);
   }
-  assert.equal(SIZES.full, "100vw");
-  assert.match(SIZES.card, /^\(min-width: 1024px\) 25vw,/, "widest breakpoint first");
+
+  assert.equal(SIZES.full, "100vw", "a hero ignores the container");
+  assert.equal(SIZES.thumbnail, "96px");
+  assert.equal("card" in SIZES, false, "one string cannot serve four different grids");
 });

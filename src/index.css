@@ -2,6 +2,19 @@
 @import "./shared/theme/tokens.css";
 
 /**
+ * Do not read the documentation or the tests for class names.
+ *
+ * Tailwind v4 finds its classes by scanning the project, and it cannot tell a
+ * class from a string that merely looks like one. `plan.md` quotes the classes
+ * it is arguing about and the tests assert on them by name, so every class this
+ * work *removed* was still being compiled and shipped — the note explaining why
+ * it went was what kept it alive. Worth 0.9 kB of the stylesheet, and growing
+ * with every phase.
+ */
+@source not "../*.md";
+@source not "../tests/**/*";
+
+/**
  * daisyUI is deliberately absent (decision D2). It carries its own theme layer
  * that competes with the site_profile-driven custom properties, and §18.2
  * requires those to win — an admin changing primary_color must restyle the
@@ -32,10 +45,140 @@
     outline: 2px solid var(--color-brand);
     outline-offset: 2px;
   }
+
+  /**
+   * Nothing scrolled into view lands under the sticky header.
+   *
+   * A browser brings a focused field into view by scrolling it flush to the top
+   * of its scroll container. On a page that container is the document, and the
+   * top of the document is behind a 4rem sticky header — so tabbing to a field,
+   * or failing validation and having React Hook Form focus the first bad one,
+   * put it under the header where you cannot read what is wrong with it.
+   *
+   * Phase R6 fixed this inside the enquiry dialog and missed every form on a
+   * page. One base rule covers all of them, and a utility still wins where a
+   * different offset is right — which is what the dialog does.
+   */
+  input,
+  select,
+  textarea {
+    scroll-margin-top: var(--scroll-offset);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+}
+
+/**
+ * The page gutter, as one custom property per side.
+ *
+ * `px-4 sm:px-6` was the gutter everywhere until now, and it has two problems
+ * this replaces. It is written out at twenty-five call sites, so changing it for
+ * large screens (plan.md, Phase R7) means twenty-five edits; and it takes no
+ * account of the safe-area insets, so in landscape on a notched phone the first
+ * 44px of every row — the logo, the first nav item, the first column of a grid —
+ * sits under the notch or a rounded corner.
+ *
+ * `max()` rather than an addition: the inset replaces the gutter only where it
+ * is larger, so nothing moves on a device that has no insets, which is every
+ * desktop and every phone in portrait.
+ *
+ * Used as `pl-(--gutter-l) pr-(--gutter-r)`. Phase R1 adopts it in the chrome —
+ * the parts that are pinned to an edge, where the clipping actually happens.
+ * The content containers follow in R2 and R7.
+ */
+/* The sticky header is 4rem; the rem on top of it is so a field does not sit
+   flat against its underside. Read by the base rule above and by `prose.js`,
+   so the header's height is one number rather than two. */
+:root {
+  --scroll-offset: 5rem;
+}
+
+:root {
+  --gutter-l: max(1rem, env(safe-area-inset-left));
+  --gutter-r: max(1rem, env(safe-area-inset-right));
+}
+
+@media (width >= 40rem) {
+  :root {
+    --gutter-l: max(1.5rem, env(safe-area-inset-left));
+    --gutter-r: max(1.5rem, env(safe-area-inset-right));
+  }
+}
+
+/**
+ * The hero's minimum height.
+ *
+ * A flat `32rem` is 512px, which is more than the whole viewport on a phone
+ * held sideways — a 640×360 screen cannot show one slide, headline and CTAs
+ * included. Capping against the viewport height fixes that without shortening
+ * the hero anywhere it already fits.
+ *
+ * `svh`, not `dvh`: the dynamic unit changes as the browser hides its own
+ * chrome, so a `dvh`-sized hero grows and shrinks under the reader while they
+ * scroll. `svh` is the height with that chrome showing — stable, and the
+ * pessimistic one, which is the right way round for a minimum.
+ *
+ * The 4rem is the sticky header, which a full-height hero would otherwise sit
+ * underneath.
+ */
+:root {
+  --hero-min: min(32rem, calc(100svh - 4rem));
+}
+
+@media (width >= 64rem) {
+  :root {
+    --hero-min: min(38rem, calc(100svh - 4rem));
+  }
+}
+
+/* The 2xl step, for the same reason as the section rhythm: a capped container
+   cannot be given more width, so the hero is given more height instead. */
+@media (width >= 96rem) {
+  :root {
+    --hero-min: min(44rem, calc(100svh - 4rem));
+  }
+}
+
+/**
+ * A horizontal strip that says it has more to show.
+ *
+ * Four of these cut their last item off mid-width on a phone, and two hide the
+ * scrollbar outright — and on a touch device there is no scrollbar to see
+ * anyway, since overlay scrollbars appear only once you are already scrolling.
+ * A cut-off card then reads as broken rather than as "there is more this way".
+ *
+ * The mask is driven by `useScrollEdges`, so each edge fades only while there
+ * is something behind it — a permanent fade on a strip that fits, or one that
+ * stays after you reach the end, is its own small lie.
+ *
+ * The `#000` here is not a colour. In a mask it means "fully opaque", and it
+ * must stay black whatever `primary_color` becomes — §18.2 governs colours the
+ * site *shows*, and this one is never seen.
+ */
+@layer components {
+  .scroll-fade {
+    --fade: 2.5rem;
+  }
+
+  .scroll-fade[data-overflow-end="true"] {
+    mask-image: linear-gradient(to right, #000 calc(100% - var(--fade)), transparent 100%);
+  }
+
+  .scroll-fade[data-overflow-start="true"] {
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--fade));
+  }
+
+  .scroll-fade[data-overflow-start="true"][data-overflow-end="true"] {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      #000 var(--fade),
+      #000 calc(100% - var(--fade)),
+      transparent 100%
+    );
   }
 }
