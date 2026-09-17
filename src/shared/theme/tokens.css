@@ -78,15 +78,34 @@
 }
 
 /* Section rhythm is a plain custom property, not a @theme token: it is read by
-   arbitrary-value utilities rather than generating a utility class of its own. */
+   arbitrary-value utilities rather than generating a utility class of its own.
+
+   Both of these were declared here from the start and read by nothing: every
+   band wrote its own vertical padding and every container its own max width, so
+   the two numbers the design system actually owns lived in twenty-five places.
+
+   The classes they replaced are deliberately not named here. Tailwind scans
+   this file too, and a class quoted in a comment is a class it compiles and
+   ships — the same trap the `@source not` rules in index.css exist for.
+   Adopted across the site in the responsive Phase R7, which is also what gives
+   1920 its own rhythm — see plan.md D2. */
 :root {
-  --space-section: 80px;
+  --space-section: 48px;
   --container-max: 1280px;
 }
 
-@media (max-width: 768px) {
+@media (width >= 48rem) {
   :root {
-    --space-section: 48px;
+    --space-section: 80px;
+  }
+}
+
+/* The 2xl step. The container is capped, so a wide screen cannot be given more
+   width — what it can be given is air, and at 1536 and up a band that breathes
+   is the difference between a deliberate column and a page that ran out. */
+@media (width >= 96rem) {
+  :root {
+    --space-section: 112px;
   }
 }
 

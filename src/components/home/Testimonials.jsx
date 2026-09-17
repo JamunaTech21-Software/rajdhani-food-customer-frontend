@@ -32,8 +32,8 @@ export function Testimonials({ testimonials }) {
   if (!testimonials?.length) return null;
 
   return (
-    <section aria-labelledby="testimonials-heading" className="bg-ground py-16">
-      <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
+    <section aria-labelledby="testimonials-heading" className="bg-ground py-(--space-section)">
+      <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
         <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">
           What Our Clients Say
         </p>

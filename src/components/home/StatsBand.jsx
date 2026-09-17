@@ -37,8 +37,8 @@ export function StatsBand({ stats }) {
   if (!stats?.length) return null;
 
   return (
-    <section aria-label="Rajdhani by the numbers" className="bg-ground-warm py-16">
-      <div className="mx-auto grid max-w-[1280px] grid-cols-2 gap-8 px-4 sm:px-6 lg:grid-cols-4">
+    <section aria-label="Rajdhani by the numbers" className="bg-ground-warm py-(--space-section)">
+      <div className="mx-auto grid max-w-(--container-max) grid-cols-2 gap-8 pl-(--gutter-l) pr-(--gutter-r) md:grid-cols-4">
         {stats.map((stat) => (
           <Stat key={stat.id} stat={stat} />
         ))}

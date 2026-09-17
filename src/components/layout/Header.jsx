@@ -31,7 +31,7 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface">
-      <div className="mx-auto flex max-w-[1280px] items-center gap-3 px-4 sm:px-6 lg:gap-6">
+      <div className="mx-auto flex max-w-(--container-max) items-center gap-3 pl-(--gutter-l) pr-(--gutter-r) lg:gap-6">
         {/* min-w-0 so the wordmark can truncate instead of forcing the row
             wider than the viewport on a narrow phone. */}
         <Link to="/" className="flex min-w-0 shrink items-center gap-2.5 py-3">
@@ -47,7 +47,13 @@ export function Header() {
               imgClassName="object-contain"
             />
           ) : null}
-          <span className="truncate text-sm font-bold uppercase leading-tight tracking-tight text-brand sm:text-base lg:text-lg">
+          {/*
+            The wordmark holds at 16px until `xl`. Between 1024 and about 1150
+            the nav and the CTA take everything, and at 18px the name truncated
+            to "RAJDHANI FOOD PRO…" — a brand name cut mid-word is worse than a
+            brand name two points smaller.
+          */}
+          <span className="truncate text-sm font-bold uppercase leading-tight tracking-tight text-brand sm:text-base xl:text-lg">
             {site?.name ?? "Rajdhani Food Products"}
           </span>
         </Link>
@@ -104,15 +110,23 @@ export function Header() {
           </ul>
         </nav>
 
-        {/* Persistent CTA. A tel: link rather than a route — the comps show a
-            phone icon, and on a phone this should dial. */}
+        {/*
+          Persistent CTA (§10.5). A tel: link rather than a route — the comps
+          show a phone icon, and on a phone this should dial.
+
+          It drops to the icon alone between 1024 and 1280, where the eight nav
+          links plus a 150px button leave the logo about 227px and the wordmark
+          truncates. The label stays in the accessibility tree at every width —
+          `sr-only` rather than `hidden`, so it is still announced — and the
+          button keeps its 44px target from `w-11`.
+        */}
         {phone ? (
           <a
             href={`tel:${phone.replace(/[^\d+]/g, "")}`}
-            className="hidden h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-md bg-brand px-4 text-sm font-medium text-on-brand transition-colors duration-(--duration-fast) hover:bg-brand-dark lg:flex"
+            className="hidden h-11 w-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-brand text-sm font-medium text-on-brand transition-colors duration-(--duration-fast) hover:bg-brand-dark lg:flex xl:w-auto xl:px-4"
           >
             <Phone size={15} strokeWidth={2} aria-hidden="true" />
-            Get In Touch
+            <span className="sr-only xl:not-sr-only">Get In Touch</span>
           </a>
         ) : null}
 
@@ -120,7 +134,7 @@ export function Header() {
           type="button"
           onClick={() => setDrawerOpen(true)}
           aria-label="Open menu"
-          className="ml-auto grid size-10 shrink-0 place-items-center rounded-md text-ink hover:bg-ground lg:hidden"
+          className="ml-auto grid size-11 shrink-0 place-items-center rounded-md text-ink hover:bg-ground lg:hidden"
         >
           <Menu size={20} strokeWidth={1.75} aria-hidden="true" />
         </button>

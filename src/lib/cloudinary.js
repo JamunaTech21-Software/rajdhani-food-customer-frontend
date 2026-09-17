@@ -79,19 +79,226 @@ export function srcSet(url, widths = DEFAULT_WIDTHS) {
 }
 
 /**
- * A `sizes` value from a layout description.
+ * `sizes` — how wide this image will actually be drawn.
  *
- * `sizes` is how the browser chooses from `srcSet` *before* layout, so a wrong
- * value silently downloads the wrong variant. These are the shapes this site
- * actually uses rather than a general-purpose builder.
+ * `sizes` is how the browser chooses from `srcSet` **before layout happens**, so
+ * it is a promise the CSS has to keep. Get it wrong high and every visitor pays
+ * for pixels they never see; get it wrong low and the image is upscaled and
+ * soft. Neither failure shows up anywhere — no warning, no error, just a slower
+ * or blurrier page.
+ *
+ * The values below are therefore *derived* from the grids they serve rather
+ * than estimated. Two things the old hand-written strings missed, both of which
+ * cost real bandwidth on every page:
+ *
+ *   * **The container caps at 1280.** `25vw` on a 1920 screen asks for 480px to
+ *     fill 293px — 64% over — because a quarter of the viewport stopped being a
+ *     quarter of the content the moment the content stopped growing.
+ *   * **One string cannot serve four grids.** The catalogue is 3-up at 1024 and
+ *     4-up above 1280; related products go straight to 4-up; news is 3-up with a
+ *     wider gap; the gallery is a 2-up masonry on a phone. They had all been
+ *     given the same `sizes`, so at least one was always wrong.
  */
+
+/**
+ * The site container's max width, in pixels — the same number as
+ * `--container-max` in tokens.css, which is what the components read.
+ *
+ * Deliberately not quoting the utility classes here: Tailwind scans this file
+ * and would compile any class named in a comment. See index.css.
+ */
+export const CONTAINER_MAX = 1280;
+
+/** The long-form column: `mx-auto max-w-3xl px-4 sm:px-6`, on the article page. */
+export const ARTICLE_MAX = 768;
+
+/**
+ * The page gutter: 16px a side below 640, 24px at and above it.
+ *
+ * Since Phase R7 the components read `--gutter-l` / `--gutter-r`, which are
+ * `max(that, env(safe-area-inset-*))`. On a notched phone held sideways the
+ * inset wins and the real content is up to 56px narrower than this assumes —
+ * about 9% on a 640px screen, inside G5's tolerance, and in the safe direction
+ * of asking for slightly more image than is drawn.
+ */
+const gutter = (viewport) => (viewport >= 640 ? 48 : 32);
+
+/**
+ * The width one column actually renders at, in CSS pixels.
+ *
+ * Exported because it is the only honest way to check a `sizes` value: the test
+ * computes what the layout does and compares. A `sizes` string asserted against
+ * itself proves nothing.
+ *
+ * A step may carry its own `gap` — the product page tightens from `gap-14` to
+ * `gap-8` at 768, and one number for the whole ramp would be wrong either side
+ * of that.
+ *
+ * @param {Array<{from: number, columns: number, gap?: number}>} ramp ascending by `from`
+ */
+export function renderedWidth(ramp, viewport, { gap = 0, container = CONTAINER_MAX } = {}) {
+  const step = [...ramp].reverse().find((entry) => viewport >= entry.from) ?? ramp[0];
+  const content = Math.min(viewport, container) - gutter(viewport);
+  const between = step.gap ?? gap;
+
+  return (content - between * (step.columns - 1)) / step.columns;
+}
+
+/**
+ * A `sizes` string for one column of a grid inside a capped container.
+ *
+ * Widest condition first, because the browser takes the first match. Above the
+ * container's own max width the answer is a **constant** — the content has
+ * stopped growing, so the column has too, and a `vw` unit there is simply a
+ * lie that gets more expensive the wider the screen.
+ */
+export function gridSizes(ramp, { gap = 0, container = CONTAINER_MAX } = {}) {
+  // The column count changes at the ramp's own breakpoints; the gutter changes
+  // at 640 (`px-4` to `px-6`). Both move the answer, so both are boundaries —
+  // a ramp step that straddles 640 would otherwise be 16px out for half its
+  // range, which is small but is exactly the kind of drift this file exists to
+  // stop accumulating.
+  const boundaries = [...new Set([0, 640, ...ramp.map((step) => step.from)])]
+    .filter((width) => width < container)
+    .sort((a, b) => b - a);
+
+  // Above the container's own max width the answer is a **constant**: the
+  // content has stopped growing, so the column has too, and a `vw` unit there
+  // is a lie that gets more expensive the wider the screen.
+  const conditions = [
+    `(min-width: ${container}px) ${Math.round(renderedWidth(ramp, container, { gap, container }))}px`,
+  ];
+
+  for (const from of boundaries) {
+    const step = [...ramp].reverse().find((entry) => from >= entry.from) ?? ramp[0];
+    const { columns } = step;
+    const deductions = gutter(from) + (step.gap ?? gap) * (columns - 1);
+    const width =
+      columns === 1
+        ? `calc(100vw - ${deductions}px)`
+        : `calc((100vw - ${deductions}px) / ${columns})`;
+
+    conditions.push(from > 0 ? `(min-width: ${from}px) ${width}` : width);
+  }
+
+  return conditions.join(", ");
+}
+
+// ── The grids, as they are actually written in the JSX ────────────────────
+// Each is checked against its own class list by tests/responsive.test.mjs, so a
+// grid that changes ramp without its `sizes` following fails the suite.
+
+/** `ProductsPage` — `grid gap-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4`. */
+const PRODUCT_GRID = [
+  { from: 0, columns: 1 },
+  { from: 640, columns: 2 },
+  { from: 768, columns: 3 },
+  { from: 1280, columns: 4 },
+];
+
+/** `ProductDetailPage` related — `grid gap-5 sm:grid-cols-2 lg:grid-cols-4`. */
+const RELATED_GRID = [
+  { from: 0, columns: 1 },
+  { from: 640, columns: 2 },
+  { from: 1024, columns: 4 },
+];
+
+/** `NewsPage` and `LatestNews` — `grid gap-6 md:grid-cols-2 lg:grid-cols-3`. */
+const NEWS_GRID = [
+  { from: 0, columns: 1 },
+  { from: 768, columns: 2 },
+  { from: 1024, columns: 3 },
+];
+
+/** `GalleryGrid` — `columns-1 gap-4 min-[360px]:columns-2 md:columns-3 xl:columns-4`. */
+const GALLERY_GRID = [
+  { from: 0, columns: 1 },
+  { from: 360, columns: 2 },
+  { from: 768, columns: 3 },
+  { from: 1280, columns: 4 },
+];
+
+/** The half-and-half sections — `grid gap-10 lg:grid-cols-2 lg:gap-14`. */
+const SPLIT_GRID = [
+  { from: 0, columns: 1 },
+  { from: 1024, columns: 2 },
+];
+
+/**
+ * `ProductDetailPage` — `grid gap-10 md:grid-cols-2 md:gap-8 lg:gap-14`.
+ *
+ * Splits a breakpoint earlier than the other half-and-half sections, and with a
+ * tighter gap in between, because a tablet showing a 720px square image above
+ * the price puts the price below the fold on the one page whose job is to show
+ * it.
+ */
+const PRODUCT_MEDIA_GRID = [
+  { from: 0, columns: 1 },
+  { from: 768, columns: 2, gap: 32 },
+  { from: 1024, columns: 2, gap: 56 },
+];
+
+/**
+ * `BulkSupplyCta` — `grid gap-8 md:grid-cols-[1fr_1.2fr]`.
+ *
+ * The image takes the wider track: 1.2 of 2.2, so 0.545 of what is left after
+ * the gap. Not a column count, so it cannot come from `gridSizes` — but it was
+ * being given `SIZES.half`, which promises the *full* width below 1024 and was
+ * therefore 92% over at 768.
+ */
+const BULK_CTA_SIZES = [
+  "(min-width: 1280px) 654px",
+  "(min-width: 768px) calc((100vw - 80px) * 0.545)",
+  "(min-width: 640px) calc(100vw - 48px)",
+  "calc(100vw - 32px)",
+].join(", ");
+
 export const SIZES = {
+  /** Full-bleed: heroes and page banners, which ignore the container. */
   full: "100vw",
-  // Content column capped at 1280px, full-bleed below that.
-  content: "(min-width: 1280px) 1280px, 100vw",
-  // Four-up product grid at desktop, two-up at tablet, one-up on a phone.
-  card: "(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw",
-  // The detail page's main image sits in a half-width column.
-  half: "(min-width: 1024px) 50vw, 100vw",
+
+  /** One column of the site container. */
+  content: gridSizes([{ from: 0, columns: 1 }]),
+
+  /** The article column, which caps at 768 rather than 1280. */
+  article: gridSizes([{ from: 0, columns: 1 }], { container: ARTICLE_MAX }),
+
+  productCard: gridSizes(PRODUCT_GRID, { gap: 20 }),
+  relatedCard: gridSizes(RELATED_GRID, { gap: 20 }),
+  newsCard: gridSizes(NEWS_GRID, { gap: 24 }),
+  galleryTile: gridSizes(GALLERY_GRID, { gap: 16 }),
+
+  /**
+   * `FeaturedProducts` — a horizontal scroll strip of fixed 15rem tracks below
+   * `lg`, then the container's own 4-up grid. The strip overflows deliberately,
+   * so its tracks stay 240px wide however narrow the screen gets; a `vw` unit
+   * there would describe the viewport rather than the card.
+   */
+  carouselCard: "(min-width: 1280px) 293px, (min-width: 1024px) calc((100vw - 108px) / 4), 240px",
+
+  /** Half a split section: the welcome block and the page blocks. */
+  half: gridSizes(SPLIT_GRID, { gap: 56 }),
+
+  /** The product page's main image, which splits a breakpoint earlier. */
+  productMedia: gridSizes(PRODUCT_MEDIA_GRID),
+
+  /** The wider track of the bulk-supply band. */
+  splitWide: BULK_CTA_SIZES,
+
+  /**
+   * The zoomed product image: a square dialog capped at 56rem, and capped
+   * again by the viewport height, which `sizes` has no way to express. The
+   * width condition is the honest half — it was being given `SIZES.content`,
+   * which promises the whole 1232px container.
+   */
+  zoom: "(min-width: 928px) 896px, calc(100vw - 32px)",
+
+  /**
+   * The lightbox image. Not in the container at all — a fixed dialog with
+   * `p-4 sm:p-8` around a `max-w-5xl` (1024px) column.
+   */
+  lightbox: "(min-width: 1088px) 1024px, (min-width: 640px) calc(100vw - 64px), calc(100vw - 32px)",
+
+  /** Logos, gallery strip thumbs and certification marks — none above 48px. */
   thumbnail: "96px",
 };

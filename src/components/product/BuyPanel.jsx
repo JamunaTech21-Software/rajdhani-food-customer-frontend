@@ -41,8 +41,15 @@ export function BuyPanel({ product, pack, onSelectPack, quantity, onQuantity, br
         ) : null}
       </div>
 
+      {/*
+        A ramp that goes back down on purpose. This panel is not inside a
+        container that only grows: it is full width until 768, then *half* of
+        one once the page splits beside the gallery. Four highlights across
+        592px is 148px each; across the 344px panel at 768 it is 86px, which is
+        not enough for an icon over two lines of text.
+      */}
       {product.highlights?.length ? (
-        <ul className="mt-6 grid grid-cols-2 gap-4 border-y border-line py-5 sm:grid-cols-4">
+        <ul className="mt-6 grid grid-cols-2 gap-4 border-y border-line py-5 sm:grid-cols-4 md:grid-cols-2 lg:grid-cols-4">
           {product.highlights.map((highlight) => (
             <li key={highlight.id} className="flex flex-col items-center gap-2 text-center">
               <Icon name={highlight.icon_name} size={22} className="text-brand" />
@@ -124,7 +131,7 @@ export function BuyPanel({ product, pack, onSelectPack, quantity, onQuantity, br
             onClick={() => onQuantity(Math.max(1, quantity - 1))}
             disabled={quantity <= 1}
             aria-label="Decrease quantity"
-            className="grid size-10 place-items-center rounded-md border border-line text-ink disabled:opacity-40"
+            className="grid size-11 place-items-center rounded-md border border-line text-ink disabled:opacity-40"
           >
             <Minus size={15} strokeWidth={2} aria-hidden="true" />
           </button>
@@ -134,13 +141,13 @@ export function BuyPanel({ product, pack, onSelectPack, quantity, onQuantity, br
             min="1"
             value={quantity}
             onChange={(event) => onQuantity(Math.max(1, Number(event.target.value) || 1))}
-            className="h-10 w-16 rounded-md border border-line text-center text-sm text-ink"
+            className="h-11 w-16 rounded-md border border-line text-center text-sm text-ink"
           />
           <button
             type="button"
             onClick={() => onQuantity(quantity + 1)}
             aria-label="Increase quantity"
-            className="grid size-10 place-items-center rounded-md border border-line text-ink"
+            className="grid size-11 place-items-center rounded-md border border-line text-ink"
           >
             <Plus size={15} strokeWidth={2} aria-hidden="true" />
           </button>

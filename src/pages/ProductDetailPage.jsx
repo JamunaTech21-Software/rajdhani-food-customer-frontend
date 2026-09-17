@@ -10,6 +10,7 @@ import { Gallery } from "../components/product/Gallery.jsx";
 import { ProductTabs } from "../components/product/ProductTabs.jsx";
 import { useDownload } from "../hooks/useDownload.js";
 import { publicApi } from "../lib/api.js";
+import { SIZES } from "../lib/cloudinary.js";
 import { DOWNLOAD_KEYS } from "../lib/downloadKeys.js";
 import { breadcrumbFor, defaultPackSize, visibleTabs } from "../lib/productDetail.js";
 
@@ -116,8 +117,8 @@ export function ProductDetailPage() {
 
   if (product.isPending) {
     return (
-      <div role="status" aria-label="Loading product" aria-busy="true" className="mx-auto max-w-[1280px] px-4 py-10 sm:px-6">
-        <div className="grid gap-10 lg:grid-cols-2">
+      <div role="status" aria-label="Loading product" aria-busy="true" className="mx-auto max-w-(--container-max) py-10 pl-(--gutter-l) pr-(--gutter-r)">
+        <div className="grid gap-10 md:grid-cols-2 md:gap-8 lg:gap-14">
           <div className="aspect-square animate-pulse rounded-xl bg-ground" />
           <div className="flex flex-col gap-4">
             <div className="h-10 w-2/3 animate-pulse rounded bg-ground" />
@@ -131,7 +132,7 @@ export function ProductDetailPage() {
 
   if (product.isError || !data) {
     return (
-      <div className="mx-auto max-w-lg px-4 py-24 text-center">
+      <div className="mx-auto max-w-lg py-24 text-center pl-(--gutter-l) pr-(--gutter-r)">
         <h1 className="font-display text-2xl font-bold text-ink">We could not find that product</h1>
         <p className="mt-2 text-ink-muted">
           It may have been renamed or withdrawn from the catalogue.
@@ -150,10 +151,10 @@ export function ProductDetailPage() {
   const relatedItems = related.data?.items ?? [];
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 pb-16 sm:px-6">
+    <div className="mx-auto max-w-(--container-max) pb-16 pl-(--gutter-l) pr-(--gutter-r)">
       <Breadcrumbs trail={breadcrumbFor(data)} />
 
-      <div className="grid gap-10 lg:grid-cols-2 lg:gap-14">
+      <div className="grid gap-10 md:grid-cols-2 md:gap-8 lg:gap-14">
         <Gallery images={data.images} alt={data.name} priority />
 
         <BuyPanel
@@ -192,7 +193,9 @@ export function ProductDetailPage() {
           <ul className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {relatedItems.map((item) => (
               <li key={item.id}>
-                <ProductCard product={item} />
+                {/* Four-up straight from `lg`, where the catalogue goes
+                    three-up first — a different ramp, so a different `sizes`. */}
+                <ProductCard product={item} sizes={SIZES.relatedCard} />
               </li>
             ))}
           </ul>

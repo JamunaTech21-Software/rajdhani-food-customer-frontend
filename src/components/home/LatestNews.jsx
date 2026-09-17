@@ -17,8 +17,8 @@ export function LatestNews({ posts }) {
   if (!posts?.length) return null;
 
   return (
-    <section aria-labelledby="news-heading" className="py-16">
-      <div className="mx-auto max-w-[1280px] px-4 sm:px-6">
+    <section aria-labelledby="news-heading" className="py-(--space-section)">
+      <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">
@@ -46,7 +46,7 @@ export function LatestNews({ posts }) {
                   <CloudinaryImage
                     src={post.cover_image?.url}
                     alt={post.cover_image?.alt ?? ""}
-                    sizes={SIZES.card}
+                    sizes={SIZES.newsCard}
                     className="size-full transition-transform duration-(--duration-slow) group-hover:scale-105"
                   />
                 </div>

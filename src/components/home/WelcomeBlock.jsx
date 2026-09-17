@@ -1,12 +1,11 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { ArrowRight, CircleCheck, Play, X } from "lucide-react";
+import { Play, X } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router";
 
 import { CloudinaryImage } from "../CloudinaryImage.jsx";
+import { PageBlockBody } from "../content/PageBlockSection.jsx";
 import { SIZES } from "../../lib/cloudinary.js";
 import { isDirectVideo, toEmbedUrl } from "../../lib/videoEmbed.js";
-import { isExternal } from "../../lib/nav.js";
 
 /**
  * The `HOME_VIDEO_CARD` promo, opening a video modal (§10.1).
@@ -79,7 +78,13 @@ function PromoCard({ banner }) {
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/70" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed left-1/2 top-1/2 z-50 w-[min(60rem,100vw-2rem)] -translate-x-1/2 -translate-y-1/2"
+          /*
+            Width is limited by the *height* budget as well: a 16:9 box 608px
+            wide is 342px tall, which does not fit a 640×360 phone held
+            sideways. Multiplying the space available vertically by the aspect
+            ratio gives the widest the box can be and still fit.
+          */
+          className="fixed left-1/2 top-1/2 z-50 w-[min(60rem,calc((100dvh-2rem)*16/9))] max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2"
         >
           <Dialog.Title className="sr-only">{banner.title ?? "Video"}</Dialog.Title>
 
@@ -102,7 +107,10 @@ function PromoCard({ banner }) {
 
           <Dialog.Close
             aria-label="Close video"
-            className="absolute -top-12 right-0 grid size-10 place-items-center rounded-full bg-surface text-ink"
+            /* Inside the frame, not floating 48px above it: on a short
+               viewport there is no room above, and the control that closes a
+               dialog is the last one that may be off-screen. */
+            className="absolute right-2 top-2 grid size-11 place-items-center rounded-full bg-ink/70 text-ink-inverse backdrop-blur-sm hover:bg-ink/90"
           >
             <X size={18} strokeWidth={2} aria-hidden="true" />
           </Dialog.Close>
@@ -116,82 +124,20 @@ function PromoCard({ banner }) {
  * The welcome / about teaser (§10.1) — the published `(home, welcome)`
  * `PageBlock`, with its four-item benefit list and the promo card beside it.
  *
- * `body` is rich text the API has **already sanitised** server-side
- * (`RichText::sanitize()`), which is why it is set as HTML here. Sanitising
- * again on the client would be theatre: the server is the authority, and a
- * second pass in the browser protects nothing an attacker could not skip.
+ * The text column is `PageBlockBody`, shared with the About and Quality pages:
+ * all three render the same `PageBlock` payload, and two renderers for one
+ * shape is how the two drift. What stays here is what is particular to the home
+ * page — the promo card that takes the image column when one is scheduled.
  */
 export function WelcomeBlock({ block, promo }) {
   if (!block) return null;
 
   const promoBanner = promo?.[0] ?? null;
-  const bullets = block.bullet_points ?? [];
 
   return (
-    <section aria-labelledby="welcome-heading" className="py-16">
-      <div className="mx-auto grid max-w-[1280px] gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:items-center lg:gap-14">
-        <div>
-          {block.eyebrow ? (
-            <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">
-              {block.eyebrow}
-            </p>
-          ) : null}
-
-          {block.heading ? (
-            <h2 id="welcome-heading" className="mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">
-              {block.heading}
-            </h2>
-          ) : null}
-
-          {block.subheading ? (
-            <p className="mt-3 text-lg text-ink-muted">{block.subheading}</p>
-          ) : null}
-
-          {block.body ? (
-            <div
-              className="mt-4 max-w-prose text-base leading-relaxed text-ink-muted [&_a]:text-brand [&_a]:underline [&_p+p]:mt-3"
-              dangerouslySetInnerHTML={{ __html: block.body }}
-            />
-          ) : null}
-
-          {bullets.length ? (
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
-              {bullets.map((point) => (
-                <li key={point} className="flex items-start gap-2.5 text-sm text-ink">
-                  <CircleCheck
-                    size={18}
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                    className="mt-0.5 shrink-0 text-brand"
-                  />
-                  {point}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {block.cta_label && block.cta_url ? (
-            <div className="mt-8">
-              {isExternal(block.cta_url) ? (
-                <a
-                  href={block.cta_url}
-                  className="inline-flex h-12 items-center gap-2 rounded-md bg-brand px-6 text-sm font-medium text-on-brand hover:bg-brand-dark"
-                >
-                  {block.cta_label}
-                  <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
-                </a>
-              ) : (
-                <Link
-                  to={block.cta_url}
-                  className="inline-flex h-12 items-center gap-2 rounded-md bg-brand px-6 text-sm font-medium text-on-brand transition-colors duration-(--duration-fast) hover:bg-brand-dark"
-                >
-                  {block.cta_label}
-                  <ArrowRight size={16} strokeWidth={2} aria-hidden="true" />
-                </Link>
-              )}
-            </div>
-          ) : null}
-        </div>
+    <section aria-labelledby="welcome-heading" className="py-(--space-section)">
+      <div className="mx-auto grid max-w-(--container-max) gap-10 pl-(--gutter-l) pr-(--gutter-r) lg:grid-cols-2 lg:items-center lg:gap-14">
+        <PageBlockBody block={block} headingId="welcome-heading" />
 
         {promoBanner ? (
           <PromoCard banner={promoBanner} />

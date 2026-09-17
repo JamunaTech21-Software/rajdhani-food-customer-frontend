@@ -9,16 +9,17 @@ import { captionFor, ratioFor } from "../../lib/gallery.js";
  * to flow into balanced columns, and a column layout does that natively at every
  * width with no measuring and no resize listener.
  *
- * **Each tile reserves its height before its image loads.** The payload has no
- * dimensions, so the ratio comes from `ratioFor(index)` — deterministic, so the
- * layout is identical on every render. That is what satisfies "lazy-load without
- * layout shift": the boxes are laid out first and the images drop into them.
+ * **Each tile reserves its height before its image loads.** `ratioFor` uses the
+ * payload's real `width`/`height` where they exist and a deterministic fallback
+ * where they do not, so there is always a reserved box. That is what satisfies
+ * "lazy-load without layout shift": the boxes are laid out first and the images
+ * drop into them.
  */
 export function GalleryGrid({ images, onOpen }) {
   if (!images?.length) return null;
 
   return (
-    <ul className="columns-2 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 [&>li]:mb-4">
+    <ul className="columns-1 gap-4 min-[360px]:columns-2 md:columns-3 xl:columns-4 [&>li]:mb-4">
       {images.map((image, index) => {
         const caption = captionFor(image);
 
@@ -37,8 +38,10 @@ export function GalleryGrid({ images, onOpen }) {
               <CloudinaryImage
                 src={image.image?.url}
                 alt={image.image?.alt ?? ""}
-                aspectRatio={ratioFor(index)}
-                sizes={SIZES.card}
+                aspectRatio={ratioFor(index, image)}
+                width={image.image?.width}
+                height={image.image?.height}
+                sizes={SIZES.galleryTile}
                 // The first few are above the fold on a wide screen; the rest
                 // stay lazy, which is the other half of criterion two.
                 priority={index < 4}

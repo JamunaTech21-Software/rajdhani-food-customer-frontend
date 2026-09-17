@@ -31,7 +31,7 @@ export function MobileDrawer({ open, onOpenChange, links, categories, phone }) {
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/40 lg:hidden" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-y-0 right-0 z-50 flex w-[min(20rem,85vw)] flex-col bg-surface shadow-modal lg:hidden"
+          className="fixed inset-y-0 right-0 z-50 flex w-80 max-w-[85%] flex-col bg-surface pr-(--gutter-r) pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] shadow-modal lg:hidden"
         >
           <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <Dialog.Title className="text-sm font-semibold uppercase tracking-wide text-ink-muted">
@@ -39,7 +39,7 @@ export function MobileDrawer({ open, onOpenChange, links, categories, phone }) {
             </Dialog.Title>
             <Dialog.Close
               aria-label="Close menu"
-              className="grid size-9 place-items-center rounded-md text-ink-subtle hover:bg-ground hover:text-ink"
+              className="grid size-11 place-items-center rounded-md text-ink-subtle hover:bg-ground hover:text-ink"
             >
               <X size={18} strokeWidth={1.75} aria-hidden="true" />
             </Dialog.Close>
@@ -86,12 +86,18 @@ export function MobileDrawer({ open, onOpenChange, links, categories, phone }) {
                 <p className="mt-4 px-3 text-eyebrow uppercase tracking-wide text-ink-subtle">
                   Shop by category
                 </p>
+                {/*
+                  `py-3` on the category rows, not `py-2`: at 20px of line box
+                  that was a 36px target, on the one surface that is only ever
+                  used with a thumb. The pitch grows by 8px a row, which the
+                  drawer already scrolls for.
+                */}
                 <ul className="mt-1">
                   <li>
                     <Link
                       to={ALL_PRODUCTS.url}
                       onClick={close}
-                      className="block rounded-md px-3 py-2 text-sm font-medium text-ink hover:bg-ground"
+                      className="block rounded-md px-3 py-3 text-sm font-medium text-ink hover:bg-ground"
                     >
                       {ALL_PRODUCTS.label}
                     </Link>
@@ -101,7 +107,7 @@ export function MobileDrawer({ open, onOpenChange, links, categories, phone }) {
                       <Link
                         to={item.url}
                         onClick={close}
-                        className="flex items-center gap-2.5 rounded-md px-3 py-2 text-sm text-ink hover:bg-ground"
+                        className="flex items-center gap-2.5 rounded-md px-3 py-3 text-sm text-ink hover:bg-ground"
                       >
                         <Icon name={item.iconName} size={16} className="text-brand" />
                         <span className="min-w-0 flex-1 truncate">{item.label}</span>

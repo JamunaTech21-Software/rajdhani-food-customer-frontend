@@ -60,9 +60,12 @@ test("moving between images is announced, not only shown", () => {
 // ── Criterion 2: lazy-load without layout shift ───────────────────────────
 
 test("every tile reserves its height before the image loads", () => {
-  // The payload has no dimensions, so nothing can be measured up front. Without
-  // a reserved box, every tile below reflows as images arrive.
-  assert.match(grid, /aspectRatio=\{ratioFor\(index\)\}/);
+  // Without a reserved box, every tile below reflows as images arrive. The
+  // ratio now comes from the payload's real width/height where present, with a
+  // deterministic fallback where it is not — so there is always one.
+  assert.match(grid, /aspectRatio=\{ratioFor\(index, image\)\}/);
+  assert.match(grid, /width=\{image\.image\?\.width\}/, "and the intrinsic size is passed through");
+  assert.match(grid, /height=\{image\.image\?\.height\}/);
 });
 
 test("only the first few tiles load eagerly", () => {
@@ -73,7 +76,9 @@ test("the loading skeleton reserves the same shape as the grid", () => {
   // A skeleton of a different shape is itself a layout shift when it is
   // replaced by the real thing.
   assert.match(page, /aspectRatio: i % 2 \? "3 \/ 4" : "1 \/ 1"/);
-  assert.match(page, /columns-2 gap-4 lg:columns-3 xl:columns-4/);
+  // Three columns from `md` since the responsive Phase R2: a tablet was
+  // showing the same two 352px tiles as a 640px phone.
+  assert.ok(page.includes("columns-1 gap-4 min-[360px]:columns-2 md:columns-3 xl:columns-4"));
 });
 
 test("tiles are not sliced across column breaks", () => {

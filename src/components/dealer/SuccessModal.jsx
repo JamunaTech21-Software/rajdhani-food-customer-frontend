@@ -26,7 +26,7 @@ export function DealerSuccessModal({ result, onOpenChange, brochure }) {
     <Dialog.Root open onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/60" />
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 w-[min(32rem,100vw-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-xl bg-surface shadow-modal">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[32rem] max-w-[calc(100%-2rem)] overflow-y-auto -translate-x-1/2 -translate-y-1/2 overflow-x-hidden rounded-xl bg-surface shadow-modal">
           <div className="px-6 py-8 text-center">
             <span className="mx-auto grid size-16 place-items-center rounded-full bg-success-tint text-success">
               <CircleCheck size={32} strokeWidth={1.75} aria-hidden="true" />

@@ -31,9 +31,18 @@ function Field({ label, error, required, hint, children }) {
   );
 }
 
+/**
+ * `scroll-mt-6` is for the on-screen keyboard.
+ *
+ * This dialog scrolls inside itself, and a browser brings a focused field into
+ * view by scrolling it to the very edge of its nearest scroll container. On a
+ * phone that puts the field flush against the top of the dialog, with its label
+ * cut off above — you can see what you are typing but not what you are typing
+ * *into*. The scroll margin reserves the label's own height.
+ */
 const inputClass = (invalid) =>
   cn(
-    "h-11 rounded-md border bg-surface px-3 text-sm text-ink",
+    "h-11 scroll-mt-6 rounded-md border bg-surface px-3 text-sm text-ink",
     invalid ? "border-danger" : "border-line",
   );
 
@@ -112,7 +121,7 @@ export function EnquiryModal({ open, onOpenChange, product, pack, quantity, cust
         <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/50" />
         {/* Radix handles the three focus requirements: trapped while open,
             Escape closes, and focus returns to the trigger on close. */}
-        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[92dvh] w-[min(38rem,100vw-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl bg-surface shadow-modal">
+        <Dialog.Content className="fixed left-1/2 top-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[38rem] max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-xl bg-surface shadow-modal">
           <div className="flex items-start justify-between gap-4 border-b border-line p-5">
             <div>
               <Dialog.Title className="font-display text-lg font-semibold text-ink">
@@ -126,7 +135,7 @@ export function EnquiryModal({ open, onOpenChange, product, pack, quantity, cust
             </div>
             <Dialog.Close
               aria-label="Close"
-              className="grid size-9 shrink-0 place-items-center rounded-md text-ink-subtle hover:bg-ground hover:text-ink"
+              className="grid size-11 shrink-0 place-items-center rounded-md text-ink-subtle hover:bg-ground hover:text-ink"
             >
               <X size={18} strokeWidth={1.75} aria-hidden="true" />
             </Dialog.Close>
@@ -218,7 +227,7 @@ export function EnquiryModal({ open, onOpenChange, product, pack, quantity, cust
                 <textarea
                   rows={4}
                   className={cn(
-                    "rounded-md border bg-surface px-3 py-2.5 text-sm text-ink",
+                    "scroll-mt-6 rounded-md border bg-surface px-3 py-2.5 text-sm text-ink",
                     errors.message ? "border-danger" : "border-line",
                   )}
                   {...register("message")}

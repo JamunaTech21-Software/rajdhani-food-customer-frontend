@@ -9,15 +9,19 @@ import { Icon } from "../components/ui/Icon.jsx";
 import { cn } from "../lib/cn.js";
 import { galleryTabs } from "../lib/gallery.js";
 import { publicApi } from "../lib/api.js";
+import { useScrollEdges } from "../hooks/useScrollEdges.js";
 
 const PAGE_SIZE = 24;
 
 function Tabs({ tabs, active, onSelect }) {
+  const [stripRef, stripProps] = useScrollEdges();
   return (
-    <div className="sticky top-16 z-30 -mx-4 border-b border-line bg-surface/95 px-4 backdrop-blur-sm sm:-mx-6 sm:px-6">
+    <div className="sticky top-16 z-30 -ml-(--gutter-l) -mr-(--gutter-r) border-b border-line bg-surface/95 pl-(--gutter-l) pr-(--gutter-r) backdrop-blur-sm">
       <ul
+        ref={stripRef}
+        {...stripProps}
         aria-label="Filter by category"
-        className="flex gap-1 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="scroll-fade flex gap-1 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((tab) => {
           const selected = active === tab.slug;
@@ -85,7 +89,7 @@ export function GalleryPage() {
   const category = (categories.data?.items ?? []).find((c) => c.slug === slug) ?? null;
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 pb-16 sm:px-6">
+    <div className="mx-auto max-w-(--container-max) pb-16 pl-(--gutter-l) pr-(--gutter-r)">
       <header className="py-10">
         {/* A category page gets its own breadcrumb; the index does not need one. */}
         {category ? (
@@ -132,7 +136,7 @@ export function GalleryPage() {
 
       <div className="py-8">
         {images.isError ? (
-          <div role="alert" className="rounded-xl border border-line p-10 text-center">
+          <div role="alert" className="rounded-xl border border-line p-6 text-center sm:p-10">
             <p className="font-display text-xl font-semibold text-ink">
               We could not load the gallery
             </p>
@@ -145,7 +149,7 @@ export function GalleryPage() {
             </button>
           </div>
         ) : images.isPending ? (
-          <div role="status" aria-label="Loading the gallery" aria-busy="true" className="columns-2 gap-4 lg:columns-3 xl:columns-4 [&>div]:mb-4">
+          <div role="status" aria-label="Loading the gallery" aria-busy="true" className="columns-1 gap-4 min-[360px]:columns-2 md:columns-3 xl:columns-4 [&>div]:mb-4">
             {Array.from({ length: 8 }, (_, i) => (
               <div key={i} className="break-inside-avoid">
                 <div className="animate-pulse rounded-lg bg-ground" style={{ aspectRatio: i % 2 ? "3 / 4" : "1 / 1" }} />
@@ -153,7 +157,7 @@ export function GalleryPage() {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div className="rounded-xl border border-line p-10 text-center">
+          <div className="rounded-xl border border-line p-6 text-center sm:p-10">
             <p className="font-display text-xl font-semibold text-ink">Nothing here yet</p>
             <p className="mt-2 text-ink-muted">
               {category
