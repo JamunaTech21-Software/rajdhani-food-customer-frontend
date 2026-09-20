@@ -8,11 +8,20 @@ import { BuyPanel } from "../components/product/BuyPanel.jsx";
 import { EnquiryModal } from "../components/product/EnquiryModal.jsx";
 import { Gallery } from "../components/product/Gallery.jsx";
 import { ProductTabs } from "../components/product/ProductTabs.jsx";
+import { ReviewsPanel } from "../components/product/ReviewsPanel.jsx";
+import { JsonLd } from "../components/seo/Seo.jsx";
+import { PageState } from "../components/state/StatePanel.jsx";
+import { SITE_URL } from "../config.js";
 import { useDownload } from "../hooks/useDownload.js";
+import { useSeo } from "../hooks/useSeo.js";
 import { publicApi } from "../lib/api.js";
+import { ACTION_CLASS, ACTION_QUIET_CLASS } from "../lib/buttons.js";
 import { SIZES } from "../lib/cloudinary.js";
 import { DOWNLOAD_KEYS } from "../lib/downloadKeys.js";
+import { failureKind } from "../lib/loadState.js";
 import { breadcrumbFor, defaultPackSize, visibleTabs } from "../lib/productDetail.js";
+import { breadcrumbJsonLd, productJsonLd } from "../lib/seo.js";
+import { useSiteStore } from "../stores/siteStore.js";
 
 function Breadcrumbs({ trail }) {
   return (
@@ -39,26 +48,6 @@ function Breadcrumbs({ trail }) {
         ))}
       </ol>
     </nav>
-  );
-}
-
-function ReviewsPanel({ product }) {
-  // The full reviews experience — distribution, list and submission — is
-  // RTPP-70. This is the honest placeholder until then, rather than a tab that
-  // opens onto nothing.
-  if ((product.rating_count ?? 0) > 0) {
-    return (
-      <p className="text-ink-muted">
-        {product.rating_count} {product.rating_count === 1 ? "review" : "reviews"}, averaging{" "}
-        {Number(product.rating_average).toFixed(1)} out of 5.
-      </p>
-    );
-  }
-
-  return (
-    <p className="text-ink-muted">
-      No reviews yet. Be the first to tell others what you think of this tea.
-    </p>
   );
 }
 
@@ -96,6 +85,20 @@ export function ProductDetailPage() {
   const brochure = useDownload(DOWNLOAD_KEYS.productBrochure);
 
   const data = product.data;
+  const siteName = useSiteStore((s) => s.site?.name);
+
+  // Above the two early returns, so the loading and not-found states do not sit
+  // under the previous product's title. `meta_title` is the admin's override
+  // and is null for every product today — the name is what actually ships.
+  useSeo({
+    title: data?.meta_title || data?.name,
+    description: data?.meta_description || data?.short_description,
+    image: data?.image?.url,
+    // A `meta_title` an editor wrote is used exactly as written — they will
+    // have included the brand if they wanted it, and appending it again gives
+    // "Premium Green Tea | Rajdhani — Rajdhani Food Products".
+    absoluteTitle: Boolean(data?.meta_title),
+  });
 
   if (data && seededFor !== data.id) {
     setSeededFor(data.id);
@@ -131,28 +134,48 @@ export function ProductDetailPage() {
   }
 
   if (product.isError || !data) {
+    // A 404 and an outage are different sentences. "It may have been withdrawn
+    // from the catalogue" told during a five-minute outage is a claim about the
+    // product that is simply untrue — and it offers no retry, because for a
+    // genuine 404 there is nothing to retry.
+    const gone = failureKind(product.error) === "notFound" || (!product.isError && !data);
+
     return (
-      <div className="mx-auto max-w-lg py-24 text-center pl-(--gutter-l) pr-(--gutter-r)">
-        <h1 className="font-display text-2xl font-bold text-ink">We could not find that product</h1>
-        <p className="mt-2 text-ink-muted">
-          It may have been renamed or withdrawn from the catalogue.
-        </p>
-        <Link
-          to="/products"
-          className="mt-6 inline-flex h-11 items-center rounded-md bg-brand px-5 text-sm font-medium text-on-brand"
-        >
-          Browse all products
-        </Link>
-      </div>
+      <PageState
+        title={gone ? "We could not find that product" : "We could not load that product"}
+        action={
+          <>
+            {gone ? null : (
+              <button type="button" onClick={() => product.refetch()} className={ACTION_CLASS}>
+                Try again
+              </button>
+            )}
+            <Link to="/products" className={gone ? ACTION_CLASS : ACTION_QUIET_CLASS}>
+              Browse all products
+            </Link>
+          </>
+        }
+      >
+        {gone
+          ? "It may have been renamed or withdrawn from the catalogue."
+          : "Something went wrong at our end. The rest of the catalogue is still available."}
+      </PageState>
     );
   }
 
   const tabs = visibleTabs(data, { reviewCount: data.rating_count });
   const relatedItems = related.data?.items ?? [];
+  const trail = breadcrumbFor(data);
 
   return (
     <div className="mx-auto max-w-(--container-max) pb-16 pl-(--gutter-l) pr-(--gutter-r)">
-      <Breadcrumbs trail={breadcrumbFor(data)} />
+      {/* The same trail the page draws, so the two cannot disagree — a crumb
+          reading "Classic Black" where the URL segment is a slug is the point
+          of emitting names at all. */}
+      <JsonLd id="product" data={productJsonLd(data, { siteUrl: SITE_URL, siteName })} />
+      <JsonLd id="breadcrumb" data={breadcrumbJsonLd(trail, { siteUrl: SITE_URL })} />
+
+      <Breadcrumbs trail={trail} />
 
       <div className="grid gap-10 md:grid-cols-2 md:gap-8 lg:gap-14">
         <Gallery images={data.images} alt={data.name} priority />

@@ -2,8 +2,11 @@ import { Link } from "react-router";
 
 import { RichText } from "../components/content/RichText.jsx";
 import { PageHero } from "../components/layout/PageHero.jsx";
+import { ErrorState } from "../components/state/StatePanel.jsx";
+import { useSeo } from "../hooks/useSeo.js";
 import { blocksOf, usePageBlocks } from "../hooks/usePageContent.js";
 import { legalDocument, showContents } from "../lib/pageContent.js";
+import { PAGE_META } from "../lib/seo.js";
 
 /**
  * The contents list.
@@ -57,6 +60,8 @@ export function LegalPage({ pageKey, title }) {
   const blocks = usePageBlocks(pageKey);
   const { html, headings } = legalDocument(blocksOf(blocks));
 
+  useSeo({ title, description: PAGE_META[pageKey]?.description });
+
   return (
     <>
       <PageHero title={title} breadcrumb={title} />
@@ -69,6 +74,16 @@ export function LegalPage({ pageKey, title }) {
               <div key={i} className="h-3.5 w-full animate-pulse rounded bg-ground" />
             ))}
           </div>
+        ) : blocks.isError ? (
+          // Before the "not published yet" branch below, and the reason this
+          // distinction is worth the extra case: during an outage that message
+          // would tell a visitor the company has no privacy policy, which is a
+          // very different statement from "we could not fetch it".
+          <ErrorState
+            error={blocks.error}
+            title={`We could not load our ${title.toLowerCase()}`}
+            onRetry={() => blocks.refetch()}
+          />
         ) : html ? (
           <>
             {showContents(headings) ? (

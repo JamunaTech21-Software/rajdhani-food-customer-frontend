@@ -69,7 +69,14 @@ test("an unset or unparseable API base URL leaves connect-src without one", () =
   assert.equal(originOf("localhost:8000"), null);
 
   const d = directives({ apiOrigin: null });
-  assert.deepEqual(d["connect-src"], ["'self'", "https://www.google.com", "https://www.gstatic.com"]);
+  assert.deepEqual(d["connect-src"], [
+    "'self'",
+    "https://www.google.com",
+    "https://www.gstatic.com",
+    "https://accounts.google.com",
+    // Tag Manager beacons back to the same origin it loads from (RTPP-71).
+    "https://www.googletagmanager.com",
+  ]);
 });
 
 test("a tunnel origin is carried through, because development uses one", () => {

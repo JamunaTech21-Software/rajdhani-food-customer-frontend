@@ -17,3 +17,34 @@ export const SITE_URL =
  * token while its own secret is unconfigured, so the forms must not gate on one.
  */
 export const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? null;
+
+/**
+ * Google Identity Services **client** ID — publishable by design (§7.1), and it
+ * has to be: the browser is what mints the ID token the API then verifies
+ * against Google's public keys.
+ *
+ * Unset today. Sign-in is hidden rather than broken when it is missing, the
+ * same arrangement as the reCAPTCHA key: a button that opens a Google dialog
+ * saying "invalid client" is worse than no button.
+ */
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? null;
+
+/**
+ * Google Tag Manager container ID (§14.3).
+ *
+ * Unset today, and nothing loads without it — see `lib/gtm.js` for why that is
+ * deliberate rather than a gap. The API also holds one as a setting, but does
+ * not expose it publicly, so this is the value that can be read.
+ */
+export const GTM_ID = import.meta.env.VITE_GTM_ID ?? null;
+
+/**
+ * Whether this is a development build (§10.5).
+ *
+ * Vite defines `DEV` itself, so unlike everything above there is no variable to
+ * set — but it belongs here anyway, because `config.js` is the only module
+ * allowed to read `import.meta.env` and a lint rule enforces that. The error
+ * page uses it to decide whether showing a raw error message helps a developer
+ * or leaks internals to a visitor.
+ */
+export const IS_DEV = import.meta.env.DEV === true;

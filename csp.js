@@ -28,6 +28,29 @@
 
 const GOOGLE_MAPS = ["https://www.google.com", "https://maps.google.com"];
 const GOOGLE_RECAPTCHA = ["https://www.google.com", "https://www.gstatic.com"];
+
+/**
+ * Google Identity Services (§7.1, RTPP-68).
+ *
+ * The library is served from `accounts.google.com`, it renders its button in an
+ * iframe from the same origin, and it talks to `accounts.google.com` directly.
+ * Miss any one and sign-in fails with nothing on the page to say why — the
+ * script 404s, or the button renders as a blank box.
+ */
+const GOOGLE_IDENTITY = ["https://accounts.google.com"];
+
+/**
+ * Google Tag Manager (§14.3, RTPP-71).
+ *
+ * The container itself is one script; the tags an editor adds inside it load
+ * from wherever those vendors live, and each will need its own entry here when
+ * one is added. That is a feature of a CSP, not a shortcoming: a tag manager is
+ * a licence to inject arbitrary scripts, and this is the list that says which.
+ */
+const GOOGLE_TAG_MANAGER = ["https://www.googletagmanager.com"];
+
+/** Profile pictures come from Google's own CDN, not from Cloudinary. */
+const GOOGLE_AVATARS = ["https://lh3.googleusercontent.com"];
 const CLOUDINARY = "https://res.cloudinary.com";
 
 // The seed catalogue still points at placehold.co. It goes when the seeds do —
@@ -53,13 +76,13 @@ export function cspDirectives({ apiOrigin } = {}) {
     // inline styles as far as CSP is concerned.
     "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
     "font-src": ["'self'", "https://fonts.gstatic.com"],
-    "img-src": unique(["'self'", "data:", "blob:", CLOUDINARY, PLACEHOLDER_IMAGES]),
+    "img-src": unique(["'self'", "data:", "blob:", CLOUDINARY, PLACEHOLDER_IMAGES, ...GOOGLE_AVATARS]),
     "media-src": unique(["'self'", CLOUDINARY]),
-    "script-src": unique(["'self'", ...GOOGLE_RECAPTCHA]),
-    "connect-src": unique(["'self'", apiOrigin, ...GOOGLE_RECAPTCHA]),
+    "script-src": unique(["'self'", ...GOOGLE_RECAPTCHA, ...GOOGLE_IDENTITY, ...GOOGLE_TAG_MANAGER]),
+    "connect-src": unique(["'self'", apiOrigin, ...GOOGLE_RECAPTCHA, ...GOOGLE_IDENTITY, ...GOOGLE_TAG_MANAGER]),
     // The contact page's map, the banner video modal, and reCAPTCHA's own
     // challenge frame. Without the first two entries both render an empty box.
-    "frame-src": unique([...GOOGLE_MAPS, "https://www.youtube-nocookie.com"]),
+    "frame-src": unique([...GOOGLE_MAPS, "https://www.youtube-nocookie.com", ...GOOGLE_IDENTITY]),
   };
 }
 

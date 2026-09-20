@@ -4,32 +4,18 @@ import { Link, useParams } from "react-router";
 
 import { CloudinaryImage } from "../components/CloudinaryImage.jsx";
 import { RichText } from "../components/content/RichText.jsx";
+import { JsonLd } from "../components/seo/Seo.jsx";
+import { PageState } from "../components/state/StatePanel.jsx";
 import { SITE_URL } from "../config.js";
+import { useSeo } from "../hooks/useSeo.js";
 import { publicApi } from "../lib/api.js";
+import { ACTION_CLASS, ACTION_QUIET_CLASS } from "../lib/buttons.js";
 import { SIZES } from "../lib/cloudinary.js";
+import { failureKind } from "../lib/loadState.js";
 import { formatDate, toDateTimeAttribute } from "../lib/format.js";
-import { articleJsonLd, breadcrumbJsonLd } from "../lib/newsJsonLd.js";
+import { articleJsonLd } from "../lib/newsJsonLd.js";
+import { breadcrumbJsonLd } from "../lib/seo.js";
 import { useSiteStore } from "../stores/siteStore.js";
-
-/**
- * Structured data, emitted as a script tag.
- *
- * `dangerouslySetInnerHTML` is the only way to put raw JSON inside a script
- * element — React escapes text children, which would produce `&quot;` and an
- * unparseable block. The content is our own serialised object, not user input.
- * `<` is escaped anyway, since a `</script>` inside a string would close the
- * tag early and break the page.
- */
-function JsonLd({ data }) {
-  if (!data) return null;
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
-    />
-  );
-}
 
 function Neighbour({ post, direction }) {
   // `previous` is the *older* post and `next` the *newer* one — the API's own
@@ -82,6 +68,15 @@ export function NewsArticlePage() {
 
   const post = query.data;
 
+  // Above the early returns: an article opened from a shared link spends its
+  // first moments in the skeleton below, and that is exactly when a crawler is
+  // reading the head.
+  useSeo({
+    title: post?.title,
+    description: post?.excerpt,
+    image: post?.cover_image?.url,
+  });
+
   if (query.isPending) {
     return (
       <div role="status" aria-label="Loading article" aria-busy="true" className="mx-auto max-w-3xl py-12 pl-(--gutter-l) pr-(--gutter-r)">
@@ -93,17 +88,31 @@ export function NewsArticlePage() {
   }
 
   if (query.isError || !post) {
+    // "Unpublished or renamed" is a claim about the article. During an outage
+    // it is the wrong claim, and it leaves a reader who followed a shared link
+    // believing the piece was taken down.
+    const gone = failureKind(query.error) === "notFound" || (!query.isError && !post);
+
     return (
-      <div className="mx-auto max-w-lg py-24 text-center pl-(--gutter-l) pr-(--gutter-r)">
-        <h1 className="font-display text-2xl font-bold text-ink">We could not find that article</h1>
-        <p className="mt-2 text-ink-muted">It may have been unpublished or renamed.</p>
-        <Link
-          to="/news"
-          className="mt-6 inline-flex h-11 items-center rounded-md bg-brand px-5 text-sm font-medium text-on-brand"
-        >
-          All news
-        </Link>
-      </div>
+      <PageState
+        title={gone ? "We could not find that article" : "We could not load that article"}
+        action={
+          <>
+            {gone ? null : (
+              <button type="button" onClick={() => query.refetch()} className={ACTION_CLASS}>
+                Try again
+              </button>
+            )}
+            <Link to="/news" className={gone ? ACTION_CLASS : ACTION_QUIET_CLASS}>
+              All news
+            </Link>
+          </>
+        }
+      >
+        {gone
+          ? "It may have been unpublished or renamed."
+          : "Something went wrong at our end. The rest of the site is still available."}
+      </PageState>
     );
   }
 
@@ -111,8 +120,18 @@ export function NewsArticlePage() {
 
   return (
     <article className="mx-auto max-w-3xl pb-16 pl-(--gutter-l) pr-(--gutter-r)">
-      <JsonLd data={articleJsonLd(post, context)} />
-      <JsonLd data={breadcrumbJsonLd(post, context)} />
+      <JsonLd id="article" data={articleJsonLd(post, context)} />
+      <JsonLd
+        id="breadcrumb"
+        data={breadcrumbJsonLd(
+          [
+            { label: "Home", to: "/" },
+            { label: "News", to: "/news" },
+            { label: post.title, to: `/news/${post.slug}` },
+          ],
+          { siteUrl: SITE_URL },
+        )}
+      />
 
       <nav aria-label="Breadcrumb" className="py-5">
         <ol className="flex flex-wrap items-center gap-1.5 text-sm text-ink-muted">

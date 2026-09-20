@@ -7,6 +7,7 @@ import { ProcessTimeline } from "../components/content/ProcessTimeline.jsx";
 import { SectionHeading } from "../components/content/SectionHeading.jsx";
 import { PageBlockBody, PageBlockSection } from "../components/content/PageBlockSection.jsx";
 import { PageHero } from "../components/layout/PageHero.jsx";
+import { PageSections } from "../components/state/PageSections.jsx";
 import {
   blocksOf,
   itemsOf,
@@ -15,8 +16,11 @@ import {
   usePageBlocks,
   useProcessSteps,
 } from "../hooks/usePageContent.js";
+import { useSeo } from "../hooks/useSeo.js";
 import { publicApi } from "../lib/api.js";
+import { combineState, retryFailed } from "../lib/loadState.js";
 import { blockFor, bulletsOf, PAGE_KEYS } from "../lib/pageContent.js";
+import { PAGE_META } from "../lib/seo.js";
 
 /**
  * The closing assurance panel — a block whose bullet list is the checklist
@@ -79,6 +83,8 @@ export function QualityPage() {
     staleTime: 5 * 60_000,
   });
 
+  useSeo(PAGE_META.quality);
+
   const blocks = usePageBlocks(PAGE_KEYS.quality);
   const certifications = useCertifications();
   const commitments = useFeatureItems("QUALITY_COMMITMENT");
@@ -86,39 +92,60 @@ export function QualityPage() {
 
   const all = blocksOf(blocks);
 
+  // The hero is not counted: it has a hardcoded title and renders with or
+  // without its banner, so a failed banner is not a failed page.
+  const content = [blocks, certifications, commitments, process];
+  const state = combineState(content, {
+    hasContent: Boolean(
+      all.length ||
+        itemsOf(commitments).length ||
+        itemsOf(process).length ||
+        certifications.data?.items?.length,
+    ),
+  });
+
   return (
     <>
       <PageHero banner={hero.data?.items?.[0]} title="Quality" breadcrumb="Quality" />
 
-      {/* The six commitment cards sit beside the block's text, where a block
-          would otherwise put its image. Absent, the block keeps its own. */}
-      <PageBlockSection block={blockFor(all, "commitment")} id="commitment">
-        {itemsOf(commitments).length ? <FeatureGrid items={itemsOf(commitments)} /> : undefined}
-      </PageBlockSection>
+      <PageSections
+        state={state}
+        error={blocks.error}
+        onRetry={() => retryFailed(content)}
+        emptyTitle="This page is being prepared"
+        emptyBody="Our quality standards and certifications will be published here shortly."
+      >
 
-      {itemsOf(process).length ? (
-        <section aria-labelledby="quality-process-heading" className="bg-ground py-(--space-section)">
-          <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
-            <SectionHeading
-              block={blockFor(all, "process")}
-              id="quality-process-heading"
-              heading="Our Quality Process"
-              subheading="Every step is carefully monitored to ensure the highest quality in every cup."
-            />
+        {/* The six commitment cards sit beside the block's text, where a block
+            would otherwise put its image. Absent, the block keeps its own. */}
+        <PageBlockSection block={blockFor(all, "commitment")} id="commitment">
+          {itemsOf(commitments).length ? <FeatureGrid items={itemsOf(commitments)} /> : undefined}
+        </PageBlockSection>
 
-            <ProcessTimeline steps={itemsOf(process)} className="mt-12" />
-          </div>
-        </section>
-      ) : null}
+        {itemsOf(process).length ? (
+          <section aria-labelledby="quality-process-heading" className="bg-ground py-(--space-section)">
+            <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
+              <SectionHeading
+                block={blockFor(all, "process")}
+                id="quality-process-heading"
+                heading="Our Quality Process"
+                subheading="Every step is carefully monitored to ensure the highest quality in every cup."
+              />
 
-      <Certifications
-        items={certifications.data?.items}
-        block={blockFor(all, "certifications")}
-        heading="Certifications & Standards"
-        subheading="We comply with international standards to ensure the best quality and safety."
-      />
+              <ProcessTimeline steps={itemsOf(process)} className="mt-12" />
+            </div>
+          </section>
+        ) : null}
 
-      <AssurancePanel block={blockFor(all, "assurance")} />
+        <Certifications
+          items={certifications.data?.items}
+          block={blockFor(all, "certifications")}
+          heading="Certifications & Standards"
+          subheading="We comply with international standards to ensure the best quality and safety."
+        />
+
+        <AssurancePanel block={blockFor(all, "assurance")} />
+      </PageSections>
     </>
   );
 }

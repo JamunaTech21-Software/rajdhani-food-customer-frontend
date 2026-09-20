@@ -62,25 +62,3 @@ export function articleJsonLd(post, { siteUrl, siteName, logoUrl } = {}) {
   // the emitted JSON readable when someone inspects the page.
   return Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
 }
-
-/** A breadcrumb trail, which is the other structured data a crawler uses here. */
-export function breadcrumbJsonLd(post, { siteUrl } = {}) {
-  if (!post?.slug || !post?.title || !siteUrl) return null;
-
-  const crumbs = [
-    { name: "Home", item: siteUrl },
-    { name: "News", item: `${siteUrl}/news` },
-    { name: post.title, item: `${siteUrl}/news/${post.slug}` },
-  ];
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: crumbs.map((crumb, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      name: crumb.name,
-      item: crumb.item,
-    })),
-  };
-}

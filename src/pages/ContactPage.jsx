@@ -4,8 +4,10 @@ import { ContactDetails } from "../components/contact/ContactDetails.jsx";
 import { ContactForm } from "../components/contact/ContactForm.jsx";
 import { ContactMap } from "../components/contact/ContactMap.jsx";
 import { PageHero } from "../components/layout/PageHero.jsx";
+import { useSeo } from "../hooks/useSeo.js";
 import { publicApi } from "../lib/api.js";
 import { mapLocation } from "../lib/contact.js";
+import { PAGE_META } from "../lib/seo.js";
 import { useSiteStore } from "../stores/siteStore.js";
 
 /**
@@ -33,6 +35,8 @@ export function ContactPage() {
     queryFn: () => publicApi.list("/public/banners", { params: { placement: "CONTACT_HERO" } }),
     staleTime: 5 * 60_000,
   });
+
+  useSeo(PAGE_META.contact);
 
   const contact = site?.contact;
   const address = [contact?.address_line, contact?.city, contact?.country].filter(Boolean).join(", ");

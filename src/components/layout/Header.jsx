@@ -1,13 +1,15 @@
-import { Menu, Phone } from "lucide-react";
+import { Menu, Phone, User } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
 
 import { CloudinaryImage } from "../CloudinaryImage.jsx";
 import { cn } from "../../lib/cn.js";
 import { brandLogo } from "../../lib/brand.js";
+import { initials } from "../../lib/session.js";
 import { isActiveLink, isExternal } from "../../lib/nav.js";
 import { SIZES } from "../../lib/cloudinary.js";
 import { useCategories } from "../../hooks/useCategories.js";
+import { useAuthStore } from "../../stores/authStore.js";
 import { useSiteStore } from "../../stores/siteStore.js";
 import { MobileDrawer } from "./MobileDrawer.jsx";
 import { ProductsDropdown } from "./ProductsDropdown.jsx";
@@ -23,6 +25,9 @@ export function Header() {
   const site = useSiteStore((s) => s.site);
   const menus = useSiteStore((s) => s.menus);
   const status = useSiteStore((s) => s.status);
+
+  const session = useAuthStore((s) => s.status);
+  const customer = useAuthStore((s) => s.customer);
 
   const categories = useCategories();
   const links = menus?.header ?? [];
@@ -128,6 +133,55 @@ export function Header() {
             <span className="sr-only xl:not-sr-only">Get In Touch</span>
           </a>
         ) : null}
+
+        {/*
+          The account entry point (§10.5, RTPP-68).
+
+          Three states, because `status` is three-valued: while it is "unknown"
+          the refresh cookie is still being exchanged, and showing "Sign in" to
+          someone who is about to be restored as signed in — then swapping it for
+          their avatar — is a flicker on every page load.
+
+          An icon rather than a name at this size: the row already carries the
+          wordmark, the nav and the phone CTA, and a name of unknown length is
+          what pushed the wordmark into truncating (F7).
+        */}
+        {session === "authenticated" ? (
+          <Link
+            to="/account"
+            aria-label={`Your account, ${customer?.name ?? "signed in"}`}
+            className="hidden size-11 shrink-0 place-items-center rounded-full text-ink transition-colors duration-(--duration-fast) hover:bg-ground lg:grid"
+          >
+            {customer?.avatar_url ? (
+              <img
+                src={customer.avatar_url}
+                alt=""
+                width={32}
+                height={32}
+                referrerPolicy="no-referrer"
+                className="size-8 rounded-full object-cover"
+              />
+            ) : (
+              <span
+                aria-hidden="true"
+                className="grid size-8 place-items-center rounded-full bg-brand-tint text-xs font-semibold text-brand"
+              >
+                {initials(customer)}
+              </span>
+            )}
+          </Link>
+        ) : session === "anonymous" ? (
+          <Link
+            to="/account"
+            className="hidden size-11 shrink-0 place-items-center rounded-full text-ink transition-colors duration-(--duration-fast) hover:bg-ground lg:grid"
+          >
+            <User size={19} strokeWidth={1.75} aria-hidden="true" />
+            <span className="sr-only">Sign in</span>
+          </Link>
+        ) : (
+          // "unknown": hold the space so nothing shifts when it resolves.
+          <span aria-hidden="true" className="hidden size-11 shrink-0 lg:block" />
+        )}
 
         <button
           type="button"

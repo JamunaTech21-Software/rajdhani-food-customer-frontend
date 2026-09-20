@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 
 import { CloudinaryImage } from "./CloudinaryImage.jsx";
+import { WishlistButton } from "./wishlist/WishlistButton.jsx";
 import { SIZES } from "../lib/cloudinary.js";
 import { readableOn } from "@shared/theme/color.js";
 
@@ -33,6 +34,11 @@ export function ProductCard({ product, priority = false, sizes = SIZES.productCa
           priority={priority}
           className="size-full transition-transform duration-(--duration-slow) group-hover:scale-105"
         />
+
+        {/* Over the image, inside the card's stretched link — so the button
+            carries its own stacking context and stops the click reaching it.
+            Without that, saving a product navigates to it. */}
+        <WishlistButton product={product} className="absolute right-2 top-2" />
 
         {badge ? (
           <span

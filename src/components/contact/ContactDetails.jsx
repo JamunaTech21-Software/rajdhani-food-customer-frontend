@@ -55,7 +55,17 @@ export function ContactDetails({ contact, loading = false }) {
     );
   }
 
-  if (rows.length === 0) return null;
+  // Not `return null`. This card sits beside the form in a two-column layout,
+  // and vanishing leaves an empty half — the blank panel §10.5 is about. The
+  // form beneath still reaches us, so say that rather than showing nothing.
+  if (rows.length === 0) {
+    return (
+      <p className="rounded-xl border border-line p-5 text-sm leading-relaxed text-ink-muted">
+        Our contact details could not be loaded just now. The form below still reaches us, and we
+        reply to every message.
+      </p>
+    );
+  }
 
   return (
     <ul className="flex flex-col">

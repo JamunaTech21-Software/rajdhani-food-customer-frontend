@@ -22,6 +22,13 @@
         * The renderer emits title, description, canonical, Open Graph, Twitter
           and JSON-LD. Do not add competing tags of those kinds outside the
           markers, or a page will carry two titles and crawlers pick their own.
+        * Once React has mounted it takes these over (RTPP-71, §14.3). It
+          updates each tag **in place** rather than adding its own, so whatever
+          the renderer wrote is corrected, never duplicated — and the fallback
+          title below is what the tab shows until the first route renders. The
+          app removes only tags carrying data-rajdhani-seo, so nothing the
+          renderer emits is ever deleted. The rules both sides implement live
+          in src/lib/seo.js, which is written to be read from PHP.
         * <div id="root"> is where React mounts and is not part of the shell's
           contract — but the renderer must leave it, and must not inject
           anything after it that scripts would have to step over.

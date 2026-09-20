@@ -43,8 +43,13 @@ test("the card skeletons while the layout payload is still in flight", () => {
   assert.match(details, /aria-busy="true"/);
 });
 
-test("a contact block that never arrives renders nothing, not an empty card", () => {
-  assert.match(details, /if \(rows\.length === 0\) return null;/);
+test("a contact block that never arrives says so rather than vanishing", () => {
+  // It used to return null. RTPP-72: this card is one half of a two-column
+  // layout, so disappearing leaves an empty half beside the form — exactly the
+  // blank panel §10.5 is about. Individual missing rows are still dropped
+  // silently; that is `contactDetails()` and is unchanged.
+  assert.doesNotMatch(details, /if \(rows\.length === 0\) return null;/);
+  assert.match(details, /The form below still reaches us/);
 });
 
 // ── Criterion 2: the map embed ────────────────────────────────────────────

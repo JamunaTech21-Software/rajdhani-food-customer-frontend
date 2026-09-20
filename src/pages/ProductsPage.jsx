@@ -5,7 +5,9 @@ import { ProductCard } from "../components/ProductCard.jsx";
 import { BulkSupplyCta } from "../components/products/BulkSupplyCta.jsx";
 import { CategoryFilterBar } from "../components/products/CategoryFilterBar.jsx";
 import { useCategories } from "../hooks/useCategories.js";
+import { useSeo } from "../hooks/useSeo.js";
 import { publicApi } from "../lib/api.js";
+import { listingPath, PAGE_META, pageSuffix } from "../lib/seo.js";
 import {
   isFiltered,
   parseFilters,
@@ -87,6 +89,14 @@ export function ProductsPage() {
   const filtered = isFiltered(filters);
 
   const activeCategory = (categories.data ?? []).find((c) => c.slug === filters.category);
+
+  // A category listing gets the category's own name and description, which is
+  // the whole reason the admin lets someone write them.
+  useSeo({
+    title: `${activeCategory?.name ?? PAGE_META.products.title}${pageSuffix(filters.page)}`,
+    description: activeCategory?.description || PAGE_META.products.description,
+    path: listingPath("/products", filters),
+  });
 
   return (
     <div className="mx-auto max-w-(--container-max) pb-16 pl-(--gutter-l) pr-(--gutter-r)">

@@ -123,8 +123,14 @@ test("every env value the app reads is mapped at build time", () => {
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/^\s*\/\/.*$/gm, "");
 
+  // Vite defines these five itself, on every build, with no variable to set and
+  // nothing to map. They are the exception the rule below does not cover.
+  const VITE_BUILT_IN = new Set(["MODE", "BASE_URL", "PROD", "DEV", "SSR"]);
+
   const read_ = new Set(
-    [...source.matchAll(/import\.meta\.env\.([A-Z0-9_]+)/g)].map((m) => m[1]),
+    [...source.matchAll(/import\.meta\.env\.([A-Z0-9_]+)/g)]
+      .map((m) => m[1])
+      .filter((name) => !VITE_BUILT_IN.has(name)),
   );
   const defined = new Set(
     [...read("vite.config.js").matchAll(/"import\.meta\.env\.([A-Z0-9_]+)":/g)].map((m) => m[1]),

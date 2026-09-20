@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router";
 
 import { NewsCard } from "../components/news/NewsCard.jsx";
+import { useSeo } from "../hooks/useSeo.js";
 import { publicApi } from "../lib/api.js";
+import { listingPath, PAGE_META, pageSuffix } from "../lib/seo.js";
 
 const PAGE_SIZE = 9;
 
@@ -29,6 +31,12 @@ export function NewsPage() {
     queryKey: ["public", "news", { page }],
     queryFn: () => publicApi.list("/public/news", { params: { page, limit: PAGE_SIZE } }),
     placeholderData: (previous) => previous,
+  });
+
+  useSeo({
+    title: `${PAGE_META.news.title}${pageSuffix(page)}`,
+    description: PAGE_META.news.description,
+    path: listingPath("/news", { page }),
   });
 
   const posts = query.data?.items ?? [];
