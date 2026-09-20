@@ -125,13 +125,20 @@
  * The 4rem is the sticky header, which a full-height hero would otherwise sit
  * underneath.
  */
+/* Tightened 2026-09-20 alongside the section rhythm, from 32/38/44rem. The
+   comp's hero is about 474px at 1280 and ours was 608 — the single largest
+   piece of excess height left on the page once the band padding came down.
+
+   It stays a *minimum*, so a long headline or a third line still grows the
+   hero rather than being clipped: at desktop the content is around 477px
+   with its own padding, which the 34rem step clears. */
 :root {
-  --hero-min: min(32rem, calc(100svh - 4rem));
+  --hero-min: min(30rem, calc(100svh - 4rem));
 }
 
 @media (width >= 64rem) {
   :root {
-    --hero-min: min(38rem, calc(100svh - 4rem));
+    --hero-min: min(34rem, calc(100svh - 4rem));
   }
 }
 
@@ -139,7 +146,7 @@
    cannot be given more width, so the hero is given more height instead. */
 @media (width >= 96rem) {
   :root {
-    --hero-min: min(44rem, calc(100svh - 4rem));
+    --hero-min: min(38rem, calc(100svh - 4rem));
   }
 }
 

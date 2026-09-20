@@ -509,7 +509,9 @@ test("a footer link is a target, not a line of text", () => {
 test("the footer takes the same safe-area gutter as the rest of the chrome", () => {
   const footer = file("components/layout/Footer.jsx");
 
-  assert.match(footer, /py-14 pl-\(--gutter-l\) pr-\(--gutter-r\)/);
+  // H9 moved the band off `py-14` and onto the shared rhythm token; the pair
+  // of gutters either side of it is what this test is actually about.
+  assert.match(footer, /py-\(--space-section\) pl-\(--gutter-l\) pr-\(--gutter-r\)/);
   // The last row on the page is what a home indicator sits over.
   assert.match(footer, /pb-\[max\(1\.25rem,env\(safe-area-inset-bottom\)\)\]/);
   assert.doesNotMatch(footer, /px-4 py-14|py-5 .*sm:px-6/, "an old hardcoded gutter is left");
@@ -525,15 +527,15 @@ test("the legal row wraps rather than overflowing at 360", () => {
 // ── Phase R4: the hero and the scrolling strips ───────────────────────────
 
 test("the hero fits a phone held sideways", () => {
-  // F10. A flat 32rem is 512px, which is more than the whole 360px viewport of
+  // F10. A flat 30rem is 480px, which is more than the whole 360px viewport of
   // a landscape phone — a slide, its headline and its CTAs could not all be on
-  // screen at once.
+  // screen at once. The `min()` against `svh` is what keeps it on screen.
   const css = read("index.css");
 
-  assert.match(css, /--hero-min: min\(32rem, calc\(100svh - 4rem\)\)/);
-  assert.match(css, /@media \(width >= 64rem\)[\s\S]*--hero-min: min\(38rem/, "and it still grows on a desktop");
+  assert.match(css, /--hero-min: min\(30rem, calc\(100svh - 4rem\)\)/);
+  assert.match(css, /@media \(width >= 64rem\)[\s\S]*--hero-min: min\(34rem/, "and it still grows on a desktop");
   assert.match(file("components/home/Hero.jsx"), /min-h-\(--hero-min\)/);
-  assert.doesNotMatch(file("components/home/Hero.jsx"), /min-h-\[32rem\]/);
+  assert.doesNotMatch(file("components/home/Hero.jsx"), /min-h-\[\d+rem\]/);
 });
 
 test("the hero measures the stable viewport, not the dynamic one", () => {
@@ -858,9 +860,24 @@ test("the container width and the section rhythm are each declared once", () => 
   const tokens = read("shared/theme/tokens.css");
 
   assert.match(tokens, /--container-max: 1280px/);
-  assert.match(tokens, /--space-section: 48px/);
-  assert.match(tokens, /@media \(width >= 48rem\)[\s\S]*--space-section: 80px/);
-  assert.match(tokens, /@media \(width >= 96rem\)[\s\S]*--space-section: 112px/, "the 2xl step");
+  assert.match(tokens, /--space-section: 32px/);
+  assert.match(tokens, /@media \(width >= 48rem\)[\s\S]*--space-section: 48px/);
+  assert.match(tokens, /@media \(width >= 96rem\)[\s\S]*--space-section: 64px/, "the 2xl step");
+});
+
+test("the rhythm token is half a gap, and says so", () => {
+  // The trap it was falling into: adjacent bands each contribute their own
+  // padding, so what a visitor sees between two sections is twice the token.
+  // At the old 80px that was 160px between every pair and 800px down the
+  // page, against roughly 300px in the comp.
+  const tokens = read("shared/theme/tokens.css");
+  const steps = [...tokens.matchAll(/--space-section: (\d+)px/g)].map((m) => Number(m[1]));
+
+  assert.deepEqual(steps, [32, 48, 64], "three steps, ascending");
+  assert.match(tokens, /half a gap, not a gap/, "the doubling is recorded where the number is");
+
+  // Five banded sections on the home page, each padded top and bottom.
+  assert.ok(steps[1] * 2 * 5 < 500, "the desktop padding budget stays near the comp's");
 });
 
 test("nothing caps its own width or spaces its own band by hand", () => {
@@ -893,7 +910,18 @@ test("a full-bleed bar cancels exactly the gutter it sits in", () => {
 
 test("a wide screen is given height, since it cannot be given width", () => {
   // D2 keeps the 1280 cap, so the levers at 1920 are rhythm and hero height.
-  assert.match(read("index.css"), /@media \(width >= 96rem\)[\s\S]*--hero-min: min\(44rem/);
+  assert.match(read("index.css"), /@media \(width >= 96rem\)[\s\S]*--hero-min: min\(38rem/);
+});
+
+test("the hero still clears its own content at every step", () => {
+  // It is a *minimum*, so a long headline grows it rather than being clipped —
+  // but a step below the content's natural height would make the value inert
+  // and the ramp a lie. Desktop content is about 477px: eyebrow, a two-line
+  // 60px headline, subtitle, buttons, and the block's own 80px padding.
+  const steps = [...read("index.css").matchAll(/--hero-min: min\((\d+)rem/g)].map((m) => Number(m[1]) * 16);
+
+  assert.deepEqual(steps, [480, 544, 608], "three steps, ascending");
+  assert.ok(steps[1] > 477, "the lg step clears the desktop content");
 });
 
 test("the section rhythm is read as a property, not re-typed", () => {

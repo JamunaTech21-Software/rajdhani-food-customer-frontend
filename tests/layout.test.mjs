@@ -97,11 +97,24 @@ test("a skip link lets a keyboard user past the header", () => {
   assert.match(layout, /id="main"/);
 });
 
-test("focus rings are not removed anywhere", () => {
-  // §18 requires AA; `outline-none` without a replacement is the usual way that
-  // gets broken.
+test("a focus ring is never removed without one taking its place", () => {
+  // §18 requires AA; `outline-none` with nothing behind it is the usual way
+  // that gets broken. The rule is not "never write it" though — the footer's
+  // newsletter control is one clipped pill, so the ring has to move from the
+  // input out to the wrapper, or `overflow-hidden` eats half of it. What the
+  // rule forbids is removing a ring and putting nothing back.
   for (const [name, source] of Object.entries({ header, footer, dropdown, drawer, layout })) {
-    assert.doesNotMatch(source, /outline-none|focus:outline-none/, `${name} removes a focus ring`);
+    const removals = source.match(/\bfocus:outline-none\b|(?<!focus:)\boutline-none\b/g) ?? [];
+    if (!removals.length) continue;
+
+    assert.equal(name, "footer", `${name} removes a focus ring`);
+    // Every removal in the footer is inside the newsletter control, and that
+    // control draws the ring itself.
+    assert.equal(removals.length, 1);
+    const form = footer.match(/<form[\s\S]*?<\/form>/)[0];
+    assert.match(form, /focus:outline-none/);
+    assert.match(form, /focus-within:outline focus-within:outline-2/);
+    assert.match(form, /focus-within:outline-brand/);
   }
 });
 
@@ -134,6 +147,61 @@ test("the newsletter form appears only when the setting says so", () => {
   // It posts to an endpoint that is switched off with the same flag.
   assert.match(footer, /newsletter\?\.enabled === true/);
   assert.match(footer, /\{newsletterOn \? \(/);
+});
+
+test("the footer band sits on the shared section rhythm", () => {
+  // `mt-16` on top of the previous band's own `py-(--space-section)` was two
+  // gaps stacked — 112px where the reference butts the footer straight
+  // against the section above it.
+  assert.doesNotMatch(footer, /<footer className="[^"]*\bmt-\d/, "no extra gap above the footer");
+  assert.match(footer, /py-\(--space-section\)/);
+});
+
+test("the newsletter field and its button read as one control", () => {
+  // The reference draws a white pill with a green square welded to its right
+  // edge. A gap between the two, or a gold button, reads as two unrelated
+  // controls that happen to sit near each other.
+  const form = footer.match(/<form[\s\S]*?<\/form>/)[0];
+  assert.match(form, /overflow-hidden rounded-md bg-surface/);
+  assert.doesNotMatch(form, /className="mt-4 flex gap-/, "no gap between field and button");
+  assert.match(form, /bg-brand text-on-brand/);
+  assert.doesNotMatch(form, /bg-gold/, "the subscribe button is brand green, not gold");
+
+  // The wrapper clips the children, so the input cannot draw its own focus
+  // ring — the ring has to trace the whole control instead, or focus becomes
+  // invisible.
+  assert.match(form, /focus-within:outline-brand/);
+  assert.match(form, /focus:outline-none/);
+
+  // WCAG 2.5.5: the button is still a 44px target.
+  assert.match(form, /size-11/);
+});
+
+test("the footer is the brand green the comp samples, not the deep shade", () => {
+  // #015826 in the comp against #1b5e20 for brand and #0d3411 for brand-deep —
+  // the footer and the dealer bar above it are one colour there.
+  assert.match(footer, /<footer className="bg-brand text-ink-inverse"/);
+});
+
+test("a hairline separates the link columns, but not the brand block", () => {
+  // Three rules in the comp: quick|products, products|contact,
+  // contact|newsletter. Nothing between the brand block and Quick Links.
+  const rules = footer.match(/COLUMN_RULE/g) ?? [];
+  assert.equal(rules.length, 4, "one definition and three uses");
+  assert.doesNotMatch(footer, /title="Quick Links" links=\{menus\?\.footer_quick\} className/);
+
+  // The gutter is not allowed to change size: the negative margin buys the
+  // 20px the padding gives back, so the line centres in the existing gap.
+  assert.match(footer, /lg:-ml-5 lg:border-l lg:border-ink-inverse\/15 lg:pl-5/);
+  // And the same trick vertically, from xl, where all five blocks share a row.
+  assert.match(footer, /xl:-my-\(--space-section\) xl:py-\(--space-section\)/);
+});
+
+test("the rule above the legal row stops where the content does", () => {
+  // It spans the container's content box in the comp, not the window. A
+  // border on the full-bleed wrapper ran edge to edge.
+  assert.doesNotMatch(footer, /<div className="border-t border-ink-inverse\/15">/);
+  assert.match(footer, /flex flex-wrap items-center justify-between gap-3 border-t border-ink-inverse\/15/);
 });
 
 // ── Social marks ──────────────────────────────────────────────────────────

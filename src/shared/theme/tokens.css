@@ -89,14 +89,25 @@
    ships — the same trap the `@source not` rules in index.css exist for.
    Adopted across the site in the responsive Phase R7, which is also what gives
    1920 its own rhythm — see plan.md D2. */
+/* Tightened 2026-09-20 to the reference's rhythm, from 48/80/112.
+
+   The number is **half a gap, not a gap**: adjacent bands each contribute
+   their own padding, so what a visitor sees between two sections is twice
+   what is written here. At 80px that was 160px of air between every pair of
+   bands and 800px down the page — against roughly 300px in the approved
+   comp, which is why the page read as almost twice as tall as the design.
+
+   These values put the gap at 64 / 96 / 128px. Still generous against the
+   comp's ~63px at desktop, and deliberately so: the comp is drawn on a wider
+   canvas than our 1280 cap, so the same air reads tighter here. */
 :root {
-  --space-section: 48px;
+  --space-section: 32px;
   --container-max: 1280px;
 }
 
 @media (width >= 48rem) {
   :root {
-    --space-section: 80px;
+    --space-section: 48px;
   }
 }
 
@@ -105,7 +116,7 @@
    is the difference between a deliberate column and a page that ran out. */
 @media (width >= 96rem) {
   :root {
-    --space-section: 112px;
+    --space-section: 64px;
   }
 }
 
