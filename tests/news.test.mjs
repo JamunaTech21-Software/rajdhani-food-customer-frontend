@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 
-import { articleJsonLd, breadcrumbJsonLd } from "../src/lib/newsJsonLd.js";
+import { articleJsonLd } from "../src/lib/newsJsonLd.js";
+import { breadcrumbJsonLd } from "../src/lib/seo.js";
 
 const read = (path) => readFileSync(fileURLToPath(new URL(`../src/${path}`, import.meta.url)), "utf8");
 const strip = (s) => s.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
@@ -127,16 +128,26 @@ test("nothing is emitted without enough to describe", () => {
 });
 
 test("the breadcrumb trail is positioned in order", () => {
-  const data = breadcrumbJsonLd(POST, CONTEXT);
+  // Now the shared builder from lib/seo.js, fed the same trail the page draws.
+  // There were two copies of this; the news one has gone.
+  const data = breadcrumbJsonLd(
+    [
+      { label: "Home", to: "/" },
+      { label: "News", to: "/news" },
+      { label: POST.title, to: `/news/${POST.slug}` },
+    ],
+    CONTEXT,
+  );
 
   assert.deepEqual(data.itemListElement.map((i) => i.position), [1, 2, 3]);
   assert.deepEqual(data.itemListElement.map((i) => i.name), ["Home", "News", POST.title]);
+  assert.equal(data.itemListElement[2].item, `${CONTEXT.siteUrl}/news/${POST.slug}`);
 });
 
-test("a closing script tag inside the data cannot break the page", () => {
-  // A post titled with "</script>" would otherwise end the block early and
-  // spill the rest of the JSON into the document as markup.
-  assert.match(article, /replace\(\/<\/g, "\\\\u003c"\)/);
+test("the article page emits both blocks through the shared component", () => {
+  assert.match(article, /<JsonLd id="article" data=\{articleJsonLd\(post, context\)\} \/>/);
+  assert.match(article, /<JsonLd\s+id="breadcrumb"/);
+  assert.doesNotMatch(article, /function JsonLd/, "no bespoke copy left on the page");
 });
 
 test("the pure builder does not import config", () => {

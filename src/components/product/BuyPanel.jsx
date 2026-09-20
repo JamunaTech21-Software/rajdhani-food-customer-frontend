@@ -1,6 +1,7 @@
-import { Download, Heart, Minus, Plus, Share2 } from "lucide-react";
+import { Download, Minus, Plus, Share2 } from "lucide-react";
 
 import { Icon } from "../ui/Icon.jsx";
+import { WishlistButton } from "../wishlist/WishlistButton.jsx";
 import { cn } from "../../lib/cn.js";
 import { formatPrice, packDetails, sortedPackSizes } from "../../lib/productDetail.js";
 import { Stars } from "../ui/Stars.jsx";
@@ -163,6 +164,8 @@ export function BuyPanel({ product, pack, onSelectPack, quantity, onQuantity, br
           Enquire Now
         </button>
 
+        <WishlistButton product={product} variant="button" />
+
         {/* Only rendered when the download actually resolves — see useDownload.
             A button that 404s is worse than no button. */}
         {brochure ? (
@@ -179,16 +182,9 @@ export function BuyPanel({ product, pack, onSelectPack, quantity, onQuantity, br
       </div>
 
       <div className="mt-5 flex flex-wrap gap-5 text-sm">
-        <button
-          type="button"
-          disabled
-          title="Saving products arrives with customer accounts"
-          className="inline-flex items-center gap-2 text-ink-subtle"
-        >
-          <Heart size={16} strokeWidth={1.75} aria-hidden="true" />
-          Add to Wishlist
-        </button>
-
+        {/* "Add to Wishlist" was a disabled placeholder here until RTPP-69.
+            The real control is beside "Enquire Now" above, where it is an
+            action rather than an afterthought. */}
         <button
           type="button"
           onClick={onShare}

@@ -38,16 +38,19 @@ one `config.js` uses:
 | **API origin**, including `/api/v1` | **yes** | `BASE_URL` · `API_BASE_URL` · `VITE_API_BASE_URL` · `VITE_BASE_URL` |
 | **Site origin**, for canonical URLs and JSON-LD | no | `SITE_URL` · `VITE_SITE_URL` |
 | **reCAPTCHA v3 site key** | no | `RECAPTCHA_SITE_KEY` · `VITE_RECAPTCHA_SITE_KEY` |
+| **Google client ID**, for customer sign-in | no | `GOOGLE_CLIENT_ID` · `VITE_GOOGLE_CLIENT_ID` |
+| **Tag Manager container**, e.g. `GTM-XXXXXXX` | no | `GTM_ID` · `VITE_GTM_ID` |
 
 Use the short names. They are listed first because they are the ones that work
 everywhere; the prefixed spellings are kept so nobody's existing setup breaks.
 
-The build log names the one it read, for all three:
+The build log names the one it read, for every row:
 
 ```
 [env] API base URL from BASE_URL=https://api.rajdhanifood.com/api/v1
 [env] site URL from SITE_URL=https://rajdhanifood.com
 [env] no reCAPTCHA site key set — the forms post without a token, which the API allows
+[env] no GTM container set — nothing is loaded
 ```
 
 Check those lines after changing anything. If a variable does not appear the way

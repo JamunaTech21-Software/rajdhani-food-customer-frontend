@@ -1,7 +1,15 @@
 import { Icon } from "../ui/Icon.jsx";
 import { useCountUp } from "../../hooks/useCountUp.js";
 
-function Stat({ stat }) {
+/**
+ * One counter.
+ *
+ * Exported because `AboutBand` lays four of them out beside the welcome text
+ * rather than across a band of their own, and the counting, the observer and
+ * the screen-reader arrangement below should exist once. The *band* stays here
+ * because the About page still renders one from group `ABOUT`.
+ */
+export function Stat({ stat }) {
   const { ref, display } = useCountUp(stat.value);
 
   return (
@@ -33,11 +41,14 @@ function Stat({ stat }) {
  * anyone who has asked for reduced motion. See `useCountUp` for why that last
  * one is handled by showing the final value rather than by skipping the render.
  */
-export function StatsBand({ stats }) {
+export function StatsBand({ stats, label = "Rajdhani by the numbers" }) {
   if (!stats?.length) return null;
 
   return (
-    <section aria-label="Rajdhani by the numbers" className="bg-ground-warm py-(--space-section)">
+    // The label is a prop because About shows a second band from a different
+    // group, and two landmarks with one name are two landmarks a screen reader
+    // cannot tell apart.
+    <section aria-label={label} className="bg-ground-warm py-(--space-section)">
       <div className="mx-auto grid max-w-(--container-max) grid-cols-2 gap-8 pl-(--gutter-l) pr-(--gutter-r) md:grid-cols-4">
         {stats.map((stat) => (
           <Stat key={stat.id} stat={stat} />

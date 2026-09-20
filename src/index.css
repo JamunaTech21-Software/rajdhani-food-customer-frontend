@@ -182,3 +182,21 @@
     );
   }
 }
+
+/**
+ * A photograph that fades in from its left edge.
+ *
+ * The home page's process band puts a photograph against the right of an
+ * otherwise white section, and the reference does not butt the two together —
+ * the image resolves out of the background over roughly a quarter of its
+ * width. A hard edge there reads as a screenshot pasted onto the page.
+ *
+ * As with `.scroll-fade` above, the `#000` is not a colour. In a mask it means
+ * "fully opaque" and must stay black whatever `primary_color` becomes: §18.2
+ * governs colours the site *shows*, and this one is never seen.
+ */
+@layer components {
+  .fade-in-from-left {
+    mask-image: linear-gradient(to right, transparent 0, #000 26%);
+  }
+}

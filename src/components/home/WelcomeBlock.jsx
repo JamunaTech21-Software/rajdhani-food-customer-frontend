@@ -121,6 +121,22 @@ function PromoCard({ banner }) {
 }
 
 /**
+ * **Not rendered anywhere as of H5 (2026-09-20).**
+ *
+ * The reference draws the `(home, welcome)` block with the four counters
+ * beside it, which is `AboutBand`, so that took this band's place on the home
+ * page. What has no home any more is the `PromoCard` above: the reference has
+ * no video anywhere on the page, and `HOME_VIDEO_CARD` is a placement the
+ * admin still offers.
+ *
+ * Kept rather than deleted because **that is `homepage-plan.md`'s open
+ * decision D5**, and it is the client's, not ours — deleting the only consumer
+ * of a scheduled banner placement while the question is unanswered would
+ * answer it by default. If the client wants the video somewhere, `PromoCard`
+ * is what goes there; if they do not, this file and the placement go together.
+ *
+ * ---
+ *
  * The welcome / about teaser (§10.1) — the published `(home, welcome)`
  * `PageBlock`, with its four-item benefit list and the promo card beside it.
  *

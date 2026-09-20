@@ -61,3 +61,45 @@ export function useCertifications() {
 
 /** The blocks as a plain array, whatever the endpoint did. */
 export const blocksOf = (query) => query.data?.items ?? [];
+
+/**
+ * The three section resources, each filtered to one group (§10.4).
+ *
+ * All three arrived with RTPP-67's backend update. The `section` and `group`
+ * parameters are **required** by the API — an absent or unrecognised one is a
+ * 422, not an empty list, which is the right way round: a typo in a section
+ * name surfaces instead of looking like "nobody has written this yet".
+ *
+ * They are separate hooks rather than one, because the three pages that use
+ * them want different groups and a combined call would fetch what it did not
+ * need on every one of them.
+ */
+const sectionQuery = (key, path, value) => ({
+  queryKey: ["public", key, value],
+  queryFn: () => emptyOnMissing(() => publicApi.list(path)),
+  enabled: Boolean(value),
+  staleTime: 5 * 60_000,
+  retry: false,
+});
+
+/** `FeatureItem` rows — `HOME_USP`, `ABOUT_VALUES`, `QUALITY_COMMITMENT`, … */
+export function useFeatureItems(section) {
+  return useQuery(
+    sectionQuery("feature-items", `/public/feature-items?section=${encodeURIComponent(section)}`, section),
+  );
+}
+
+/** `ProcessStep` rows — `MANUFACTURING_PROCESS`, `QUALITY_PROCESS`, … */
+export function useProcessSteps(group) {
+  return useQuery(
+    sectionQuery("process-steps", `/public/process-steps?group=${encodeURIComponent(group)}`, group),
+  );
+}
+
+/** `StatCounter` rows — `HOME`, `ABOUT`, `DEALER_NETWORK`, … */
+export function useStats(group) {
+  return useQuery(sectionQuery("stats", `/public/stats?group=${encodeURIComponent(group)}`, group));
+}
+
+/** The rows, as a plain array, whatever the endpoint did. */
+export const itemsOf = (query) => query.data?.items ?? [];

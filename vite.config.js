@@ -23,6 +23,8 @@ import { contentSecurityPolicy, originOf } from "./csp.js";
 const API_URL_NAMES = ["VITE_BASE_URL", "VITE_API_BASE_URL", "API_BASE_URL", "BASE_URL"];
 const SITE_URL_NAMES = ["VITE_SITE_URL", "SITE_URL"];
 const RECAPTCHA_NAMES = ["VITE_RECAPTCHA_SITE_KEY", "RECAPTCHA_SITE_KEY"];
+const GOOGLE_NAMES = ["VITE_GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_ID"];
+const GTM_NAMES = ["VITE_GTM_ID", "GTM_ID"];
 
 function resolve(env, names) {
   for (const name of names) {
@@ -77,6 +79,8 @@ export default defineConfig(({ command, mode }) => {
   const api = resolve(env, API_URL_NAMES);
   const site = resolve(env, SITE_URL_NAMES);
   const recaptcha = resolve(env, RECAPTCHA_NAMES);
+  const google = resolve(env, GOOGLE_NAMES);
+  const gtm = resolve(env, GTM_NAMES);
 
   // Say which name was used: the failure this guards against is silent — a
   // misspelled variable builds cleanly and 404s on every request at runtime.
@@ -92,6 +96,14 @@ export default defineConfig(({ command, mode }) => {
     recaptcha
       ? `[env] reCAPTCHA site key from ${recaptcha.name}`
       : "[env] no reCAPTCHA site key set — the forms post without a token, which the API allows",
+  );
+  console.log(
+    google
+      ? `[env] Google client ID from ${google.name}`
+      : "[env] no Google client ID set — sign-in is hidden rather than broken",
+  );
+  console.log(
+    gtm ? `[env] GTM container from ${gtm.name}=${gtm.value}` : "[env] no GTM container set — nothing is loaded",
   );
 
   /*
@@ -142,6 +154,8 @@ export default defineConfig(({ command, mode }) => {
       "import.meta.env.VITE_BASE_URL": literal(api),
       "import.meta.env.VITE_SITE_URL": literal(site),
       "import.meta.env.VITE_RECAPTCHA_SITE_KEY": literal(recaptcha),
+      "import.meta.env.VITE_GOOGLE_CLIENT_ID": literal(google),
+      "import.meta.env.VITE_GTM_ID": literal(gtm),
     },
     resolve: {
       alias: {

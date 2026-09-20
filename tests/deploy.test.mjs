@@ -63,17 +63,30 @@ test("the 161 MB of design references cannot reach a deployment", () => {
   assert.match(ignored, /public\/RajdhaniPagesRequireImages\//);
 });
 
-test("the one asset that does ship is where the build will look for it", () => {
+test("everything that ships from static/ is actually referenced", () => {
   // `static/` holds exactly what the site serves, and nothing else — which is
   // how `icons.svg` came to sit in a public directory unreferenced for months.
+  // The reference may be in the shell or in a component, so both are scanned;
+  // what must never happen is a file sitting there that nothing asks for.
   const served = readdirSync(fileURLToPath(new URL("../static/", import.meta.url)));
-  const html = read("index.html");
+  const haystack = read("index.html") + walk(fileURLToPath(new URL("../src/", import.meta.url)));
 
-  assert.deepEqual(served, ["rajdhani-logo.png"]);
+  assert.ok(served.length > 0, "the scan found nothing — the directory moved");
   for (const file of served) {
-    assert.ok(html.includes(`/${file}`), `static/${file} is served but nothing references it`);
+    assert.ok(haystack.includes(`/${file}`), `static/${file} is served but nothing references it`);
   }
 });
+
+/** Every source file's text, concatenated — enough to look for a filename in. */
+function walk(dir) {
+  let out = "";
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const path = `${dir}${entry.name}`;
+    if (entry.isDirectory()) out += walk(`${path}/`);
+    else if (/\.(jsx?|css|html)$/.test(entry.name)) out += readFileSync(path, "utf8");
+  }
+  return out;
+}
 
 test("the environment is documented where a deployer will find it", () => {
   const example = read(".env.example");
@@ -123,8 +136,14 @@ test("every env value the app reads is mapped at build time", () => {
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .replace(/^\s*\/\/.*$/gm, "");
 
+  // Vite defines these five itself, on every build, with no variable to set and
+  // nothing to map. They are the exception the rule below does not cover.
+  const VITE_BUILT_IN = new Set(["MODE", "BASE_URL", "PROD", "DEV", "SSR"]);
+
   const read_ = new Set(
-    [...source.matchAll(/import\.meta\.env\.([A-Z0-9_]+)/g)].map((m) => m[1]),
+    [...source.matchAll(/import\.meta\.env\.([A-Z0-9_]+)/g)]
+      .map((m) => m[1])
+      .filter((name) => !VITE_BUILT_IN.has(name)),
   );
   const defined = new Set(
     [...read("vite.config.js").matchAll(/"import\.meta\.env\.([A-Z0-9_]+)":/g)].map((m) => m[1]),

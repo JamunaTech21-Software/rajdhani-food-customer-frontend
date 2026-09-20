@@ -368,8 +368,14 @@ const NO_768_STEP = [
   ["pages/NewsArticlePage.jsx", "previous and next — there are exactly two"],
   ["components/product/BuyPanel.jsx", "already four across from `sm`"],
   ["components/content/Certifications.jsx", "already three across from `sm`; the new step is at `lg`, where five was squeezing to 182px"],
-  ["components/home/FeaturedProducts.jsx", "a scroll strip of fixed 240px tracks below `lg` — how many are visible already follows the viewport, so a breakpoint there would decide nothing"],
+  ["components/home/FeaturedProducts.jsx", "a scroll strip of fixed 240px tracks at every width now (H2) — how many are visible already follows the viewport, so a breakpoint there would decide nothing"],
+  ["components/home/DealerCta.jsx", "a mark, a heading and one button — the button beside a two-line heading at 768 leaves the heading about 400px, and it is the only thing on the bar that has to stay on one line"],
+  ["components/content/FeatureGrid.jsx", "the columns are the caller's — the USP strip asks for four and Quality's commitment grid for two"],
+  ["components/content/ProcessTimeline.jsx", "a wrapping flex row, not a grid: it stops wrapping at `sm` when compact and `md` when not, which is its breakpoint"],
   ["pages/HomePage.jsx", "its skeleton mirrors that strip, and has to keep mirroring it"],
+  ["pages/AccountPage.jsx", "a fixed 22rem profile column beside the reviews, which is the same shape the contact page settled on"],
+  ["components/product/RatingSummary.jsx", "the average and the bars sit side by side from `sm`; a tablet has no more to give them than a wide phone, and the panel is already half a page at `md`"],
+  ["components/state/PageSections.jsx", "its skeleton mirrors PageBlockSection, which splits at `lg` for the reason above — a loading state that breaks at a different width than the thing it stands in for is a jump, not a reveal"],
 ];
 
 test("every grid without a 768 step is one that was argued for", () => {
@@ -380,13 +386,17 @@ test("every grid without a 768 step is one that was argued for", () => {
     "components/gallery/GalleryGrid.jsx",
     "pages/GalleryPage.jsx",
     "components/home/LatestNews.jsx",
-    "components/home/Testimonials.jsx",
     "pages/NewsPage.jsx",
     "components/products/BulkSupplyCta.jsx",
     "components/dealer/SuccessModal.jsx",
     "components/home/WelcomeBlock.jsx",
     "pages/QualityPage.jsx",
     "pages/ContactPage.jsx",
+    // Five steps: one up, two, three at 768, then all five in a row at `lg`
+    // where the dotted connector between them starts to mean something.
+    "components/home/ProcessBand.jsx",
+    "components/home/VoicesBand.jsx",
+    "components/home/AboutBand.jsx",
     // Phase R5 owns the product detail page, including its related-products
     // grid and the gallery/buy-panel split.
     "pages/ProductDetailPage.jsx",
@@ -542,7 +552,9 @@ test("the hero dots are a 44px target around an 8px dot", () => {
 
   assert.match(hero, /className="group grid h-11 place-items-center px-1"/);
   assert.match(hero, /block h-2 rounded-full/, "the dot is still 8px");
-  assert.match(hero, /group-hover:bg-ink-inverse\/80/, "and still reacts to a hover on the target");
+  // Dark, not white: H8 turned the hero light, so a white dot over a bright
+  // tea garden would be the one control nobody can see.
+  assert.match(hero, /group-hover:bg-ink\/70/, "and still reacts to a hover on the target");
 });
 
 test("the hero controls are not drawn over the headline or under the USP strip", () => {
@@ -573,8 +585,11 @@ test("every horizontal strip says it has more to show", () => {
   // F12. Two of the four hid the scrollbar outright, and on a touch device
   // there is no scrollbar to see anyway — overlay scrollbars appear only once
   // you are already scrolling, which is after you needed to know.
+  //
+  // `FeaturedProducts` is not in this list any more: the reference wants clean
+  // card edges, and it has explicit arrows instead, which say the same thing
+  // outright. See the test below, which holds it to that bargain.
   for (const name of [
-    "components/home/FeaturedProducts.jsx",
     "components/product/ProductTabs.jsx",
     "components/products/CategoryFilterBar.jsx",
     "pages/GalleryPage.jsx",
@@ -584,6 +599,18 @@ test("every horizontal strip says it has more to show", () => {
     assert.match(source, /ref=\{stripRef\}/, `${name} does not measure its own overflow`);
     assert.match(source, /\{\.\.\.stripProps\}/, `${name} does not report which edge`);
   }
+});
+
+test("the one strip without a fade has something better in its place", () => {
+  // Dropping the mask is only allowed because arrows replace it, and the
+  // arrows only exist from `xl`. Below that the thin scrollbar has to stay, or
+  // the row scrolls with nothing at all saying so.
+  const source = file("components/home/FeaturedProducts.jsx");
+
+  assert.doesNotMatch(source, /scroll-fade/, "the fade is gone, as the reference asks");
+  assert.match(source, /ref=\{stripRef\}/, "but the overflow is still measured, for the arrows");
+  assert.match(source, /xl:grid/, "and the arrows appear at xl");
+  assert.match(source, /\[scrollbar-width:thin\][\s\S]*xl:\[scrollbar-width:none\]/, "thin below xl");
 });
 
 test("the fade appears only at an edge that has something behind it", () => {
@@ -875,8 +902,7 @@ test("the section rhythm is read as a property, not re-typed", () => {
     "components/content/Certifications.jsx",
     "components/home/FeaturedProducts.jsx",
     "components/home/StatsBand.jsx",
-    "components/home/Testimonials.jsx",
-    "components/home/LatestNews.jsx",
+    "components/home/VoicesBand.jsx",
     "pages/AboutPage.jsx",
     "pages/QualityPage.jsx",
   ]) {

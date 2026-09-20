@@ -4,10 +4,12 @@ import { useState } from "react";
 import { CloudinaryImage } from "../components/CloudinaryImage.jsx";
 import { ApplicationForm } from "../components/dealer/ApplicationForm.jsx";
 import { DealerSuccessModal } from "../components/dealer/SuccessModal.jsx";
+import { useSeo } from "../hooks/useSeo.js";
 import { useDownload } from "../hooks/useDownload.js";
 import { publicApi } from "../lib/api.js";
 import { SIZES } from "../lib/cloudinary.js";
 import { DOWNLOAD_KEYS } from "../lib/downloadKeys.js";
+import { PAGE_META } from "../lib/seo.js";
 
 function Hero({ banner }) {
   if (!banner) return null;
@@ -78,6 +80,8 @@ export function DealerPage() {
     queryFn: () => publicApi.list("/public/banners", { params: { placement: "DEALER_HERO" } }),
     staleTime: 5 * 60_000,
   });
+
+  useSeo(PAGE_META.dealer);
 
   const brochure = useDownload(DOWNLOAD_KEYS.dealerBrochure);
 

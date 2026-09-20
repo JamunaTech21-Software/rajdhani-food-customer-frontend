@@ -2,6 +2,8 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 
 import { CloudinaryImage } from "./CloudinaryImage.jsx";
+import { WishlistButton } from "./wishlist/WishlistButton.jsx";
+import { cn } from "../lib/cn.js";
 import { SIZES } from "../lib/cloudinary.js";
 import { readableOn } from "@shared/theme/color.js";
 
@@ -17,14 +19,50 @@ import { readableOn } from "@shared/theme/color.js";
  * code decided. The text colour on top is computed for contrast rather than
  * assumed white — a gold badge with white text fails AA, and the admin lets an
  * editor pick any colour at all.
+ *
+ * ## Two variants
+ *
+ * `default` is the catalogue card: bordered, left-aligned, two lines of
+ * `short_description`. `/products` and the related-products row both use it.
+ *
+ * `compact` is the home carousel's, from the reference: no border, the image
+ * on the same pale panel as the card, centred, and a **single line of
+ * `tagline`** rather than the description. Narrower tracks and a row a visitor
+ * scans rather than reads are what the shorter line is for — "Bold. Dark.
+ * Traditional." says enough at 240px, where two lines of prose do not.
+ *
+ * A variant rather than a second component, and rather than changing all
+ * three surfaces: only the home page was redesigned, and `/products` was
+ * signed off separately. Two cards in the codebase is a real cost — if the
+ * catalogue is ever redrawn to match, this variant should absorb it rather
+ * than a third appearing.
+ *
+ * The wishlist button and the badge are kept in **both**. The reference shows
+ * neither, but it predates RTPP-69, and `badge_text` is live editable data —
+ * dropping them to match a picture would remove a working feature and hide a
+ * field the admin still offers.
  */
-export function ProductCard({ product, priority = false, sizes = SIZES.productCard }) {
+export function ProductCard({
+  product,
+  priority = false,
+  sizes = SIZES.productCard,
+  variant = "default",
+}) {
   if (!product?.slug) return null;
 
   const badge = product.badge_text?.trim();
+  const compact = variant === "compact";
+  // Falls back to the description: `tagline` is nullable, and a card with a
+  // name and nothing under it looks unfinished next to five that have one.
+  const line = compact ? (product.tagline ?? product.short_description) : product.short_description;
 
   return (
-    <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface transition-shadow duration-(--duration-fast) hover:shadow-card">
+    <article
+      className={cn(
+        "group relative flex h-full flex-col overflow-hidden rounded-xl transition-shadow duration-(--duration-fast) hover:shadow-card",
+        compact ? "bg-ground text-center" : "border border-line bg-surface",
+      )}
+    >
       <div className="relative aspect-square overflow-hidden bg-ground">
         <CloudinaryImage
           src={product.image?.url}
@@ -33,6 +71,11 @@ export function ProductCard({ product, priority = false, sizes = SIZES.productCa
           priority={priority}
           className="size-full transition-transform duration-(--duration-slow) group-hover:scale-105"
         />
+
+        {/* Over the image, inside the card's stretched link — so the button
+            carries its own stacking context and stops the click reaching it.
+            Without that, saving a product navigates to it. */}
+        <WishlistButton product={product} className="absolute right-2 top-2" />
 
         {badge ? (
           <span
@@ -56,14 +99,24 @@ export function ProductCard({ product, priority = false, sizes = SIZES.productCa
           </Link>
         </h3>
 
-        {product.short_description ? (
-          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink-muted">
-            {product.short_description}
+        {line ? (
+          <p
+            className={cn(
+              "mt-1.5 text-sm leading-relaxed text-ink-muted",
+              compact ? "line-clamp-1" : "line-clamp-2",
+            )}
+          >
+            {line}
           </p>
         ) : null}
 
-        <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand">
-          View Details
+        <span
+          className={cn(
+            "mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand",
+            compact && "justify-center",
+          )}
+        >
+          {compact ? "View Product" : "View Details"}
           <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
         </span>
       </div>

@@ -117,10 +117,13 @@ test("share falls back to the clipboard where there is no share sheet", () => {
   assert.match(page, /catch \{/, "a dismissed share sheet rejects, which is not an error");
 });
 
-test("the wishlist control is honestly disabled rather than dead", () => {
-  // Saving needs a customer account, which is RTPP-68/69. A button that looks
-  // live and does nothing is worse than one that says why.
-  assert.match(panel, /disabled\s*\n\s*title="Saving products arrives with customer accounts"/);
+test("the wishlist control is a real one now, not the placeholder", () => {
+  // It was a disabled button saying saving arrives with customer accounts.
+  // RTPP-69 is that, so the placeholder is gone and the control moved up beside
+  // "Enquire Now" — an action rather than an afterthought.
+  assert.doesNotMatch(panel, /Saving products arrives with customer accounts/);
+  assert.doesNotMatch(panel, /Add to Wishlist/);
+  assert.match(panel, /<WishlistButton product=\{product\} variant="button" \/>/);
 });
 
 // ── Ratings ───────────────────────────────────────────────────────────────

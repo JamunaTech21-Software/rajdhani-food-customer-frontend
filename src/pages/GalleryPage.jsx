@@ -6,9 +6,11 @@ import { Link, useNavigate, useParams } from "react-router";
 import { GalleryGrid } from "../components/gallery/GalleryGrid.jsx";
 import { Lightbox } from "../components/gallery/Lightbox.jsx";
 import { Icon } from "../components/ui/Icon.jsx";
+import { useSeo } from "../hooks/useSeo.js";
 import { cn } from "../lib/cn.js";
 import { galleryTabs } from "../lib/gallery.js";
 import { publicApi } from "../lib/api.js";
+import { PAGE_META } from "../lib/seo.js";
 import { useScrollEdges } from "../hooks/useScrollEdges.js";
 
 const PAGE_SIZE = 24;
@@ -87,6 +89,13 @@ export function GalleryPage() {
   const tabs = galleryTabs(categories.data?.items);
   const items = images.data?.items ?? [];
   const category = (categories.data?.items ?? []).find((c) => c.slug === slug) ?? null;
+
+  useSeo({
+    // "Factory Gallery", not "Factory" — the category name alone in a search
+    // result gives no clue what the page actually holds.
+    title: category ? `${category.name} Gallery` : PAGE_META.gallery.title,
+    description: category?.description || PAGE_META.gallery.description,
+  });
 
   return (
     <div className="mx-auto max-w-(--container-max) pb-16 pl-(--gutter-l) pr-(--gutter-r)">
