@@ -41,13 +41,38 @@ function FooterLink({ link, className }) {
   );
 }
 
-function LinkColumn({ title, links }) {
+/**
+ * The hairline that separates one footer column from the next.
+ *
+ * Sampled off the comp: a 1px rule at about white/12 sitting midway down the
+ * gutter, between Quick Links and Products, Products and Contact, and Contact
+ * and Newsletter — but *not* between the brand block and Quick Links, which
+ * the comp leaves open.
+ *
+ * Two tricks, both there to avoid moving anything:
+ *
+ * `-ml-5 pl-5` widens the column 20px to its left and pushes the content back
+ * by the same 20px, so the border lands in the middle of the `gap-10` gutter
+ * rather than flush against the text. Adding `pl-10` on its own would have
+ * been simpler and wrong — it would double the gutter to 80px and squeeze
+ * every column.
+ *
+ * `-my-(--space-section) py-(--space-section)` does the same vertically, so
+ * the rule runs the full height of the band the way the comp draws it instead
+ * of stopping at the tallest column. Only from `xl`, because that is the first
+ * step where all five blocks share one row — at `lg` the brand block is a row
+ * of its own and the bleed would run up through it.
+ */
+const COLUMN_RULE =
+  "lg:-ml-5 lg:border-l lg:border-ink-inverse/15 lg:pl-5 xl:-my-(--space-section) xl:py-(--space-section)";
+
+function LinkColumn({ title, links, className }) {
   // A heading above nothing is worse than no column — it reads as a rendering
   // failure rather than as an empty menu.
   if (!links?.length) return null;
 
   return (
-    <nav aria-label={title}>
+    <nav aria-label={title} className={className}>
       <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-inverse">{title}</h2>
       <ul className="mt-4 flex flex-col gap-0.5">
         {links.map((link) => (
@@ -70,7 +95,18 @@ export function Footer() {
   const address = [contact.address_line, contact.city, contact.country].filter(Boolean).join(", ");
 
   return (
-    <footer className="mt-16 bg-brand-deep text-ink-inverse">
+    /*
+      No top margin: the band above ends with its own `py-(--space-section)`,
+      so `mt-16` was a second gap stacked on the first — 112px where the comp
+      butts the footer straight against the section above it.
+
+      `bg-brand`, not `bg-brand-deep`: the comp's footer samples at #015826,
+      which is the brand green (#1b5e20) and the same green as the dealer bar
+      above it, where `brand-deep` is #0d3411 and reads as a different, much
+      darker band. Theme-driven either way — both shades are rewritten from
+      site_profile at boot, so this still restyles with primary_color.
+    */
+    <footer className="bg-brand text-ink-inverse">
       {/*
         Five blocks: the brand, three link lists and the newsletter.
 
@@ -85,7 +121,7 @@ export function Footer() {
         tablet would leave the newsletter's email field about 110px wide, which
         is narrower than the text people type into it.
       */}
-      <div className="mx-auto grid max-w-(--container-max) gap-10 py-14 pl-(--gutter-l) pr-(--gutter-r) sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[1.4fr_1fr_1fr_1.2fr_1.2fr]">
+      <div className="mx-auto grid max-w-(--container-max) gap-10 py-(--space-section) pl-(--gutter-l) pr-(--gutter-r) sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[1.4fr_1fr_1fr_1.2fr_1.2fr]">
         <div className="sm:col-span-2 lg:col-span-4 xl:col-span-1">
           <p className="font-display text-xl font-semibold">{site?.name ?? "Rajdhani Food Products"}</p>
           {site?.footer?.about ? (
@@ -116,9 +152,9 @@ export function Footer() {
         </div>
 
         <LinkColumn title="Quick Links" links={menus?.footer_quick} />
-        <LinkColumn title="Products" links={menus?.footer_products} />
+        <LinkColumn title="Products" links={menus?.footer_products} className={COLUMN_RULE} />
 
-        <div>
+        <div className={COLUMN_RULE}>
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-inverse">Contact Us</h2>
           <ul className="mt-4 flex flex-col gap-3 text-sm text-ink-inverse/75">
             {address ? (
@@ -157,13 +193,27 @@ export function Footer() {
         {/* Rendered only when the setting says so — the form posts to an
             endpoint that is switched off with it. RTPP-65 wires the submit. */}
         {newsletterOn ? (
-          <div>
+          <div className={COLUMN_RULE}>
             <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-inverse">Newsletter</h2>
             <p className="mt-4 text-sm text-ink-inverse/75">
               Subscribe to get updates on new products and offers.
             </p>
+            {/*
+              Field and button are one control, not two.
+
+              The reference draws a single white pill with a green square
+              welded to its right edge; ours had an 8px gap and a gold button,
+              which reads as two unrelated things sitting near each other. The
+              wrapper owns the radius and the white, clips both children with
+              `overflow-hidden`, and carries the focus ring via `focus-within`
+              so the outline still traces the whole control when the field
+              itself no longer has a border of its own.
+
+              The button stays 44px square — `tests/responsive.test.mjs`
+              enforces the WCAG 2.5.5 target and would fail a smaller one.
+            */}
             <form
-              className="mt-4 flex gap-2"
+              className="mt-4 flex overflow-hidden rounded-md bg-surface focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand"
               onSubmit={(event) => event.preventDefault()}
               aria-label="Newsletter sign-up"
             >
@@ -175,12 +225,12 @@ export function Footer() {
                 type="email"
                 required
                 placeholder="Enter your email"
-                className="h-11 min-w-0 flex-1 rounded-md bg-surface px-3 text-sm text-ink"
+                className="h-11 min-w-0 flex-1 bg-transparent px-3 text-sm text-ink focus:outline-none"
               />
               <button
                 type="submit"
                 aria-label="Subscribe"
-                className="grid size-11 shrink-0 place-items-center rounded-md bg-gold text-on-gold"
+                className="grid size-11 shrink-0 place-items-center bg-brand text-on-brand transition-colors hover:bg-brand-dark"
               >
                 <Send size={16} strokeWidth={2} aria-hidden="true" />
               </button>
@@ -189,8 +239,17 @@ export function Footer() {
         ) : null}
       </div>
 
-      <div className="border-t border-ink-inverse/15">
-        <div className="mx-auto flex max-w-(--container-max) flex-wrap items-center justify-between gap-3 py-5 pl-(--gutter-l) pr-(--gutter-r) pb-[max(1.25rem,env(safe-area-inset-bottom))] text-sm text-ink-inverse/70">
+      {/*
+        The rule above the legal row stops where the content does.
+
+        It used to sit on the full-bleed wrapper, so it ran the whole width of
+        the window. In the comp it spans x=72→949 of a 1024-wide frame — the
+        container's content box, gutters excluded — which is why it needs to
+        be on an element inside the padding rather than on the one that
+        carries it.
+      */}
+      <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-inverse/15 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-sm text-ink-inverse/70">
           <p>{site?.footer?.copyright ?? `© ${new Date().getFullYear()} Rajdhani Food Products`}</p>
 
           {menus?.legal?.length ? (

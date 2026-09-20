@@ -369,14 +369,10 @@ already records why the `#000` in a mask is not a colour §18.2 governs.
 5. **Step 2 is `sprout`, not `droplet`** — the reference draws two leaves on a
    stem there. Changed in the admin, not in code.
 
-**Measured but deliberately not changed:** the reference's bands are roughly
-half the height of ours — about 220px against 460px — and its headings are
-nearer 25px than our 36px. That is true of *every* band, not this one, because
-the reference is drawn on a canvas wider than our 1280 cap and scaled down.
-Shrinking one band would make it inconsistent with the seven around it, and
-changing `--space-section` or the heading scale is a site-wide typographic
-decision, not a fix to this section. Worth raising separately if the client
-wants the whole page tighter.
+**Measured here and acted on later, site-wide — see H9.** The reference's
+bands are roughly half the height of ours. Shrinking one band would have made
+it inconsistent with the seven around it, so it waited until the client asked
+for the whole page.
 
 #### H1b — it was the content all along *(2026-09-20)*
 
@@ -875,6 +871,107 @@ real change.
 
 ---
 
+### H9 — the page's vertical rhythm ✅ *done 2026-09-20*
+
+The page read as nearly twice as tall as the comp, and two tokens accounted
+for almost all of it.
+
+**`--space-section` is half a gap, not a gap.** Adjacent bands each contribute
+their own padding, so what a visitor sees between two sections is twice the
+number. At the old 80px that was 160px between every pair, and **800px down
+the page** against roughly 300px in the comp. Now 32 / 48 / 64px, so the gap
+is 64 / 96 / 128px and the budget is 480px at desktop.
+
+**`--hero-min` was the single largest remaining piece.** 608px at 1280 against
+the comp's ~474px. Now 30 / 34 / 38rem. It is still a *minimum*, so a longer
+headline grows the hero rather than being clipped — and a test asserts the
+`lg` step clears the ~477px the content needs, because a step below that would
+make the value inert and the ramp a lie.
+
+| Viewport | Rhythm | Gap between bands | Hero |
+|---|---|---|---|
+| 360–640 | 32px | 64px | 480px |
+| 768–1279 | 48px | 96px | 480px |
+| 1280–1535 | 48px | 96px | 544px |
+| 1536+ | 64px | 128px | 608px |
+
+**384px shorter at 1280, 576px shorter at 1536 and up**, on the home page
+alone. Both tokens are site-wide, so every other page tightens with it —
+which is the point: a rhythm that applies to one page is not a rhythm.
+
+Nothing needed changing in the eighteen components that read the tokens. That
+is what they were extracted for in phase R7, and `ProcessBand`'s photograph —
+which aligns itself with `top-(--space-section)` — followed the new value on
+its own.
+
+---
+
+### H10 — the footer ✅ *done 2026-09-20*
+
+Four differences, and this time they were **measured off the comp rather than
+eyeballed**: a small PNG reader (inflate the IDATs, undo the row filters,
+sample pixels) turned each question into a number. Section 0 of this plan says
+check the data before writing CSS; reading the pixels is the same idea applied
+to the design.
+
+| | Was | Comp | Now |
+|---|---|---|---|
+| Gap above the footer | `mt-16` **plus** the band's own padding | none — the footer butts straight against the section above | no margin |
+| Band padding | `py-14` | ~22px top, ~16px bottom | `py-(--space-section)` |
+| Background | `bg-brand-deep` `#0d3411` | `#015826` | `bg-brand` `#1b5e20` |
+| Column rules | none | 3 hairlines at ~white/12 | `border-ink-inverse/15` from `lg` |
+| Legal rule | full-bleed | x=72→949 of 1024 — the content box | inset to the container |
+| Subscribe button | gold, 8px gap | green, welded to the field | `bg-brand`, joined |
+
+**The footer is the brand green, not the deep shade.** The comp's footer and
+its dealer bar sample within a few points of each other, and both are the
+brand green. `brand-deep` is a visibly different, much darker band. Both
+shades are still rewritten from `site_profile` at boot, so §18.2 holds either
+way.
+
+**The three column rules are asymmetric, and that is deliberate.** They fall
+between Quick Links | Products, Products | Contact and Contact | Newsletter —
+there is none between the brand block and Quick Links. `divide-x` would have
+drawn all four, so the rule goes on the three columns that want it.
+
+Two tricks keep them from moving anything. `-ml-5 pl-5` widens the column 20px
+to the left and pushes its content back by the same 20px, so the line centres
+in the existing `gap-10` gutter instead of sitting flush against the text —
+`pl-10` alone would have doubled the gutter and squeezed every column.
+`-my-(--space-section) py-(--space-section)` does the same vertically so the
+rule runs the full height of the band, as the comp draws it, and only from
+`xl`, because that is the first step where all five blocks share a row.
+
+**The newsletter is one control, not two.** A white pill with the green button
+welded to its right edge. The wrapper owns the radius, the white and the
+clipping, which means the input can no longer draw its own focus ring inside
+it — `overflow-hidden` would eat half of it — so the ring moves to the wrapper
+via `focus-within`. That collided with an existing invariant in
+`layout.test.mjs` that forbade `outline-none` anywhere in the chrome. The rule
+was right in spirit and too blunt in letter: it now allows a removal only
+where a replacement ring is asserted in the same control. The button stays
+44px square, which `responsive.test.mjs` enforces.
+
+**Not changed, and why.** The comp's brand column carries a logo mark above
+the wordmark. `static/rajdhani-logo.png` is colour type 2 — RGB with **no
+alpha channel at all** — on a white background, so dropping it into a green
+footer renders a white rectangle. `site.logos.dark` is still a placehold.co
+placeholder. The text wordmark stays until a dark-background or transparent
+variant is uploaded in admin; that is one upload, not a code change.
+
+**Content, not code.** The comp's copyright reads "© 2025 Rajdhani Food
+Products. All Rights Reserved. Developed by Jamuna Tech." and
+`site.footer.copyright` is "© 2026 Rajdhani Food Products. All rights
+reserved." One admin edit if the client wants the credit line.
+
+**Padding is deliberately looser than the comp.** The comp's footer band is
+~22px top and ~16px bottom at 1280-equivalent, against 48px here. Our columns
+are taller than the comp's anyway — 44px social buttons and `py-1` link rows
+are the WCAG 2.5.8 target, not decoration — and a footer on a different
+rhythm from every other band is a worse trade than 30px of air.
+
+---
+
 ## 5a. Audit, 2026-09-20
 
 Asked after H5 whether the home page was finished. It was not, and mapping
@@ -927,7 +1024,9 @@ out of the bundle). Nobody has looked at the page.
 | 5 | H5 About + stats merge ✅ | Moves working code; blocked on content |
 | 6 | H7 Side-by-side row ✅ | Most invasive; touches `SIZES` |
 | 7 | H8 Hero ✅ | Was blocked on D3; answered by inverting the scrim |
-| 8 | H4 Process variant | Only if the client wants it on About and Quality too |
+| 8 | H9 Page rhythm ✅ | Site-wide; waited until the client asked for the whole page |
+| 9 | H10 Footer ✅ | Last band on the page; measured off the comp's pixels |
+| 10 | H4 Process variant | Only if the client wants it on About and Quality too |
 
 H1 and H3 together close both missing bands and need no decisions from anyone.
 They are the sensible first commit.
