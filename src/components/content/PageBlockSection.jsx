@@ -92,10 +92,25 @@ export function PageBlockSection({ block, id, reversed = false, tone = "surface"
       aria-label={block.heading ? undefined : block.eyebrow || undefined}
       className={cn("py-(--space-section)", tone === "ground" ? "bg-ground" : "bg-surface")}
     >
+      {/*
+        Not two equal columns.
+
+        Measured off the About comp's "Our Company" band: the text runs
+        x 80..397 of a 1024-wide frame and the photograph x 490..949, which is
+        41% / 59% of the content width with a 116px gutter between them. At
+        `grid-cols-2` the text column was half the row and the picture was
+        cramped by the same amount.
+
+        `0.7fr 1fr` is that ratio — 0.7/1.7 is 41.2% — and it suits the other
+        two users of this component as well: About's "Our Strength" puts five
+        process steps in the wide half and Quality's commitment block puts a
+        feature grid there, and both were being squeezed into 50%.
+      */}
       <div
         className={cn(
           "mx-auto grid max-w-(--container-max) gap-10 pl-(--gutter-l) pr-(--gutter-r)",
-          (block.image?.url || children) && "lg:grid-cols-2 lg:items-center lg:gap-14",
+          (block.image?.url || children) &&
+            "lg:grid-cols-[0.7fr_1fr] lg:items-center lg:gap-28",
         )}
       >
         <PageBlockBody block={block} headingId={headingId} className={cn(reversed && "lg:order-2")} />
@@ -105,7 +120,14 @@ export function PageBlockSection({ block, id, reversed = false, tone = "surface"
             When there is none, the block's own image takes the column. */}
         {children ??
           (block.image?.url ? (
-            <div className={cn("overflow-hidden rounded-xl", reversed && "lg:order-1")}>
+            // A 16px radius and a soft shadow, as the comp draws the card —
+            // it lifts the photograph off the near-white band rather than
+            // letting it sit flat on it. `rounded-xl` was 24px, which on a
+            // 575px-wide picture reads as a rounded button rather than a
+            // photograph.
+            <div
+              className={cn("overflow-hidden rounded-lg shadow-card", reversed && "lg:order-1")}
+            >
               <CloudinaryImage
                 src={block.image.url}
                 alt={block.image.alt ?? ""}

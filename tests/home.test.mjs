@@ -1032,13 +1032,15 @@ test("a banner with no image gets a pale ground, not the deep green", () => {
 });
 
 test("the other pages' heroes were not dragged along", () => {
-  // `PageHero` is a different component with its own dark overlay, used by
-  // About, Quality, Contact and four more. The reference covers the home page
-  // only, and nothing here should have reached them.
+  // `PageHero` is a different component with its own dark scrim, used by
+  // About, Quality, Contact and four more. The *home* reference covers the
+  // home page only, and its light treatment should not have reached them —
+  // the inner pages have a comp of their own, and it keeps them dark.
   const pageHero = strip(read("components/layout/PageHero.jsx"));
 
-  assert.match(pageHero, /bg-ink/);
-  assert.match(pageHero, /text-ink-inverse/);
+  assert.match(pageHero, /lg:from-ink lg:from-0% lg:via-ink\/75 lg:via-35%/, "still an ink scrim");
+  assert.match(pageHero, /text-ink-inverse/, "and still light text on it");
+  assert.doesNotMatch(pageHero, /from-surface|bg-surface\/80/, "the home hero's light wash has not leaked");
 });
 
 // ── The second hero button ───────────────────────────────────────────────
