@@ -53,9 +53,9 @@ function FooterLink({ link, className }) {
  *
  * `-ml-5 pl-5` widens the column 20px to its left and pushes the content back
  * by the same 20px, so the border lands in the middle of the `gap-10` gutter
- * rather than flush against the text. Adding `pl-10` on its own would have
- * been simpler and wrong — it would double the gutter to 80px and squeeze
- * every column.
+ * rather than flush against the text. Padding on its own would have been
+ * simpler and wrong — a full 40px of it would double the gutter to 80px and
+ * squeeze every column.
  *
  * `-my-(--space-section) py-(--space-section)` does the same vertically, so
  * the rule runs the full height of the band the way the comp draws it instead
@@ -211,9 +211,24 @@ export function Footer() {
 
               The button stays 44px square — `tests/responsive.test.mjs`
               enforces the WCAG 2.5.5 target and would fail a smaller one.
+
+              **`bg-brand-dark`, and the ring, because the footer is now
+              `bg-brand` too.** Those two changes landed in the same phase and
+              were each right on their own: the comp's footer is the brand
+              green, and the comp's subscribe button is a green square. But
+              the comp's two greens differ — #015826 against #1c5c38 — and
+              ours had become the same value, so the button disappeared into
+              the background and all a visitor saw was a white field with a
+              paper plane floating on green beside it.
+
+              The comp separates them with a light stroke around the whole
+              control, which is what the ring is. The button then goes darker
+              rather than the comp's fractionally lighter: at 10.4:1 against
+              white the icon is unambiguous, where matching the comp's
+              direction would have put it near 4.7:1.
             */}
             <form
-              className="mt-4 flex overflow-hidden rounded-md bg-surface focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand"
+              className="mt-4 flex overflow-hidden rounded-md bg-surface ring-1 ring-ink-inverse/25 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand"
               onSubmit={(event) => event.preventDefault()}
               aria-label="Newsletter sign-up"
             >
@@ -230,7 +245,7 @@ export function Footer() {
               <button
                 type="submit"
                 aria-label="Subscribe"
-                className="grid size-11 shrink-0 place-items-center bg-brand text-on-brand transition-colors hover:bg-brand-dark"
+                className="grid size-11 shrink-0 place-items-center bg-brand-dark text-on-brand transition-colors hover:bg-brand-deep"
               >
                 <Send size={16} strokeWidth={2} aria-hidden="true" />
               </button>

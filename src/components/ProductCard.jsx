@@ -91,7 +91,7 @@ export function ProductCard({
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="font-display text-base font-semibold text-ink">
+        <h3 className="text-base font-semibold text-ink">
           {/* The whole card is the link target, via the overlay below, but the
               accessible name comes from this heading rather than "Read more". */}
           <Link to={`/products/${product.slug}`} className="after:absolute after:inset-0">

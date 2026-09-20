@@ -46,7 +46,7 @@ export function NewsCard({ post, priority = false }) {
           </time>
         ) : null}
 
-        <h2 className="mt-2 font-display text-lg font-semibold leading-snug text-ink">
+        <h2 className="mt-2 text-lg font-semibold leading-snug text-ink">
           <Link to={`/news/${post.slug}`} className="after:absolute after:inset-0">
             {post.title}
           </Link>

@@ -28,6 +28,16 @@ function sources(dir = SRC, out = []) {
 }
 
 const ALL = sources();
+
+/** Every file Tailwind scans, as a path, comments and all. */
+function sourceFiles(dir = SRC, out = []) {
+  for (const entry of readdirSync(dir)) {
+    const path = `${dir}${entry}`;
+    if (statSync(path).isDirectory()) sourceFiles(`${path}/`, out);
+    else if (/\.(js|jsx|css)$/.test(entry)) out.push(path);
+  }
+  return out;
+}
 const file = (name) => ALL.find(([path]) => path.replaceAll("\\", "/").endsWith(name))?.[1] ?? "";
 
 /** The five widths §10.5 names, plus the two edges that must not break. */
@@ -547,12 +557,24 @@ test("the hero measures the stable viewport, not the dynamic one", () => {
   assert.doesNotMatch(hero, /dvh/);
 });
 
-test("the hero dots are a 44px target around an 8px dot", () => {
+test("a carousel dot is a 24x44 target around an 8px dot", () => {
   // F9. Growing the dot itself to meet 2.5.8 would have changed the design;
   // padding it does not.
-  const hero = file("components/home/Hero.jsx");
+  //
+  // It was `h-11 px-1`, described in both components as "the 44px target"
+  // and 44px in one direction only: 8px of dot plus 4px either side is 16px
+  // wide, which fails 2.5.8's 24px minimum, and the 4px gap between dots is
+  // far too small for the criterion's spacing exemption to apply. A browser
+  // measured them at 16x44 on every width swept.
+  //
+  // `w-6` meets the minimum outright. Not `size-11`: 44px-wide targets would
+  // space three dots 48px apart and lose the tight row the comps draw.
+  for (const name of ["components/home/Hero.jsx", "components/home/Testimonials.jsx"]) {
+    assert.match(file(name), /className="group grid h-11 w-6 place-items-center"/, name);
+    assert.doesNotMatch(file(name), /h-11 place-items-center px-1/, `${name} is 16px wide again`);
+  }
 
-  assert.match(hero, /className="group grid h-11 place-items-center px-1"/);
+  const hero = file("components/home/Hero.jsx");
   assert.match(hero, /block h-2 rounded-full/, "the dot is still 8px");
   // Dark, not white: H8 turned the hero light, so a white dot over a bright
   // tea garden would be the one control nobody can see.
@@ -944,6 +966,43 @@ test("no class name is quoted where Tailwind will compile it", () => {
   // of, and Tailwind compiled both back into the bundle.
   assert.doesNotMatch(read("lib/cloudinary.js"), /max-w-\[1280px\]/);
   assert.doesNotMatch(read("shared/theme/tokens.css"), /max-w-\[1280px\]|`py-16`/);
+});
+
+test("and no comment anywhere names a utility the code no longer uses", () => {
+  // The curated list above only ever catches the case someone already found.
+  // This is the general one, and it has caught four more: `bottom-6` in the
+  // hero, a padding in the footer, and two in the process band — each named
+  // in a comment explaining why it went, each therefore still compiled and
+  // shipped. The explanation was keeping the thing alive.
+  //
+  // Only utilities whose value could not be an English word are considered:
+  // a number, a bracketed arbitrary value, a custom property, or one of
+  // Tailwind's keywords. Without that, "top-level" and "right-hand" are
+  // indistinguishable from class names and the test is noise.
+  const PREFIX =
+    "mt|mb|ml|mr|mx|my|pt|pb|pl|pr|px|py|gap|gap-x|gap-y|w|h|size|top|bottom|left|right|" +
+    "inset|inset-x|inset-y|max-w|min-h|min-w|grid-cols|space-x|space-y|opacity|z|basis|leading|tracking";
+  const VALUE = "\\d+(?:\\.\\d+)?|\\[[^\\]\\s]+\\]|\\(--[a-z-]+\\)|full|auto|px|screen|fit|none";
+  const token = () => new RegExp(`(?<![\\w-])-?(?:${PREFIX})-(?:${VALUE})(?![\\w-])`, "g");
+
+  const live = new Set();
+  const quoted = new Map();
+
+  for (const path of sourceFiles()) {
+    const text = readFileSync(path, "utf8");
+    const comments = [...text.matchAll(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm)].map((m) => m[0]).join("\n");
+    const bare = text.replace(/\/\*[\s\S]*?\*\//g, " ").replace(/^\s*\/\/.*$/gm, " ");
+
+    for (const m of bare.matchAll(token())) live.add(m[0]);
+    for (const m of comments.matchAll(token())) if (!quoted.has(m[0])) quoted.set(m[0], path);
+  }
+
+  const dead = [...quoted].filter(([name]) => !live.has(name));
+  assert.deepEqual(
+    dead.map(([name, path]) => `${name} in ${path.replace(/^.*[\\/]src[\\/]/, "")}`),
+    [],
+    "a comment names a class nothing uses, so Tailwind still ships it",
+  );
 });
 
 // ── Phase R8: the gates that can be checked without a browser ─────────────

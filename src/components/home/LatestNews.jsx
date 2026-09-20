@@ -77,7 +77,7 @@ export function LatestNews({ posts }) {
                     past. The excerpt is still on `/news`, where the card has
                     the width for it.
                   */}
-                  <h3 className="mt-2 font-display text-base font-semibold leading-snug text-ink">
+                  <h3 className="mt-2 text-base font-semibold leading-snug text-ink">
                     <Link to={`/news/${post.slug}`} className="after:absolute after:inset-0">
                       {post.title}
                     </Link>

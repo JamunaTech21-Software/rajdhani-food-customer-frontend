@@ -29,7 +29,7 @@ function SavedProduct({ product, onRemove }) {
       </Link>
 
       <div className="min-w-0 flex-1">
-        <h2 className="font-display text-base font-semibold text-ink">{product.name}</h2>
+        <h2 className="text-base font-semibold text-ink">{product.name}</h2>
         {product.category?.name ? (
           <p className="mt-0.5 text-sm text-ink-muted">{product.category.name}</p>
         ) : null}

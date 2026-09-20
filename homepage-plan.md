@@ -972,6 +972,318 @@ rhythm from every other band is a worse trade than 30px of air.
 
 ---
 
+### H11 — the dealer bar joined to the process band ✅ *done 2026-09-20*
+
+Measured off the comp, same method as H10:
+
+| | Comp (1024 frame) | At our 1280 |
+|---|---|---|
+| Process photo, bottom edge | y=1100 | — |
+| Dealer bar, top edge | y=1102 | — |
+| Step text, bottom | y=1083 | — |
+| **Text to bar** | **19px** | **24px** |
+| Bar | y 1102–1177, x 71–946 | 95px tall, container width |
+| Bar to next heading | 19px | 24px |
+
+**The photograph's lower edge and the bar's upper edge are the same line.**
+That is the whole of it — the two read as one composition because nothing
+separates them. We had a full section of padding there instead, so the bar
+floated below a band it belongs to.
+
+`ProcessBand` now carries `pt-(--space-section) pb-6`. The 24px is fixed
+rather than tokenised because it is no longer a gap between bands — it is the
+join, and it should not grow with the rhythm.
+
+**Why the padding and not a negative margin on the bar.** Pulling `DealerCta`
+up with `-mt-(--space-section)` would close the same gap and would have been
+wrong: the photo is `bottom-0` of the process band, so it would still reach
+the old line and the bar would simply cover it — and the bar stops at the
+1280 container while the photo bleeds to the window, so on anything wider a
+24px tail of photograph would show past the bar's right edge. Shortening the
+band moves the photo's actual edge, which is what the comp draws.
+
+**Nothing breaks when the banner is absent.** `DealerCta` renders nothing
+outside its schedule; the 24px then simply adds to the quotes band's own
+`pt-(--space-section)` for a 72px gap, which is tighter than a full band gap
+and reads fine.
+
+**Two deltas measured and deliberately left.**
+
+*Space below the bar* is 24px in the comp and 48px here. That space belongs to
+the quotes band's `py-(--space-section)`, and H9 settled that number for every
+band on the page — giving it up for one neighbour would make the rhythm a
+special case. The join above is what the comp draws; the space below is just
+the comp being tighter everywhere.
+
+*The bar itself is about 148px tall against the comp's 95px.* The difference
+is `py-8` plus a `size-16` mark where the comp has ~26px of padding and a
+~56px mark. Not changed: the bar was iterated on and signed off two rounds
+ago, and this is a separate question from joining it to the band above. One
+edit if the client wants it tightened.
+
+---
+
+### H12 — the process photograph as a full-height panel ✅ *done 2026-09-20*
+
+H11 joined the bottom of the photograph to the dealer bar. The comp joins the
+top of it too, and measuring says so exactly:
+
+| Edge | Comp (1024 frame) |
+|---|---|
+| About band's tint ends | y=944 |
+| **Photograph starts** | **y=945** |
+| **Photograph ends** | **y=1100** |
+| Dealer bar starts | y=1102 |
+
+So the photograph is a **full-height panel between two bands**, not a picture
+inset into one. It was offset from the top by a section of the rhythm so its
+upper edge sat level with "OUR PROCESS"; the white strip that left above it is
+what gave the game away. It is now `inset-y-0`, and there is no offset left to
+keep in step with anything.
+
+The crop conclusion survives the taller box, which was worth re-checking
+rather than assuming: 352×301 at `xl` against a 1942×809 source still scales
+to the height and crops only the width, so `object-right` still does the work
+and a vertical anchor would still be inert. The test recomputes the box from
+what the band is today instead of the 479px height it was written against.
+
+**The dealer bar's copy now matches the comp**, changed through the admin API,
+not in code:
+
+| | Was | Now |
+|---|---|---|
+| Title | "Interested in a dealership?" | "Become Our Distributor / Dealer" |
+| Subtitle | "We are expanding across all 64 districts." | "Join hands with Rajdhani Food Products and grow your business with a trusted brand." |
+| Button | "Apply for Dealership" | "Apply Now" |
+
+`title_highlight` stays null: there is **no gold anywhere in the comp's bar** —
+checked pixel by pixel across all 874×76 of it — so the heading is one colour.
+The link is unchanged at `/dealer`.
+
+---
+
+### F24, a fourth and fifth time — and now a test that generalises it
+
+Writing H12's comment shipped a dead class straight back into the bundle. The
+comment explaining that the photograph no longer uses a top offset **named the
+offset**, Tailwind scanned the comment, and compiled the rule it was
+explaining the removal of.
+
+The curated assertions in `responsive.test.mjs` only ever catch the instance
+somebody already found, so there is now a general one. It collects every
+utility named inside a comment anywhere in `src`, collects every utility used
+outside a comment, and fails on the difference. It found four the moment it
+ran:
+
+| Class | Named in | Why it was there |
+|---|---|---|
+| `top-(--space-section)` | `ProcessBand.jsx` | explaining this phase's change |
+| an arbitrary right padding | `ProcessBand.jsx` | explaining the percentage-padding bug |
+| a 40px left padding | `Footer.jsx` | explaining H10's gutter trick |
+| a 24px bottom offset | `Hero.jsx` | explaining why the dots moved |
+
+All four reworded to describe the value rather than spell the class.
+
+The pattern only considers utilities whose value **could not be an English
+word** — a number, a bracketed arbitrary value, a custom property, or a
+Tailwind keyword. Without that restriction "top-level", "right-hand" and
+"right-to-left" are indistinguishable from class names and the test is noise
+rather than signal.
+
+---
+
+### H13 — the bug behind five rounds of "the image is the wrong size" ✅ *done 2026-09-20*
+
+**An absolutely positioned image with a width and no height computes its own
+height, and the browser then ignores `bottom`.**
+
+Tailwind's preflight sets `height: auto` on every `img`. For an absolutely
+positioned **replaced** element that resolves the way it does for an inline
+replaced element — from the width and the intrinsic ratio — not from the
+offsets. The offset equation is then over-constrained, and CSS 2.1 §10.6.5
+says the browser drops `bottom`.
+
+| Image | Source | Column | Height it took | Height it needed |
+|---|---|---|---|---|
+| Process photo | 1942×809 | 352px at `xl` | **147px** | ~300px |
+| Dealer leaves | 1568×1003 | ~246px | **157px** | ~148px |
+
+So the photograph sat pinned to the top of its band with about 150px of white
+underneath it. H11 and H12 both moved the box and neither could fix it,
+because the height was never coming from the box. The dealer bar's leaves had
+the same bug and very nearly got away with it — 157px against a 148px bar,
+near enough to pass for working, and one extra line of wrapped copy from not.
+
+`h-full` on both. `AboutBand`'s watermark has carried `size-full` since it was
+written and never had the bug, which in hindsight was the tell: the one that
+worked was the one with an explicit height.
+
+**How it hid for so long.** Every symptom pointed at layout — "the image is
+out of the section", "move it down a bit", "increase the height so it covers
+the section". Each is a true description of what was on screen and none of
+them is the cause, so five rounds of adjusting offsets, widths and paddings
+all failed the same way. A test now asserts that every absolutely positioned
+image in the home components carries an explicit height.
+
+**What this does not change.** The step copy was already right: the live
+`FROM_GARDEN_TO_CUP` rows match the comp word for word — "Carefully Plucked /
+Finest tea leaves hand picked" through "Perfect Taste / Pure, natural &
+refreshing" — with five distinct icons. The band looked wrong because of the
+photograph, not the text.
+
+**Measured and left alone:** the comp's photo is 425px wide at 1280 against
+our 352px, and its step row is about 691px against our 848px. The comp's band
+is also far shorter than ours (its photo hole is 194px tall, ours ~300px), so
+the two are not the same shape and matching one number would not match the
+picture. Worth a look once the height fix is on screen.
+
+---
+
+### H14 — the dealer bar's left block, to the comp's measurements ✅ *done 2026-09-20*
+
+Measured at 1280-equivalent from the 1024-wide comp, rather than judged:
+
+| Part | Comp | Was | Now |
+|---|---|---|---|
+| Bar height | 95px | ~148px | ~100px |
+| Bar padding | 14px | 32px (`py-8`) | 14px from `lg` |
+| Mark | 65px | 64px | **64px, unchanged** |
+| Mark → text | 30px | 40px | 32px |
+| Title | ~20px | 24px at `sm`+ | 20px |
+| Subtitle | 14px on a 20px line | 16px on a 26px line | 14px on a 20px line |
+| Title → subtitle | 4px | 8px | 4px |
+| Button | 131×39 | ~137×48 | ~137×44 |
+| Left padding | 33px | 40px | 32px |
+
+**The mark was the only part already right**, which is why measuring first
+mattered: next to a title, a subtitle and a button that were each a size too
+large it read as too big, and shrinking it would have been the wrong fix for
+a real symptom. It is asserted at 64px now so nobody corrects it to match
+what was around it.
+
+**The button stays at 44px against the comp's 39.** WCAG 2.5.5 is the floor
+and `responsive.test.mjs` enforces it. Its width lands at about 137 against
+the comp's 131 without being set.
+
+**The tightening is held back to `lg`.** Below that the bar is a column —
+mark, then text, then button — and 14px of padding around a three-item stack
+is cramped rather than neat. The comp only ever draws the row.
+
+**The copy was already the comp's**, set through admin earlier in the day and
+re-read from the public endpoint to confirm it had not reverted or been
+cached: "Become Our Distributor / Dealer", "Join hands with Rajdhani Food
+Products and grow your business with a trusted brand.", "Apply Now" → `/dealer`,
+with no highlight because the comp's bar contains no gold at all.
+
+---
+
+### H15 — the footer join, and the serif that was not opt-in ✅ *done 2026-09-20*
+
+**The quotes band rests on the footer.** Measured from the comp: the news
+cards' lower border sits 7px above the footer's top edge in a 1024-wide frame
+— **9px at 1280** — where ours was a full section, 48px. `pb-2`.
+
+Same reasoning as the process band's join with the dealer bar: this is not a
+gap between two bands that each need air, it is the last content on the page
+resting on a solid dark block, and the footer supplies all the room needed on
+its own side.
+
+**The display serif was applied to every heading by a base rule, and the comp
+does not do that.**
+
+`index.css` set `h1, h2, h3 { font-family: var(--font-display) }` because the
+earlier comps did. The current reference uses the serif for **band titles
+only**. Checked at 4× on its own pixels:
+
+| Element | Comp | Was |
+|---|---|---|
+| "Premium Tea" (product card) | sans | Playfair, explicitly |
+| "Rajdhani Food Products at Tea Expo 2025" | sans | Playfair, explicitly |
+| "Carefully Plucked" (process step) | sans | Playfair, by inheritance |
+| "QUICK LINKS" (footer column) | sans | Playfair, by inheritance |
+| "WHAT OUR CLIENTS SAY" (eyebrow h2) | sans | Playfair, by inheritance |
+| "From Garden To Your Cup" | serif | serif ✅ |
+
+Two different faults with the same symptom. Four small headings were serif
+**by inheritance** — nobody asked for it, they simply happen to be `h2` or
+`h3`. Four card titles were serif **explicitly**, written that way when the
+blanket rule made it look consistent.
+
+The base rule is gone. The serif is opt-in now: a heading that wants it says
+`font-display`, and the rest inherit the body sans. Size is what decides it in
+the design, and a base rule cannot see size — which is also why the next small
+heading anyone adds will no longer be a serif by accident.
+
+Changed to sans: `ProductCard`, `LatestNews`'s card title, `NewsCard`,
+`WishlistPage`'s product name. The wishlist row is not in the comp, but it is
+the same product name in a different place and would have looked like a
+different component beside the card.
+
+Kept serif, explicitly: the hero headline, `SectionHeading` (every band title
+on every page), "Our Premium Tea Range", "From Garden To Your Cup", the dealer
+bar, and the page-level `h1`s.
+
+---
+
+### H16 — the responsive sweep, run in a browser ✅ *done 2026-09-20*
+
+Every earlier phase was reasoned from source. This one was measured in
+Chrome: headless over the DevTools Protocol, `tests/viewport-audit.js` — the
+script R8 wrote for exactly this and which had never been run — evaluated at
+320, 360, 390, 414, 640, 768, 834, 1024, 1280, 1440 and 1920, plus full-page
+screenshots at each.
+
+**The page does not overflow at any width.** `scrollWidth === clientWidth`
+from 320 to 1920, nothing extends past the viewport, no image renders without
+a reserved box. The ramps all step where they were designed to. So the
+structure was sound; what was broken were three things source could not show.
+
+**1. The hero's wash fails below `lg`, and the hero is the first thing anyone
+sees.** The light gradient reaches `transparent` at 68% of the *viewport*.
+That works while the text sits in the left half and fails the instant it does
+not: the column is `max-w-xl`, so it clears 68% only above about 1050px. At
+768 the text ran to 78% of the width and on a phone to 96% — the last third of
+every line was near-black type directly on a sunlit hillside. Below `lg` the
+wash is now flat and covers the slide.
+
+**2. The subscribe button had become invisible.** H10 made the footer
+`bg-brand` and the button `bg-brand` in the same phase. Each matched the comp
+on its own; together they were the same colour, so the footer showed a white
+field with a paper plane floating on green beside it. The comp keeps its two
+greens a shade apart (#015826 against #1c5c38) and draws a light stroke around
+the whole control. The stroke is a `ring-1`; the button goes to
+`bg-brand-dark` rather than the comp's fractionally lighter green, because
+darker gives the icon 10.4:1 where lighter would give about 4.7:1.
+
+**3. Both carousels' dots were 16px wide.** `h-11 px-1` around an 8px dot, in
+the hero and in the testimonials, each with a comment calling it "the 44px
+target". It is 44px in one direction only. 16px fails WCAG 2.5.8's 24px
+minimum outright, and the 4px gap between dots is far too small for the
+criterion's spacing exemption to rescue it — so three dots 20px apart on a
+phone. Now `w-6`: 24×44, confirmed by the browser at every width. Not 44 wide,
+which would space three dots 48px apart and lose the tight row the comps draw.
+
+**Two false alarms worth recording**, because both looked like serious bugs in
+the first screenshots. The three news covers and both band photographs came
+back as empty grey boxes — they are `loading="lazy"` and sit below the fold,
+and `captureBeyondViewport` does not bring lazy images into view. Curling the
+dev server returned all three assets at 200 with their full byte counts. The
+capture now resizes the viewport to the whole page first.
+
+**Page heights**, for the record: 5799px at 390, 4318px at 768, 2680px at
+1280. The comp scales to about 1920 at 1280, so desktop is still ~40% taller
+than the design — our type is larger and our targets are 44px, and H9 settled
+that trade deliberately.
+
+**Content noticed, not changed.** The hero subtitle reads "Expereince the
+reachness of premium tea…" where the comp reads "Experience the richness of
+premium tea…" — two typos in the largest body text on the site. The USP strip
+copy also differs from the comp and carries a "carefull". Both are banner and
+USP rows in admin, not code, and §D2 says the reference is authoritative on
+layout rather than content, so they are listed here rather than edited.
+
+---
+
 ## 5a. Audit, 2026-09-20
 
 Asked after H5 whether the home page was finished. It was not, and mapping
@@ -1026,7 +1338,13 @@ out of the bundle). Nobody has looked at the page.
 | 7 | H8 Hero ✅ | Was blocked on D3; answered by inverting the scrim |
 | 8 | H9 Page rhythm ✅ | Site-wide; waited until the client asked for the whole page |
 | 9 | H10 Footer ✅ | Last band on the page; measured off the comp's pixels |
-| 10 | H4 Process variant | Only if the client wants it on About and Quality too |
+| 10 | H11 Process/dealer join ✅ | Needed H9's rhythm settled first |
+| 11 | H12 Photo as a full-height panel ✅ | The other half of the same join |
+| 12 | H13 Absolute image heights ✅ | The actual cause of the process-band rounds |
+| 13 | H14 Dealer bar sizing ✅ | Measured once the image bug stopped masking it |
+| 14 | H15 Footer join + serif opt-in ✅ | Font rule was app-wide, so it waited for the page to settle |
+| 15 | H16 Responsive sweep ✅ | Measured in a browser, not reasoned from source |
+| 16 | H4 Process variant | Only if the client wants it on About and Quality too |
 
 H1 and H3 together close both missing bands and need no decisions from anyone.
 They are the sensible first commit.

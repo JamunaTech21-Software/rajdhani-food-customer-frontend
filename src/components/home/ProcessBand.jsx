@@ -82,7 +82,29 @@ export function ProcessBand({ steps }) {
   if (!steps?.length) return null;
 
   return (
-    <section aria-labelledby="process-heading" className="relative overflow-hidden py-(--space-section)">
+    /*
+      `pt-(--space-section) pb-6`, and the asymmetry is the point.
+
+      In the comp the dealer bar is not a band that follows this one — the
+      photograph's lower edge and the bar's upper edge are the same line
+      (y=1100 and y=1102 of a 1024-wide frame), and the two read as one
+      composition because of it. A full section of padding here put 96px
+      between them, counting the bar's neighbour-owned space, and broke that
+      join.
+
+      24px is the comp's own figure, measured from the bottom of the step
+      text to the top of the bar and scaled to our 1280 container. It is a
+      fixed value rather than the token because it is no longer a gap between
+      bands — it is the join, and it should not grow with the rhythm.
+
+      Nothing breaks when the banner is absent: `DealerCta` renders nothing
+      outside its schedule, and this 24px then adds to the quotes band's own
+      `pt-(--space-section)` for a 72px gap.
+    */
+    <section
+      aria-labelledby="process-heading"
+      className="relative overflow-hidden pb-6 pt-(--space-section)"
+    >
       {/*
         Real alt text, unlike the About band's watermark: this is a photograph
         of someone picking tea, not an ornament, and it says something the five
@@ -90,14 +112,34 @@ export function ProcessBand({ steps }) {
         An empty alt would be right for a border flourish and is not right for
         this.
 
-        `top-(--space-section)` is the same value as the section's own top
-        padding, so the photograph's top edge lands exactly where "OUR
-        PROCESS" does rather than squaring up against the band above. It runs
-        to `bottom-0`, so it still bleeds to the band's lower edge.
+        `inset-y-0 h-full`: it fills the band, top to bottom, and touches the
+        band on each side of it.
 
-        Reading the token rather than repeating a number is what keeps the two
-        aligned: `--space-section` steps 48 → 80 → 112px across breakpoints,
-        and a hardcoded offset matched it at none of them.
+        **`h-full` is not redundant, and leaving it off was a real bug.** An
+        absolutely positioned *replaced* element resolves `height: auto` — set
+        on every img by Tailwind's preflight — the way an inline replaced
+        element does: from the width and the intrinsic ratio. The source is
+        1942×809, so at the 352px this column is wide the image was 147px
+        tall, and then the offset equation was over-constrained and the
+        browser dropped `bottom` on the floor.
+
+        The result looked exactly like a layout problem: the photograph was
+        pinned to the top of the band with 150px of white underneath it, and
+        no amount of moving the box fixed it, because the height was being
+        computed from the width the whole time. `AboutBand`'s watermark had
+        `size-full` from the start and never had the bug, which is the tell.
+
+        It used to be offset from the top by one section of the rhythm, so
+        that its upper edge sat level with "OUR PROCESS". Measuring the comp
+        says otherwise — the
+        photograph's top edge is at y=945 of a 1024-wide frame and the About
+        band's tint ends at y=944, so the two meet exactly, with the dealer
+        bar meeting its lower edge the same way (H11). The photograph is a
+        full-height panel between two bands, not an inset picture, and the
+        white gap above it was the giveaway that we had it as the latter.
+
+        That is also why the offset no longer reads `--space-section`. There
+        is nothing left for it to stay level with.
 
         `object-right`, and the anchoring matters: the column is portrait
         (352×479 at `xl`) and the source is 1942×809, so `cover` scales to the
@@ -126,13 +168,14 @@ export function ProcessBand({ steps }) {
           every width, instead of drifting further away the wider the screen
           gets.
         */
-        className="fade-in-from-left absolute bottom-0 right-0 top-(--space-section) hidden object-cover object-right lg:block lg:w-[calc((100vw-min(100vw,1280px))/2+16rem)] xl:w-[calc((100vw-min(100vw,1280px))/2+22rem)]"
+        className="fade-in-from-left absolute inset-y-0 right-0 hidden h-full object-cover object-right lg:block lg:w-[calc((100vw-min(100vw,1280px))/2+16rem)] xl:w-[calc((100vw-min(100vw,1280px))/2+22rem)]"
       />
 
       {/*
         The text is held off the photo with `max-width`, not with padding.
         Percentage *padding* resolves against the containing block — the
-        full-bleed section — so `pr-[32%]` was 32% of the viewport: 614px at
+        full-bleed section — so a right padding of 32% was 32% of the
+        viewport: 614px at
         1920, which squeezed the steps into a narrow column and left a gulf
         between them and the photograph. A percentage `max-width` on a child
         resolves against this container's own content box, which is capped at

@@ -144,9 +144,26 @@ function Slide({ banner, onDownload, downloading, priority }) {
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-ground" />
       )}
 
+      {/*
+        A left-to-right wash only where there is room for one.
+
+        The gradient reaches `transparent` at 68% of the *viewport*, which
+        works while the text occupies the left half and fails the moment it
+        does not. The text column is `max-w-xl`, 576px, so it clears 68% only
+        above about 1050px wide: at 768 it runs to 78% and on a phone to 96%,
+        and the last third of every line was sitting on the photograph with
+        no protection under it at all. Near-black type on a sunlit hillside —
+        the first thing anyone sees on a phone, and unreadable.
+
+        So below `lg` the wash is flat and covers the whole slide. The
+        photograph is still visible through it; what it stops being is the
+        background to the words. The gradient returns at `lg`, where the
+        composition the reference draws — text left, produce right — actually
+        fits.
+      */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-r from-surface from-0% via-surface/60 via-35% to-transparent to-68%"
+        className="absolute inset-0 -z-10 bg-surface/80 lg:bg-transparent lg:bg-gradient-to-r lg:from-surface lg:from-0% lg:via-surface/60 lg:via-35% lg:to-transparent lg:to-68%"
         style={{ opacity: protection(banner.overlay_opacity) }}
       />
 
@@ -251,8 +268,9 @@ export function Hero({ banners, onDownload, downloading = false }) {
           the approved design is a single banner — so there is nothing here to
           contradict by collecting them at the bottom instead.
 
-          `bottom-16` and not `bottom-6`: the USP strip is pulled up 48px over
-          the hero and carries `z-10`, so the dots were rendering *behind* it.
+          The offset is 64px rather than the 24px it started at: the USP strip
+          is pulled up 48px over the hero and carries `z-10`, so at the
+          smaller value the dots were rendering *behind* it.
         */
         <div className="absolute inset-x-0 bottom-16 flex items-center justify-center gap-1">
           <button
@@ -266,9 +284,16 @@ export function Hero({ banners, onDownload, downloading = false }) {
 
           {slides.map((slide, i) => (
             /*
-              The button is the 44px target; the span is the 8px dot the comps
-              draw. Growing the dot itself to meet 2.5.8 would have changed the
-              design — padding it does not.
+              The span is the 8px dot the comps draw; the button is the target
+              around it. Growing the dot itself to meet 2.5.8 would have
+              changed the design — padding it does not.
+
+              24×44, and the width is the part that was wrong: this claimed a
+              44px target and was 44px tall by 16px wide, which fails 2.5.8
+              outright, and the 4px gap is too small for its spacing
+              exemption to rescue. `w-6` meets the 24px minimum without
+              spreading the dots the way a 44px-wide target would. See
+              `Testimonials`, which had the same bug.
             */
             <button
               key={slide.id}
@@ -276,7 +301,7 @@ export function Hero({ banners, onDownload, downloading = false }) {
               aria-label={`Go to slide ${i + 1}`}
               aria-current={i === index ? "true" : undefined}
               onClick={() => setIndex(i)}
-              className="group grid h-11 place-items-center px-1"
+              className="group grid h-11 w-6 place-items-center"
             >
               <span
                 className={cn(

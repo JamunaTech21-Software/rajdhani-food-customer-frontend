@@ -3,8 +3,13 @@ import { Link } from "react-router";
 
 import { isExternal } from "../../lib/nav.js";
 
+// 44px, not the comp's 39px. Measuring the bar put the button at 131×39, and
+// 39 is below the 44px target WCAG 2.5.5 asks for — `responsive.test.mjs`
+// enforces that floor and would fail a smaller one. `h-11` is as close to the
+// reference as the accessibility budget allows; the width lands at ~137
+// against the comp's 131 on its own.
 const ACTION =
-  "inline-flex h-12 shrink-0 items-center gap-2 rounded-md bg-surface px-6 text-sm font-medium text-brand transition-colors duration-(--duration-fast) hover:bg-ground";
+  "inline-flex h-11 shrink-0 items-center gap-2 rounded-md bg-surface px-6 text-sm font-medium text-brand transition-colors duration-(--duration-fast) hover:bg-ground";
 
 /**
  * "Become Our Distributor / Dealer" (§10.1) — the `DEALER_CTA` banner.
@@ -42,15 +47,39 @@ export function DealerCta({ banner }) {
   return (
     <section
       aria-labelledby="dealer-cta-heading"
-      // No vertical padding of its own, unlike every other band. The bands
-      // above and below each carry `py-(--space-section)`, so this sits in one
-      // section of space on each side rather than one above and two below —
-      // which is what it had, and which pushed the bar visibly off-centre
-      // between its neighbours. The reference draws it tighter than the other
-      // bands anyway.
+      // No vertical padding of its own, unlike every other band: the space
+      // around it belongs to its neighbours.
+      //
+      // Above, that is now `ProcessBand`'s `pb-6` — 24px, the comp's figure —
+      // because the comp draws the bar's top edge on the same line as the
+      // process photograph's bottom edge, and the two read as one
+      // composition. Below, it is the quotes band's own
+      // `py-(--space-section)`.
+      //
+      // So it is deliberately no longer centred between the two. It used to
+      // be, which was right when nothing above it reached down to meet it;
+      // now the join is the thing being drawn. The comp is tighter still
+      // underneath — 24px there too — but that is the quotes band's rhythm to
+      // give up, not this one's, and §H9 settled that number for every band
+      // on the page.
       className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)"
     >
-      <div className="relative isolate flex flex-col gap-6 overflow-hidden rounded-xl bg-brand px-6 py-8 sm:px-10 lg:flex-row lg:items-center lg:gap-10 lg:pr-64">
+      {/*
+        Measured off the comp at 1280-equivalent: the bar is 95px tall with
+        14px of padding, 33px in from its left edge, and 30px between the mark
+        and the text. It was 148px here, which is half as tall again — the
+        `py-8` and a text block set two sizes too large.
+
+        The tightening is held back to `lg`. Below that the bar is a column:
+        mark, then text, then button stacked, and 14px of padding around a
+        three-item stack reads as cramped rather than as the reference's neat
+        row. The comp only ever draws the row.
+
+        The mark stays at 64px. The comp's is 65px — the one part of the left
+        side that was already right, which is worth recording because it
+        looked too big next to everything else that was.
+      */}
+      <div className="relative isolate flex flex-col gap-6 overflow-hidden rounded-xl bg-brand px-6 py-6 sm:px-8 lg:flex-row lg:items-center lg:gap-8 lg:py-3.5 lg:pr-64">
         {/*
           The leaves at the right end of the bar, as the reference draws them.
           The file is the whole bar background — flat green on the left, leaves
@@ -72,6 +101,14 @@ export function DealerCta({ banner }) {
 
           `bg-brand` stays underneath as the real background — this is
           decoration over it, not a replacement for it.
+
+          `h-full` for the reason `ProcessBand` records at length: an
+          absolutely positioned image with a width and no height takes its
+          height from the intrinsic ratio, and the browser then ignores
+          `bottom`. This one was 157px against a bar about 148px tall, so it
+          very nearly worked by accident — which is worse than obviously
+          broken, because it would have started failing the day the copy
+          wrapped onto another line.
         */}
         <img
           src="/home-distibutor-right.png"
@@ -79,7 +116,7 @@ export function DealerCta({ banner }) {
           aria-hidden="true"
           loading="lazy"
           decoding="async"
-          className="fade-in-from-left absolute inset-y-0 right-0 -z-10 hidden w-[20%] object-cover lg:block"
+          className="fade-in-from-left absolute inset-y-0 right-0 -z-10 hidden h-full w-[20%] object-cover lg:block"
         />
 
         <span
@@ -90,10 +127,12 @@ export function DealerCta({ banner }) {
         </span>
 
         <div className="min-w-0 flex-1">
-          <h2
-            id="dealer-cta-heading"
-            className="font-display text-xl font-bold text-on-brand sm:text-2xl"
-          >
+          {/* 20px at every width. The `sm` step to 24px put the heading a
+              size above the comp, which sets "Become Our Distributor /
+              Dealer" at about 19–20px — measured from its 294px width in the
+              display serif, not from the ink height, since the slash makes
+              the tallest glyph taller than the caps. */}
+          <h2 id="dealer-cta-heading" className="font-display text-xl font-bold text-on-brand">
             {banner.title}
             {banner.title_highlight ? (
               // The gold rather than a lighter green: on a solid brand bar a
@@ -103,7 +142,11 @@ export function DealerCta({ banner }) {
           </h2>
 
           {banner.subtitle ? (
-            <p className="mt-2 max-w-xl leading-relaxed text-on-brand/85">{banner.subtitle}</p>
+            // 14px on a 20px line, and only 4px under the heading. The comp's
+            // subtitle lines sit 20px apart and its first line starts 4px
+            // below the title's line box; at 16px with relaxed leading ours
+            // was 26px apart, which is what made the block two sizes too tall.
+            <p className="mt-1 max-w-xl text-sm text-on-brand/85">{banner.subtitle}</p>
           ) : null}
         </div>
 
