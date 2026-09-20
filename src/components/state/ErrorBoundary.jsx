@@ -52,14 +52,23 @@ export class ErrorBoundary extends Component {
 
     const title = this.props.title ?? "This section could not be shown";
 
-    // Inside the page's own container and rhythm. A full-bleed panel butting
+    const panel = (
+      <ErrorState error={error} title={title} onRetry={this.reset}>
+        Something went wrong drawing this part of the page. The rest of it still works.
+      </ErrorState>
+    );
+
+    // `inline` is for a boundary already inside a laid-out column — one of the
+    // two in `VoicesBand`, say. Wrapping there would add the page's gutters a
+    // second time, inside a track that already has them.
+    if (this.props.inline) return panel;
+
+    // Otherwise the page's own container and rhythm. A full-bleed panel butting
     // against whatever rendered above it reads as part of that section rather
     // than as a replacement for the one that is missing.
     return (
       <div className="mx-auto max-w-(--container-max) py-(--space-section) pl-(--gutter-l) pr-(--gutter-r)">
-        <ErrorState error={error} title={title} onRetry={this.reset}>
-          Something went wrong drawing this part of the page. The rest of it still works.
-        </ErrorState>
+        {panel}
       </div>
     );
   }

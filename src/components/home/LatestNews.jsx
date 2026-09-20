@@ -17,15 +17,24 @@ export function LatestNews({ posts }) {
   if (!posts?.length) return null;
 
   return (
-    <section aria-labelledby="news-heading" className="py-(--space-section)">
-      <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
+    // No container, no rhythm: `VoicesBand` owns both, because this is two
+    // thirds of a row rather than a band of its own.
+    <section aria-labelledby="news-heading">
+      <div>
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">
+            {/*
+              The eyebrow *is* the heading, as on the testimonials beside it.
+              "From the garden and the factory" was written here rather than by
+              anyone who owns the copy, and the reference shows no line under
+              the eyebrow. Making the visible line the heading keeps the
+              document outline without a hidden duplicate (R3).
+            */}
+            <h2
+              id="news-heading"
+              className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand"
+            >
               Latest News &amp; Updates
-            </p>
-            <h2 id="news-heading" className="mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">
-              From the garden and the factory
             </h2>
           </div>
 
@@ -38,7 +47,7 @@ export function LatestNews({ posts }) {
           </Link>
         </div>
 
-        <ul className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {posts.map((post) => (
             <li key={post.slug}>
               <article className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface">
@@ -46,7 +55,7 @@ export function LatestNews({ posts }) {
                   <CloudinaryImage
                     src={post.cover_image?.url}
                     alt={post.cover_image?.alt ?? ""}
-                    sizes={SIZES.newsCard}
+                    sizes={SIZES.homeNewsCard}
                     className="size-full transition-transform duration-(--duration-slow) group-hover:scale-105"
                   />
                 </div>
@@ -61,17 +70,18 @@ export function LatestNews({ posts }) {
                     </time>
                   ) : null}
 
-                  <h3 className="mt-2 font-display text-lg font-semibold leading-snug text-ink">
+                  {/*
+                    Date then title, and no excerpt — F13. At `xl` these cards
+                    are 249px wide, where three lines of excerpt under a
+                    two-line title is a column of text nobody reads on the way
+                    past. The excerpt is still on `/news`, where the card has
+                    the width for it.
+                  */}
+                  <h3 className="mt-2 font-display text-base font-semibold leading-snug text-ink">
                     <Link to={`/news/${post.slug}`} className="after:absolute after:inset-0">
                       {post.title}
                     </Link>
                   </h3>
-
-                  {post.excerpt ? (
-                    <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-muted">
-                      {post.excerpt}
-                    </p>
-                  ) : null}
                 </div>
               </article>
             </li>

@@ -8,20 +8,26 @@ import { advance, swipeIntent } from "../../lib/carousel.js";
 import { SIZES } from "../../lib/cloudinary.js";
 import { isExternal } from "../../lib/nav.js";
 
-function Cta({ label, url, variant = "primary" }) {
-  if (!label || !url) return null;
+function Cta({ label, url, onClick, busy = false, variant = "primary", download = false }) {
+  if (!label || (!url && !onClick)) return null;
 
   const className = cn(
     "inline-flex h-12 items-center gap-2 rounded-md px-6 text-sm font-medium transition-colors duration-(--duration-fast)",
     variant === "primary"
       ? "bg-brand text-on-brand hover:bg-brand-dark"
-      : "border border-ink-inverse/40 bg-surface/10 text-ink-inverse backdrop-blur-sm hover:bg-surface/20",
+      : // A solid white button with a border and dark text, as the reference
+        // draws "Download Catalogue" — not the translucent one it was, which
+        // only worked because the hero used to be darkened.
+        "border border-line-strong bg-surface text-ink hover:border-brand hover:text-brand",
   );
 
-  // A download CTA gets a download glyph rather than an arrow — the comps use
+  // A download gets a download glyph rather than an arrow: the reference puts
   // "Download Catalogue" beside "Explore Our Products", and the two should not
-  // look like the same kind of action.
-  const Glyph = /^\/downloads\//.test(url) ? Download : ArrowRight;
+  // look like the same kind of action. Passed explicitly rather than sniffed
+  // from the path, because a resolved download's URL is on Cloudinary and
+  // looks nothing like `/downloads/…`.
+  const Glyph = download || /^\/downloads\//.test(url) ? Download : ArrowRight;
+
   const content = (
     <>
       {label}
@@ -29,9 +35,27 @@ function Cta({ label, url, variant = "primary" }) {
     </>
   );
 
+  // A button, because building the file *is* the action — there is no URL to
+  // link at. `aria-busy` rather than `disabled`: a disabled control loses
+  // focus mid-interaction, which drops a keyboard user out of the hero.
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} aria-busy={busy || undefined} className={className}>
+        {content}
+      </button>
+    );
+  }
+
   if (isExternal(url)) {
     return (
-      <a href={url} className={className}>
+      // A new tab for a real file, as the product page's brochure link does: a
+      // PDF replacing the page a visitor was reading loses their place, and
+      // Back from a downloaded file does not always return them.
+      <a
+        href={url}
+        {...(download ? { target: "_blank", rel: "noopener noreferrer" } : null)}
+        className={className}
+      >
         {content}
       </a>
     );
@@ -43,12 +67,64 @@ function Cta({ label, url, variant = "primary" }) {
   );
 }
 
-function Slide({ banner, priority }) {
+/**
+ * The second button beside "Explore Our Tea" — the reference's "Download
+ * Catalogue".
+ *
+ * **It always renders, and it always reads "Download Catalogue"** unless an
+ * editor has written something else. The reference draws two buttons with that
+ * wording, and a hero with one looks unbalanced.
+ *
+ * Two sources:
+ *
+ *   1. **The banner's own `secondary_cta_*` pair.** An editor who has written
+ *      one means it, and it beats anything decided here.
+ *   2. **The CSV** — every published product, built in the browser on the
+ *      click and saved as a file.
+ *
+ * Earlier passes pointed this at an uploaded PDF (`product_catalogue`) and
+ * then, when no such file existed, at `/products`. Generating the file removes
+ * both compromises: the button now does exactly what it says, with nothing for
+ * anyone to upload first.
+ */
+function secondaryCta(banner, onDownload, busy) {
+  if (banner.secondary_cta_label && banner.secondary_cta_url) {
+    return { label: banner.secondary_cta_label, url: banner.secondary_cta_url, download: false };
+  }
+
+  return { label: "Download Catalogue", onClick: onDownload, busy, download: true };
+}
+
+/**
+ * How strongly the left of the photograph is lightened behind the headline.
+ *
+ * **The reference has no dark scrim.** The headline is near-black on a bright
+ * photograph, which is a better-looking hero and a more fragile one: with the
+ * old full-bleed `bg-ink` gone, legibility stopped being something the code
+ * guaranteed and became a property of whatever an editor last uploaded. A dark
+ * photograph plus dark text is an AA failure nobody would notice until it was
+ * live.
+ *
+ * So the scrim is not removed, it is **inverted and localised** — a light
+ * wash fading left to right, behind the text only, leaving the product shot on
+ * the right untouched. That is what the reference's own photograph happens to
+ * provide (a pale, misty left third); doing it in CSS means every future
+ * upload gets it too.
+ *
+ * `overlay_opacity` still drives it, so the admin's slider still means
+ * something — now "how much protection does this image need" rather than "how
+ * dark". **With a floor**, because the one thing the slider must not be able
+ * to do is make the headline unreadable. An editor may add protection; they
+ * may not remove it.
+ */
+const MINIMUM_PROTECTION = 0.8;
+
+/** How opaque that wash is, floor included. */
+const protection = (overlayOpacity) =>
+  Math.max(MINIMUM_PROTECTION, Math.min(Math.max(overlayOpacity ?? 40, 0), 100) / 100);
+
+function Slide({ banner, onDownload, downloading, priority }) {
   const image = banner.desktop_image;
-  // overlay_opacity is a 0–100 integer from the admin's slider. It is data, so
-  // it lands as a style rather than a class — Tailwind cannot generate a class
-  // per arbitrary value, and a hardcoded ramp would ignore what was set.
-  const overlay = Math.min(Math.max(banner.overlay_opacity ?? 40, 0), 100) / 100;
 
   return (
     // `--hero-min` caps 32rem against the viewport height, so a phone held
@@ -63,43 +139,49 @@ function Slide({ banner, priority }) {
           className="absolute inset-0 -z-10 size-full"
         />
       ) : (
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-brand-deep" />
+        // No image: a pale ground rather than the deep green it used to be,
+        // because the text on top is now dark.
+        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-ground" />
       )}
 
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-ink"
-        style={{ opacity: overlay }}
+        className="absolute inset-0 -z-10 bg-gradient-to-r from-surface from-0% via-surface/60 via-35% to-transparent to-68%"
+        style={{ opacity: protection(banner.overlay_opacity) }}
       />
 
       <div className="mx-auto flex h-full max-w-(--container-max) flex-col justify-center py-20 pl-(--gutter-l) pr-(--gutter-r)">
         <div className="max-w-xl">
           {banner.eyebrow_text ? (
-            <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-gold">
+            <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">
               {banner.eyebrow_text}
             </p>
           ) : null}
 
-          {/* Two lines: the plain half and the highlighted half. The comps set
-              the highlight in the brand colour on its own line. */}
+          {/*
+            Two lines: the plain half in near-black and the highlighted half in
+            the brand green, which is how the reference sets "Pure Nature /
+            Perfect Taste". It was white over gold, which only read because the
+            image behind it was darkened.
+          */}
           {banner.title || banner.title_highlight ? (
-            <h1 className="mt-3 font-display text-4xl font-bold leading-[1.1] text-ink-inverse sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 font-display text-4xl font-bold leading-[1.1] text-ink sm:text-5xl lg:text-6xl">
               {banner.title ? <span className="block">{banner.title}</span> : null}
               {banner.title_highlight ? (
-                <span className="block text-gold">{banner.title_highlight}</span>
+                <span className="block text-brand">{banner.title_highlight}</span>
               ) : null}
             </h1>
           ) : null}
 
           {banner.subtitle ? (
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-inverse/85 sm:text-lg">
+            <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-muted sm:text-lg">
               {banner.subtitle}
             </p>
           ) : null}
 
           <div className="mt-8 flex flex-wrap gap-3">
             <Cta label={banner.primary_cta_label} url={banner.primary_cta_url} />
-            <Cta label={banner.secondary_cta_label} url={banner.secondary_cta_url} variant="secondary" />
+            <Cta {...secondaryCta(banner, onDownload, downloading)} variant="secondary" />
           </div>
         </div>
       </div>
@@ -118,7 +200,7 @@ function Slide({ banner, priority }) {
  * reaching for, and pausing it is another control to get right; §18's AA bar
  * treats uncontrolled motion as a failure rather than a flourish.
  */
-export function Hero({ banners }) {
+export function Hero({ banners, onDownload, downloading = false }) {
   const slides = banners ?? [];
   const [index, setIndex] = useState(0);
   const start = useRef(null);
@@ -157,7 +239,7 @@ export function Hero({ banners }) {
         ? { onPointerDown, onPointerUp, onPointerCancel: () => (start.current = null) }
         : null)}
     >
-      <Slide banner={current} priority />
+      <Slide banner={current} onDownload={onDownload} downloading={downloading} priority />
 
       {many ? (
         /*
@@ -177,7 +259,7 @@ export function Hero({ banners }) {
             type="button"
             aria-label="Previous slide"
             onClick={() => setIndex((i) => advance(i, slides.length, -1))}
-            className="grid size-11 place-items-center rounded-full text-ink-inverse hover:bg-ink-inverse/15"
+            className="grid size-11 place-items-center rounded-full text-ink hover:bg-ink/10"
           >
             <ChevronLeft size={20} strokeWidth={2} aria-hidden="true" />
           </button>
@@ -200,8 +282,8 @@ export function Hero({ banners }) {
                 className={cn(
                   "block h-2 rounded-full transition-all duration-(--duration-fast)",
                   i === index
-                    ? "w-6 bg-gold"
-                    : "w-2 bg-ink-inverse/50 group-hover:bg-ink-inverse/80",
+                    ? "w-6 bg-brand"
+                    : "w-2 bg-ink/35 group-hover:bg-ink/70",
                 )}
               />
             </button>
@@ -211,7 +293,7 @@ export function Hero({ banners }) {
             type="button"
             aria-label="Next slide"
             onClick={() => setIndex((i) => advance(i, slides.length, 1))}
-            className="grid size-11 place-items-center rounded-full text-ink-inverse hover:bg-ink-inverse/15"
+            className="grid size-11 place-items-center rounded-full text-ink hover:bg-ink/10"
           >
             <ChevronRight size={20} strokeWidth={2} aria-hidden="true" />
           </button>

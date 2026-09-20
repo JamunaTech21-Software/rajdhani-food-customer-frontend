@@ -1,7 +1,15 @@
 import { Icon } from "../ui/Icon.jsx";
 import { useCountUp } from "../../hooks/useCountUp.js";
 
-function Stat({ stat }) {
+/**
+ * One counter.
+ *
+ * Exported because `AboutBand` lays four of them out beside the welcome text
+ * rather than across a band of their own, and the counting, the observer and
+ * the screen-reader arrangement below should exist once. The *band* stays here
+ * because the About page still renders one from group `ABOUT`.
+ */
+export function Stat({ stat }) {
   const { ref, display } = useCountUp(stat.value);
 
   return (

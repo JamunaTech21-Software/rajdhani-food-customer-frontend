@@ -253,6 +253,28 @@ const BULK_CTA_SIZES = [
   "calc(100vw - 32px)",
 ].join(", ");
 
+/**
+ * `LatestNews`, once it is two thirds of `VoicesBand`'s row.
+ *
+ * Identical to `newsCard` below `xl`, where the band is still full width and
+ * still `md:grid-cols-2 lg:grid-cols-3`. **Only the top step differs**, and by
+ * a lot: from 1280 the container caps, the news track is a constant
+ * `(1232 - 40) × 2/3 = 795px`, and each of the three cards is
+ * `(795 - 48) / 3 = 249px` — where the news *page* draws the same card at
+ * 395px. Sharing one `sizes` between them would have been 59% over on the home
+ * page, which is an image and a half of wasted bandwidth on the busiest route.
+ *
+ * Not from `gridSizes`, for the same reason `BULK_CTA_SIZES` is not: a
+ * fractional track is not a column count.
+ */
+const HOME_NEWS_SIZES = [
+  "(min-width: 1280px) 249px",
+  "(min-width: 1024px) calc((100vw - 96px) / 3)",
+  "(min-width: 768px) calc((100vw - 72px) / 2)",
+  "(min-width: 640px) calc(100vw - 48px)",
+  "calc(100vw - 32px)",
+].join(", ");
+
 export const SIZES = {
   /** Full-bleed: heroes and page banners, which ignore the container. */
   full: "100vw",
@@ -266,15 +288,29 @@ export const SIZES = {
   productCard: gridSizes(PRODUCT_GRID, { gap: 20 }),
   relatedCard: gridSizes(RELATED_GRID, { gap: 20 }),
   newsCard: gridSizes(NEWS_GRID, { gap: 24 }),
+
+  /** The same card on the home page, where it sits in a narrower track. */
+  homeNewsCard: HOME_NEWS_SIZES,
   galleryTile: gridSizes(GALLERY_GRID, { gap: 16 }),
 
   /**
-   * `FeaturedProducts` — a horizontal scroll strip of fixed 15rem tracks below
-   * `lg`, then the container's own 4-up grid. The strip overflows deliberately,
-   * so its tracks stay 240px wide however narrow the screen gets; a `vw` unit
-   * there would describe the viewport rather than the card.
+   * `FeaturedProducts` — a horizontal scroll strip.
+   *
+   * Two steps, because the row changes shape once the arrows appear:
+   *
+   *   * **From 1280** the container caps at 1232, the two 44px arrows and
+   *     their two 12px gaps come out of it, and the remaining 1120 is divided
+   *     into six tracks with five 20px gaps: `(1120 - 100) / 6 = 170`.
+   *   * **Below that** the arrows are hidden and the tracks are a fixed 15rem,
+   *     overflowing on purpose — so 240px however narrow the screen gets. A
+   *     `vw` unit there would describe the viewport rather than the card.
+   *
+   * The one case this overstates is a catalogue with so few featured products
+   * that the tracks stop overflowing and stretch. Eight are published, which
+   * overflows at every width, so it is right today and wrong only on a
+   * catalogue that has nearly emptied.
    */
-  carouselCard: "(min-width: 1280px) 293px, (min-width: 1024px) calc((100vw - 108px) / 4), 240px",
+  carouselCard: "(min-width: 1280px) 170px, 240px",
 
   /** Half a split section: the welcome block and the page blocks. */
   half: gridSizes(SPLIT_GRID, { gap: 56 }),
@@ -293,6 +329,7 @@ export const SIZES = {
    * phone width where each card holds its 10rem minimum.
    */
   processStep: "(min-width: 1280px) 227px, (min-width: 768px) calc((100vw - 144px) / 5), 160px",
+
 
   /**
    * The zoomed product image: a square dialog capped at 56rem, and capped

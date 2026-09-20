@@ -199,14 +199,36 @@ test("each home band is wrapped on its own", () => {
   assert.match(home, /<ErrorBoundary key=\{name\} name=\{`home:\$\{name\}`\} title=\{label\}>/);
 
   const names = [...home.matchAll(/^\s*(?:\{ )?name: "(\w+)",/gm)].map((m) => m[1]);
-  assert.deepEqual(names, ["hero", "usp", "featured", "welcome", "stats", "testimonials", "news"]);
+  assert.deepEqual(names, [
+    "hero",
+    "usp",
+    "featured",
+    "about",
+    "process",
+    "dealer",
+    "voices",
+  ]);
 });
 
 test("a failed band says which band it was", () => {
   // "Featured teas could not be shown" tells a visitor what they are missing;
   // "something went wrong" leaves them wondering.
   assert.match(home, /label: "Featured teas could not be shown"/);
-  assert.match(home, /label: "Latest updates could not be shown"/);
+  assert.match(home, /label: "Our process could not be shown"/);
+});
+
+test("merging two bands into one row did not merge their boundaries", () => {
+  // H7 put the testimonials and the news in a single grid. One boundary around
+  // both would mean a bug in a news cover taking the quotes down with it —
+  // exactly what RTPP-72 added them to prevent.
+  const voices = strip(read("components/home/VoicesBand.jsx"));
+
+  assert.match(voices, /name="home:testimonials" title="Customer reviews could not be shown" inline/);
+  assert.match(voices, /name="home:news" title="Latest updates could not be shown" inline/);
+});
+
+test("a boundary inside a laid-out column does not add the gutters twice", () => {
+  assert.match(boundary, /if \(this\.props\.inline\) return panel;/);
 });
 
 test("every optional home band disappears rather than drawing an empty one", () => {
