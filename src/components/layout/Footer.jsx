@@ -1,8 +1,10 @@
-import { Globe, Mail, MapPin, Phone, Send } from "lucide-react";
+import { ChevronDown, Globe, Mail, MapPin, Phone, Send } from "lucide-react";
+import { useId, useState } from "react";
 import { Link } from "react-router";
 
 import { cn } from "../../lib/cn.js";
 import { isExternal } from "../../lib/nav.js";
+import { useMediaQuery } from "../../hooks/useMediaQuery.js";
 import { useSiteStore } from "../../stores/siteStore.js";
 import { SocialIcon } from "../ui/SocialIcon.jsx";
 
@@ -66,21 +68,81 @@ function FooterLink({ link, className }) {
 const COLUMN_RULE =
   "lg:-ml-5 lg:border-l lg:border-ink-inverse/15 lg:pl-5 xl:-my-(--space-section) xl:py-(--space-section)";
 
+/**
+ * A footer block: always open as a column, a disclosure on a phone.
+ *
+ * The mobile comp draws the four blocks as accordion rows — heading, chevron,
+ * a rule between each — and it is the right call for a reason the desktop
+ * layout hides: stacked, these four run to about 560px of the 5,800px page,
+ * and a visitor who wants the copyright scrolls past all of it.
+ *
+ * **A button, not `<details>`.** `open` is an attribute, so the element keeps
+ * its own state in the DOM; setting it from React and letting the browser
+ * toggle it too gives two sources of truth that drift on the first tap. This
+ * is the same disclosure pattern `ProductsDropdown` already uses —
+ * `aria-expanded`, `aria-controls`, and the panel rendered only when open, so
+ * a collapsed section is not in the tab order.
+ *
+ * `useMediaQuery` rather than a breakpoint because what changes is the
+ * *markup*: at `sm` and up there is no button at all, just a heading, which no
+ * stylesheet can do.
+ */
+function FooterSection({ title, className, children }) {
+  const wide = useMediaQuery("(min-width: 40rem)");
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+
+  return (
+    <div className={cn("border-b border-ink-inverse/15 sm:border-b-0", className)}>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-inverse">
+        {wide ? (
+          title
+        ) : (
+          // `py-3` around a 20px line is a 44px target, which is the floor
+          // `responsive.test.mjs` enforces for anything tappable.
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => setOpen((v) => !v)}
+            className="flex w-full items-center justify-between py-3 text-left uppercase"
+          >
+            {title}
+            <ChevronDown
+              size={18}
+              strokeWidth={2}
+              aria-hidden="true"
+              className={cn("shrink-0 transition-transform duration-(--duration-fast)", open && "rotate-180")}
+            />
+          </button>
+        )}
+      </h2>
+
+      {wide || open ? (
+        <div id={panelId} className="pb-4 sm:pb-0">
+          {children}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function LinkColumn({ title, links, className }) {
   // A heading above nothing is worse than no column — it reads as a rendering
   // failure rather than as an empty menu.
   if (!links?.length) return null;
 
   return (
-    <nav aria-label={title} className={className}>
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-inverse">{title}</h2>
-      <ul className="mt-4 flex flex-col gap-0.5">
-        {links.map((link) => (
-          <li key={link.id ?? link.url}>
-            <FooterLink link={link} />
-          </li>
-        ))}
-      </ul>
+    <nav aria-label={title}>
+      <FooterSection title={title} className={className}>
+        <ul className="mt-0 flex flex-col gap-0.5 sm:mt-4">
+          {links.map((link) => (
+            <li key={link.id ?? link.url}>
+              <FooterLink link={link} />
+            </li>
+          ))}
+        </ul>
+      </FooterSection>
     </nav>
   );
 }
@@ -121,8 +183,8 @@ export function Footer() {
         tablet would leave the newsletter's email field about 110px wide, which
         is narrower than the text people type into it.
       */}
-      <div className="mx-auto grid max-w-(--container-max) gap-10 py-(--space-section) pl-(--gutter-l) pr-(--gutter-r) sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[1.4fr_1fr_1fr_1.2fr_1.2fr]">
-        <div className="sm:col-span-2 lg:col-span-4 xl:col-span-1">
+      <div className="mx-auto grid max-w-(--container-max) gap-x-10 gap-y-0 py-(--space-section) pl-(--gutter-l) pr-(--gutter-r) sm:gap-y-10 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[1.4fr_1fr_1fr_1.2fr_1.2fr]">
+        <div className="mb-6 sm:mb-0 sm:col-span-2 lg:col-span-4 xl:col-span-1">
           <p className="font-display text-xl font-semibold">{site?.name ?? "Rajdhani Food Products"}</p>
           {site?.footer?.about ? (
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-inverse/75">
@@ -154,9 +216,8 @@ export function Footer() {
         <LinkColumn title="Quick Links" links={menus?.footer_quick} />
         <LinkColumn title="Products" links={menus?.footer_products} className={COLUMN_RULE} />
 
-        <div className={COLUMN_RULE}>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-inverse">Contact Us</h2>
-          <ul className="mt-4 flex flex-col gap-3 text-sm text-ink-inverse/75">
+        <FooterSection title="Contact Us" className={COLUMN_RULE}>
+          <ul className="mt-0 flex flex-col gap-3 text-sm text-ink-inverse/75 sm:mt-4">
             {address ? (
               <li className="flex gap-2.5">
                 <MapPin size={15} strokeWidth={1.75} aria-hidden="true" className="mt-0.5 shrink-0" />
@@ -188,14 +249,13 @@ export function Footer() {
               </li>
             ) : null}
           </ul>
-        </div>
+        </FooterSection>
 
         {/* Rendered only when the setting says so — the form posts to an
             endpoint that is switched off with it. RTPP-65 wires the submit. */}
         {newsletterOn ? (
-          <div className={COLUMN_RULE}>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-inverse">Newsletter</h2>
-            <p className="mt-4 text-sm text-ink-inverse/75">
+          <FooterSection title="Newsletter" className={COLUMN_RULE}>
+            <p className="mt-0 text-sm text-ink-inverse/75 sm:mt-4">
               Subscribe to get updates on new products and offers.
             </p>
             {/*
@@ -250,7 +310,7 @@ export function Footer() {
                 <Send size={16} strokeWidth={2} aria-hidden="true" />
               </button>
             </form>
-          </div>
+          </FooterSection>
         ) : null}
       </div>
 

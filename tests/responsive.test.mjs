@@ -512,8 +512,11 @@ test("a footer link is a target, not a line of text", () => {
   const footer = file("components/layout/Footer.jsx");
 
   assert.match(footer, /inline-block py-1 text-sm text-ink-inverse\/75/);
-  // The list gives back exactly what the padding took, so nothing moves.
-  assert.match(footer, /mt-4 flex flex-col gap-0\.5/);
+  // The list gives back exactly what the padding took, so nothing moves. The
+  // top margin waits for `sm`: below it the list is a disclosure panel that
+  // has just opened under its own button, and a second gap there reads as a
+  // detached block rather than as the section's contents.
+  assert.match(footer, /mt-0 flex flex-col gap-0\.5 sm:mt-4/);
 });
 
 test("the footer takes the same safe-area gutter as the rest of the chrome", () => {

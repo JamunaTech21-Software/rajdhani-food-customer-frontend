@@ -129,15 +129,37 @@ function Slide({ banner, onDownload, downloading, priority }) {
   return (
     // `--hero-min` caps 32rem against the viewport height, so a phone held
     // sideways can still show one whole slide. See index.css.
-    <div className="relative isolate min-h-(--hero-min) overflow-hidden">
+    <div className="relative isolate flex min-h-(--hero-min) flex-col overflow-hidden lg:block">
       {image?.url ? (
-        <CloudinaryImage
-          src={image.url}
-          alt={image.alt ?? ""}
-          sizes={SIZES.full}
-          priority={priority}
-          className="absolute inset-0 -z-10 size-full"
-        />
+        /*
+          A band under the text on a phone; the backdrop behind it at `lg`.
+          **Not a styling preference — the arithmetic leaves no other option.**
+
+          The banner is 1983×793, a 2.5:1 strip, and the product group — packet,
+          cups, gold seal — runs from 53% to 92% of its width. As a full-bleed
+          backdrop the box is 390×480 on a phone, so `object-cover` scales to
+          the *height* and crops the width to 32%. A 39%-wide subject does not
+          fit in a 32% window at any `object-position`: centred, 34% of the
+          product is in frame, and that is the sliver of packet edge the site
+          has been showing. At 1280 the same image shows 94% of its width and
+          all of the product, which is why this only looks broken on a phone.
+
+          So the box changes shape instead. 390×224 shows 70% of the width, and
+          anchored at 75% that window is 23%..92% — the whole product group,
+          and the hills it stands in.
+
+          `object-center` returns at `lg`, where the full width is nearly all
+          visible and the anchor would only push the composition off-centre.
+        */
+        <div className="order-last h-56 w-full shrink-0 lg:absolute lg:inset-0 lg:-z-10 lg:order-none lg:h-auto">
+          <CloudinaryImage
+            src={image.url}
+            alt={image.alt ?? ""}
+            sizes={SIZES.full}
+            priority={priority}
+            className="size-full object-[75%_center] lg:object-center"
+          />
+        </div>
       ) : (
         // No image: a pale ground rather than the deep green it used to be,
         // because the text on top is now dark.
@@ -155,19 +177,19 @@ function Slide({ banner, onDownload, downloading, priority }) {
         no protection under it at all. Near-black type on a sunlit hillside —
         the first thing anyone sees on a phone, and unreadable.
 
-        So below `lg` the wash is flat and covers the whole slide. The
-        photograph is still visible through it; what it stops being is the
-        background to the words. The gradient returns at `lg`, where the
-        composition the reference draws — text left, produce right — actually
-        fits.
+        Below `lg` there is now no wash at all, because there is nothing to
+        protect the text from: the photograph moved out from behind it into a
+        band of its own. A flat 80% wash over the whole slide was the previous
+        answer, and it worked — it just spent the photograph to buy
+        legibility, which is a poor trade once the two need not overlap.
       */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-surface/80 lg:bg-transparent lg:bg-gradient-to-r lg:from-surface lg:from-0% lg:via-surface/60 lg:via-35% lg:to-transparent lg:to-68%"
+        className="absolute inset-0 -z-10 hidden lg:block lg:bg-gradient-to-r lg:from-surface lg:from-0% lg:via-surface/60 lg:via-35% lg:to-transparent lg:to-68%"
         style={{ opacity: protection(banner.overlay_opacity) }}
       />
 
-      <div className="mx-auto flex h-full max-w-(--container-max) flex-col justify-center py-20 pl-(--gutter-l) pr-(--gutter-r)">
+      <div className="mx-auto flex w-full max-w-(--container-max) flex-1 flex-col justify-center py-12 pl-(--gutter-l) pr-(--gutter-r) lg:h-full lg:flex-none lg:py-20">
         <div className="max-w-xl">
           {banner.eyebrow_text ? (
             <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">

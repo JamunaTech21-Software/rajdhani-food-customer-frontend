@@ -41,6 +41,15 @@
   --color-line: #e4eae4;
   --color-line-strong: #cbd6cb;
 
+  /* Third-party brand marks — deliberately NOT brand-derived, for the same
+     reason as the status colours below: they identify someone else. WhatsApp's
+     green is what makes the floating button recognisable at a glance, and an
+     admin changing primary_color must not repaint it into something that is no
+     longer WhatsApp. The glyph is the other half of that identification, so
+     both stay fixed. */
+  --color-whatsapp: #25d366;
+  --color-on-whatsapp: #ffffff;
+
   /* Status — deliberately NOT brand-derived. A green brand colour must not be
      able to make an APPROVED chip illegible against a REJECTED one. */
   --color-success: #167c3c;
