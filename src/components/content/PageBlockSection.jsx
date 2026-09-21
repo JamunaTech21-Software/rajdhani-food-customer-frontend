@@ -110,7 +110,7 @@ export function PageBlockSection({ block, id, reversed = false, tone = "surface"
         className={cn(
           "mx-auto grid max-w-(--container-max) gap-10 pl-(--gutter-l) pr-(--gutter-r)",
           (block.image?.url || children) &&
-            "lg:grid-cols-[0.7fr_1fr] lg:items-center lg:gap-28",
+            "lg:grid-cols-[0.7fr_minmax(0,1fr)] lg:items-center lg:gap-28",
         )}
       >
         <PageBlockBody block={block} headingId={headingId} className={cn(reversed && "lg:order-2")} />

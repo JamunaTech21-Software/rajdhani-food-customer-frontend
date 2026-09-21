@@ -831,7 +831,34 @@ test("the About page's own stats band still works", () => {
 
   assert.match(band, /export function StatsBand/);
   assert.match(band, /export function Stat/);
-  assert.match(strip(read("pages/AboutPage.jsx")), /<StatsBand stats=\{itemsOf\(stats\)\} label="Rajdhani in numbers" \/>/);
+  assert.match(
+    strip(read("pages/AboutPage.jsx")),
+    /<StatsBand stats=\{itemsOf\(stats\)\} label="Rajdhani in numbers" tone="dark" \/>/,
+  );
+});
+
+test("the band has two tones, and the pages do not share one", () => {
+  // The About comp draws this band in brand green with white figures and
+  // hairline dividers; the home comp draws green figures on a tint beside the
+  // welcome text. One component, two tones — the alternative was a second
+  // component that would drift the first time either comp changed.
+  //
+  // `bg-brand-dark` because the About comp's band samples at #024517, against
+  // #144a18 for brand-dark, #1b5e20 for brand and #0d3411 for brand-deep.
+  const band = strip(read("components/home/StatsBand.jsx"));
+
+  assert.match(band, /dark \? "bg-brand-dark" : "bg-ground-warm"/);
+  assert.match(band, /dark \? "border border-ink-inverse\/40 text-ink-inverse" : "bg-brand-tint text-brand"/);
+  assert.match(band, /dark \? "text-ink-inverse" : "text-brand"/);
+
+  // The dividers wait for the single row, for the reason UspStrip records: at
+  // two columns the third item starts a row and a left border there draws a
+  // line down the middle of nothing.
+  assert.match(band, /md:gap-0 md:divide-x md:divide-ink-inverse\/20/);
+  assert.doesNotMatch(band, /\bdivide-x\b(?<!md:divide-x)/, "never unprefixed");
+
+  // The home page keeps the pale one: `tone` is not passed there at all.
+  assert.doesNotMatch(strip(read("components/home/AboutBand.jsx")), /tone="dark"/);
 });
 
 test("the band survives either half being missing", () => {

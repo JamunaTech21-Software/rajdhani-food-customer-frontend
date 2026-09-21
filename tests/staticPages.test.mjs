@@ -28,8 +28,22 @@ test("a block section is not two equal columns", () => {
   // It suits the other two users too: About's "Our Strength" puts five
   // process steps in the wide half and Quality's commitment block a feature
   // grid, and both were being squeezed into 50%.
-  assert.match(section, /lg:grid-cols-\[0\.7fr_1fr\] lg:items-center lg:gap-28/);
+  assert.match(section, /lg:grid-cols-\[0\.7fr_minmax\(0,1fr\)\] lg:items-center lg:gap-28/);
   assert.doesNotMatch(section, /lg:grid-cols-2/);
+});
+
+test("the wide column can actually shrink to its share", () => {
+  // `0.7fr 1fr` is a ratio a grid will honour only if both columns can reach
+  // it. A column's default minimum is its content, and About's five process
+  // tiles at `min-w-[8rem]` came to 704px — so the second column refused to go
+  // below that and took the difference out of the first. The heading wrapped
+  // to four lines where the comp has two.
+  //
+  // Both halves of the fix are needed: `minmax(0,1fr)` lets the column shrink,
+  // and a narrower tile lets its contents follow. 659px across five tiles and
+  // four 16px gaps is 119px each, so 7rem clears it.
+  assert.match(section, /minmax\(0,1fr\)/);
+  assert.match(timeline, /compact \? "min-w-\[7rem\]" : "min-w-\[10rem\]"/);
 });
 
 test("the photograph sits on a card, as the comp draws it", () => {
@@ -325,18 +339,46 @@ test("a step is numbered by its row, not by its position", () => {
   assert.doesNotMatch(timeline, /\{index \+ 1\}/);
 });
 
-test("a step with no image still reserves its box", () => {
-  // No seeded row carries one, so this is every step today.
-  assert.match(timeline, /grid aspect-\[4\/3\] w-full place-items-center rounded-lg bg-brand-tint/);
-  assert.match(timeline, /aspectRatio="4 \/ 3"/, "and one that does, reserves the same shape");
+test("a step with no image still reserves its box, in the same shape", () => {
+  // Step 3 of About's manufacturing strip has no photograph in the reference
+  // folder — the client supplied four of the five — so this is not a
+  // hypothetical.
+  //
+  // Square in the compact strip: the About comp's tiles are 133x124, an
+  // aspect of 1.07. Quality's roomier variant keeps 4:3, where the tile is
+  // wide enough to read as a photograph rather than a thumbnail. Whichever it
+  // is, the fallback tile and the image must agree, or the row jumps as
+  // pictures load.
+  assert.match(timeline, /aspectRatio=\{compact \? "1 \/ 1" : "4 \/ 3"\}/);
+  assert.match(timeline, /compact \? "aspect-square" : "aspect-\[4\/3\]"/);
 });
 
-test("the chevrons between steps are decorative and do not become list items", () => {
-  // A list item whose only content is a chevron is an item with no content,
-  // and a screen reader counts it.
+test("the step number sits below the picture, where the comp puts it", () => {
+  // It used to be `-top-3`, covering the first thing in the photograph and
+  // reading as a badge *on* it rather than a number under it. The ring in the
+  // page colour is what separates the disc from the image edge it straddles.
+  assert.match(timeline, /absolute -bottom-3 left-1\/2 grid -translate-x-1\/2[^"]*ring-4 ring-surface/);
+  assert.match(timeline, /compact \? "mt-6 text-xs" : "mt-8 text-base"/, "and the title clears it");
+});
+
+test("the connectors are decorative, and as wide as the gap they cross", () => {
+  // A list item whose only content is a rule is an item with no content, and
+  // a screen reader counts it as a sixth step — so it is drawn inside the
+  // step it leads away from.
   assert.match(timeline, /separated \? \(/);
-  assert.match(timeline, /<ChevronRight[\s\S]*?aria-hidden="true"/);
+  assert.match(timeline, /aria-hidden="true"[\s\S]*?<ChevronRight/);
   assert.match(timeline, /separated=\{index < steps\.length - 1\}/, "and the last step has none");
+
+  // The gutter is declared once on the list and read by each connector, so
+  // the dotted rule is exactly as wide as the space it has to cross. Writing
+  // the number in both places is how the two drift apart.
+  assert.match(timeline, /\[--process-gap:1\.5rem\]/);
+  assert.match(timeline, /sm:gap-x-4 sm:\[--process-gap:1rem\]/);
+  assert.match(timeline, /w-\(--process-gap\)/);
+
+  // Level with the badge, not with the top of the picture: the comp runs the
+  // arrows between the numbers.
+  assert.match(timeline, /absolute bottom-\[2px\] left-full/);
 });
 
 test("two stats bands on one site do not share a landmark name", () => {

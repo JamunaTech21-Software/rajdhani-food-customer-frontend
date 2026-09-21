@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Gem, Eye, Target } from "lucide-react";
+import { CircleCheck, Gem, Eye, Target } from "lucide-react";
 
 import { Certifications } from "../components/content/Certifications.jsx";
 import { ProcessTimeline } from "../components/content/ProcessTimeline.jsx";
@@ -46,7 +46,14 @@ function FoundationCard({ block }) {
         {block.heading ? (
           <h3 className="font-display text-lg font-semibold text-ink">{block.heading}</h3>
         ) : null}
-        <span aria-hidden="true" className="mt-2 mb-3 block h-0.5 w-10 bg-gold" />
+        {/* The comp rules Mission and Vision under the title and leaves Values
+            without one — its checklist starts straight after the heading. The
+            body is what tells them apart, so that is what this keys on. */}
+        {block.body ? (
+          <span aria-hidden="true" className="mt-2 mb-3 block h-0.5 w-10 bg-gold" />
+        ) : (
+          <span className="mt-3 block" />
+        )}
 
         <RichText html={block.body} className="text-sm" />
 
@@ -54,7 +61,14 @@ function FoundationCard({ block }) {
           <ul className="mt-2 space-y-1.5 text-sm text-ink-muted">
             {bullets.map((point) => (
               <li key={point} className="flex items-start gap-2">
-                <span aria-hidden="true" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand" />
+                {/* A circled check, not a dot: the comp ticks these off, and
+                    `PageBlockBody` already draws bullets the same way. */}
+                <CircleCheck
+                  size={16}
+                  strokeWidth={1.75}
+                  aria-hidden="true"
+                  className="mt-0.5 shrink-0 text-brand"
+                />
                 {point}
               </li>
             ))}
@@ -72,13 +86,11 @@ function FoundationCard({ block }) {
  * acceptance criterion: all of it is editable from the admin Page Content
  * screen, and none of the copy is in this bundle.
  *
- * **Three of the comp's sections have no public data source**, the same gap
- * that left four sections off the dealer page and the assurance strip off
- * contact: the stats band needs `StatCounter` in group `ABOUT`, the
- * manufacturing timeline needs `ProcessStep` in `MANUFACTURING_PROCESS`, and
- * the values checklist needs either `FeatureItem` in `ABOUT_VALUES` or an
- * `about/values` block. None of those rows exist in the database either, so
- * they need content as well as a route — see the ticket.
+ * **Every section of the comp now has rows behind it** (A3–A5, 2026-09-21):
+ * `StatCounter` in group `ABOUT`, `ProcessStep` in `MANUFACTURING_PROCESS`,
+ * and `mission` / `vision` / `values` / `strength` blocks. The routes were
+ * already here and waiting; what was missing was content, which is why the
+ * page read as half-built rather than as broken.
  */
 export function AboutPage() {
   const hero = useQuery({
@@ -144,13 +156,15 @@ export function AboutPage() {
           </section>
         ) : null}
 
-        <StatsBand stats={itemsOf(stats)} label="Rajdhani in numbers" />
+        {/* Dark, unlike the home page's: the About comp draws this band in
+            brand green with white figures. */}
+        <StatsBand stats={itemsOf(stats)} label="Rajdhani in numbers" tone="dark" />
 
         {/* The strength block draws the manufacturing steps beside its text, in
             place of the image a block would otherwise take. Both halves can be
             absent independently: no block and the section does not render at all;
             no steps and the block falls back to its own image. */}
-        <PageBlockSection block={blockFor(all, "strength")} id="strength" reversed tone="ground">
+        <PageBlockSection block={blockFor(all, "strength")} id="strength" tone="ground">
           {itemsOf(manufacturing).length ? (
             <ProcessTimeline steps={itemsOf(manufacturing)} compact />
           ) : undefined}
@@ -162,6 +176,8 @@ export function AboutPage() {
           eyebrow="Certified For Your Trust"
           heading="Our Certifications"
           tone="surface"
+          // The About comp sets the heading beside the marks, not above them.
+          aside
         />
       </PageSections>
     </>

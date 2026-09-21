@@ -157,11 +157,87 @@ before the crop and the band matches the comp's proportions.
 
 ---
 
+## A3–A6 — the rest of the page ✅ *done 2026-09-21*
+
+**The page was not half-coded, it was half-fed.** Every section of the comp
+already had a route and a renderer waiting; what was missing were rows. An
+inventory of the live API found: no `values` block, no `strength` block, no
+`ABOUT` stat counters, no `MANUFACTURING_PROCESS` steps, three certifications
+with no logos. That is why it rendered as two lonely cards and a shield row.
+
+### Content created, all through the admin API
+
+| Section | Rows |
+|---|---|
+| Mission / Vision | retitled to the comp's "Our Mission" / "Our Vision", bodies replaced |
+| Values | new block, six bullets — Quality First … Respect & Responsibility |
+| Stats | four `ABOUT` counters: 25+, 500+, 1000+, 1000+ |
+| Our Strength | new block with the comp's copy and its "Our Manufacturing Process" button |
+| Manufacturing | five `MANUFACTURING_PROCESS` steps, four with photographs |
+| Certifications | five rows, all five logos uploaded |
+
+**Step 3 has no photograph.** The reference folder supplies four of the five —
+there is no "quality testing" image — so it falls back to the named icon on
+the brand tint, which `ProcessTimeline` already did and which reads as a
+deliberate mark rather than a picture that failed. One upload closes it.
+
+**`smile` was not a content icon.** The comp's "Happy Customers" counter is a
+smiley and the registry had 27 names, none of them that, so it fell back to
+the question mark that renders for an unknown name. Added.
+
+### Layout, measured off the comp
+
+**The stats band has two tones now.** About draws it in brand green with white
+figures and hairline dividers; the home page keeps green figures on a tint
+beside the welcome text. `bg-brand-dark`, because the comp's band samples at
+#024517 against #144a18 for `brand-dark`, #1b5e20 for `brand` and #0d3411 for
+`brand-deep`. The dividers wait for the single row at `md`, for the reason
+`UspStrip` records: at two columns the third item starts a row and a left
+border there draws a line down the middle of nothing.
+
+**The strength band was mirrored.** It carried `reversed`, putting the steps
+on the left where the comp has the text there.
+
+**The step number moved below the picture.** It was `-top-3`, covering the
+first thing in each photograph and reading as a badge *on* it. The comp
+centres it about 14px under the tile, so `-bottom-3` with a ring in the page
+colour. Tiles are square in the compact strip — the comp's are 133×124, an
+aspect of 1.07 — and the chevron between steps became a dotted rule and arrow
+at the badges' level, which is where the comp runs them. The gutter is
+declared once on the list as `--process-gap` and read by each connector, so
+the rule is exactly as wide as the space it crosses.
+
+**A grid column will not shrink below its content.** `0.7fr 1fr` is a ratio a
+grid honours only if both columns can reach it, and five tiles at
+`min-w-[8rem]` came to 704px — so the second column refused to go below that
+and took the difference out of the first. The strength heading wrapped to four
+lines where the comp has two. `minmax(0,1fr)` lets the column shrink and a 7rem
+tile lets its contents follow; the step text also drops to 12px, which is where
+the comp sets it, so the titles stop wrapping.
+
+**The certifications heading sits beside the marks**, not centred above them —
+a 1fr/2fr split at `lg`, with `SectionHeading` gaining an `align` prop. The
+gold rule goes with the centring: under a left-aligned heading it reads as an
+underline that stops too early, and the comp draws none there. Quality keeps
+the centred version, which is why both are props rather than a rewrite.
+
+### Verified
+
+Rendered at 1280 and 390 in headless Chrome. 854 tests pass.
+
+---
+
 ## Still to do on this page
 
-Working down the comp: "Our Mission, Vision & Values" as three cards, the stats band on green, "Our
-Strength" with the five numbered process steps, and "Our Certifications".
-Each needs the same measure-then-build pass.
+Every band of the comp is built. What is left is content the client owns:
+
+* **A photograph for step 3, "Quality Testing."** The reference folder has
+  four of the five; the card falls back to its icon until one arrives.
+* **A building photograph with a sky.** See A2 — the supplied file is a
+  transparent cut-out where the comp shows blue sky and clouds.
+* **The "Learn More About Us" button's destination.** It points at
+  `/quality` on a guess; the comp puts the button on the About page itself,
+  which cannot link to where it already is.
 
 ---
 

@@ -1,6 +1,7 @@
 import { ShieldCheck } from "lucide-react";
 
 import { CloudinaryImage } from "../CloudinaryImage.jsx";
+import { cn } from "../../lib/cn.js";
 import { SectionHeading } from "./SectionHeading.jsx";
 import { SIZES } from "../../lib/cloudinary.js";
 
@@ -47,7 +48,7 @@ function Certification({ certification }) {
   );
 
   return (
-    <li className="rounded-xl border border-line bg-surface p-5 text-center">
+    <li className="rounded-xl border border-line bg-surface p-4 text-center">
       {certificate ? (
         <a
           href={certificate}
@@ -65,7 +66,15 @@ function Certification({ certification }) {
   );
 }
 
-export function Certifications({ items, block, eyebrow, heading, subheading, tone = "ground" }) {
+/**
+ * `aside` is the About comp's arrangement: the heading in a narrow column on
+ * the left with the marks in a row beside it, rather than centred above them.
+ * Quality keeps the centred version, so this is a prop rather than a rewrite.
+ *
+ * The split is 1fr/2fr — measured off the comp, the heading occupies about a
+ * third of the content width and the five cards the rest.
+ */
+export function Certifications({ items, block, eyebrow, heading, subheading, tone = "ground", aside = false }) {
   if (!items?.length) return null;
 
   return (
@@ -73,16 +82,27 @@ export function Certifications({ items, block, eyebrow, heading, subheading, ton
       aria-labelledby="certifications-heading"
       className={tone === "ground" ? "bg-ground py-(--space-section)" : "bg-surface py-(--space-section)"}
     >
-      <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
+      <div
+        className={cn(
+          "mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)",
+          aside && "lg:grid lg:grid-cols-[1fr_2fr] lg:items-center lg:gap-12",
+        )}
+      >
         <SectionHeading
           block={block}
           id="certifications-heading"
           eyebrow={eyebrow}
           heading={heading}
           subheading={subheading}
+          align={aside ? "start" : "center"}
         />
 
-        <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <ul
+          className={cn(
+            "grid grid-cols-2 gap-4 sm:grid-cols-3",
+            aside ? "mt-8 lg:mt-0 lg:grid-cols-5" : "mt-10 lg:grid-cols-4 xl:grid-cols-5",
+          )}
+        >
           {items.map((certification) => (
             <Certification key={certification.id} certification={certification} />
           ))}
