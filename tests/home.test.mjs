@@ -557,7 +557,11 @@ test("the range heading and View All share a line on a phone", () => {
     featured.includes(`View All<span className="sr-only sm:not-sr-only sm:inline"> Products</span>`),
     "the last word is hidden on a phone, not deleted",
   );
-  assert.match(featured, /whitespace-nowrap rounded-md border border-line px-3 text-xs/);
+  // Green, not grey. Sampled off the comp: the border is #9fc2ab, the brand
+  // green at about 40% over white, and the label #1f4e2b against the token's
+  // #1b5e20. A grey outline with near-black text reads as a form control.
+  assert.match(featured, /whitespace-nowrap rounded-md border border-brand\/40 px-3 text-xs font-medium text-brand/);
+  assert.doesNotMatch(featured, /border-line px-5 text-sm font-medium text-ink/, "not the grey one");
 
   // No `flex-wrap` on the row. At 320 the pair still does not fit, and
   // wrapping would drop the button under the heading — the thing being fixed.
