@@ -217,12 +217,43 @@ test("the floating WhatsApp button is content, not a hardcoded number", () => {
   );
 });
 
-test("the floating button is mounted once, site-wide, after the footer", () => {
-  const layout = strip(read("components/layout/SiteLayout.jsx"));
+test("the floating button is parked, not mounted", () => {
+  // Removed from the site on 2026-09-21 at the client's request, and kept as a
+  // component because the file is mostly decisions — the token instead of a
+  // colour literal, the number from the social accounts, the stacking below
+  // the drawer. If it comes back it is one line in `SiteLayout`.
+  //
+  // This assertion is the pair to the one above: that one keeps the parked
+  // component honest, this one keeps it off the page.
+  for (const path of ["components/layout/SiteLayout.jsx", "pages/HomePage.jsx"]) {
+    assert.doesNotMatch(strip(read(path)), /<WhatsAppButton/, `${path} renders it`);
+  }
+  assert.doesNotMatch(
+    strip(read("components/layout/SiteLayout.jsx")),
+    /import \{ WhatsAppButton \}/,
+    "and does not import it",
+  );
+});
 
-  // `{}` is what `strip` leaves behind where a JSX comment was.
-  assert.match(layout, /<Footer \/>\s*(\{\}\s*)?<WhatsAppButton \/>/);
-  assert.doesNotMatch(strip(read("pages/HomePage.jsx")), /WhatsAppButton/, "not per page");
+test("a parked component is parked in the stylesheet too, and only while parked", () => {
+  // Tailwind scans the file whether or not anything renders it, so a parked
+  // component ships CSS for a button that does not exist — `bg-whatsapp` and
+  // `text-on-whatsapp` were both in the bundle. `@source not` excludes it.
+  //
+  // The exclusion is also a footgun: re-mount the component and leave the rule
+  // in place and it renders unstyled. So the two are asserted together rather
+  // than separately — whichever way round they go, they have to agree.
+  const css = read("index.css");
+  const mounted = /<WhatsAppButton/.test(strip(read("components/layout/SiteLayout.jsx")));
+  const excluded = /@source not "\.\.\/src\/components\/layout\/WhatsAppButton\.jsx";/.test(css);
+
+  assert.equal(
+    excluded,
+    !mounted,
+    mounted
+      ? "the button is mounted again — delete the `@source not` line in index.css or it renders unstyled"
+      : "the button is parked — exclude it in index.css so its CSS stops shipping",
+  );
 });
 
 test("the footer band sits on the shared section rhythm", () => {

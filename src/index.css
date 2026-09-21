@@ -15,6 +15,18 @@
 @source not "../tests/**/*";
 
 /**
+ * `WhatsAppButton` is built but not mounted (see its own note). Tailwind does
+ * not know that — it scans the file, finds `bg-whatsapp` and ships the rules
+ * for a button nothing renders. Same trap as the markdown above, one level up:
+ * there a comment kept a class alive, here a whole parked component does.
+ *
+ * **Delete this line the moment it is mounted again**, or it will render
+ * unstyled. `layout.test.mjs` fails if the two ever disagree, so this is a
+ * reminder rather than a tripwire.
+ */
+@source not "../src/components/layout/WhatsAppButton.jsx";
+
+/**
  * daisyUI is deliberately absent (decision D2). It carries its own theme layer
  * that competes with the site_profile-driven custom properties, and §18.2
  * requires those to win — an admin changing primary_color must restyle the

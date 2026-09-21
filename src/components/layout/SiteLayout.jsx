@@ -4,7 +4,6 @@ import { Outlet, useLocation } from "react-router";
 import { Footer } from "./Footer.jsx";
 import { Header } from "./Header.jsx";
 import { JsonLd } from "../seo/Seo.jsx";
-import { WhatsAppButton } from "./WhatsAppButton.jsx";
 import { ErrorBoundary } from "../state/ErrorBoundary.jsx";
 import { organizationJsonLd, webSiteJsonLd } from "../../lib/seo.js";
 import { startTagManager, trackPageView } from "../../lib/gtm.js";
@@ -133,10 +132,8 @@ export function SiteLayout() {
 
       <Footer />
 
-      {/* Outside main and after the footer: it floats over the page, so it is
-          last in the DOM as well as on top of it — a keyboard user reaches it
-          after the content rather than being interrupted by it. */}
-      <WhatsAppButton />
+      {/* No floating WhatsApp button. It is built and parked in
+          `WhatsAppButton.jsx` — mounting it again is this one line back. */}
     </div>
   );
 }

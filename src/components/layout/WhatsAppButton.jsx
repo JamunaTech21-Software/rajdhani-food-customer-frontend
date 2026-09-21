@@ -4,6 +4,16 @@ import { useSiteStore } from "../../stores/siteStore.js";
 /**
  * The floating WhatsApp button the mobile comp draws over the footer.
  *
+ * **Not mounted. Parked on purpose, 2026-09-21** — the client does not want it
+ * on the site for now and will say when they do. `SiteLayout` is where it
+ * went; re-enabling is one line there and nothing here needs to change.
+ *
+ * Kept rather than deleted because the file is mostly decisions, not code: the
+ * green is a token so an admin changing `primary_color` cannot repaint someone
+ * else's brand, the number comes from the social accounts rather than being
+ * typed in, and the stacking sits below the drawer. Deleting it would throw
+ * those away and they would be re-argued from scratch.
+ *
  * **Content-driven, not a hardcoded number.** It renders the `whatsapp` row
  * from the same social accounts the footer lists, so an admin who changes the
  * number changes this too, and an admin who deletes the account removes the
