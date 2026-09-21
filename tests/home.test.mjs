@@ -997,14 +997,35 @@ test("but legibility is still the code's job, not the next upload's", () => {
   // where the geometry does. The gradient clears at 68% of the viewport; the
   // text column is `max-w-xl`, so it fits inside that only above about
   // 1050px. At 768 the text ran to 78% and on a phone to 96%, with the last
-  // third of every line unprotected on the photograph. Below `lg` the wash is
-  // flat and covers the slide.
-  assert.match(hero, /bg-surface\/80 lg:bg-transparent/);
+  // third of every line unprotected on the photograph.
+  //
+  // The flat mobile wash that fixed that is gone again, and for a better
+  // reason: below `lg` the photograph is no longer behind the text at all, so
+  // there is nothing to protect it from. A wash over the whole slide bought
+  // legibility by spending the picture.
+  assert.match(hero, /absolute inset-0 -z-10 hidden lg:block lg:bg-gradient-to-r/);
   assert.doesNotMatch(
     hero,
     /className="absolute inset-0 -z-10 bg-gradient-to-r/,
     "an unprefixed gradient is the bug this test exists for",
   );
+  assert.doesNotMatch(hero, /bg-surface\/80/, "and no flat wash either, now that nothing overlaps");
+});
+
+test("the phone shows the product, because the arithmetic says it otherwise cannot", () => {
+  // The banner is 1983x793 and the product group runs 53%..92% of its width.
+  // As a full-bleed backdrop the box is 390x480 on a phone, so `object-cover`
+  // scales to the height and crops the width to 32% — and a 39%-wide subject
+  // does not fit a 32% window at any `object-position`. Centred, 34% of the
+  // product was in frame. At 1280 the same image shows 94% of its width.
+  //
+  // So the box changes shape below `lg`: a 224px band under the text, which
+  // shows 70% of the width, anchored at 75% to put the window at 23%..92%.
+  assert.match(hero, /order-last h-56 w-full shrink-0 lg:absolute lg:inset-0 lg:-z-10 lg:order-none lg:h-auto/);
+  assert.match(hero, /size-full object-\[75%_center\] lg:object-center/);
+
+  // The slide is a column on a phone and a positioning context at lg.
+  assert.match(hero, /relative isolate flex min-h-\(--hero-min\) flex-col overflow-hidden lg:block/);
 });
 
 test("the admin's overlay slider still does something, but has a floor", () => {

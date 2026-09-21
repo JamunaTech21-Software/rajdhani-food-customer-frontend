@@ -149,6 +149,82 @@ test("the newsletter form appears only when the setting says so", () => {
   assert.match(footer, /\{newsletterOn \? \(/);
 });
 
+// ── The mobile comp: footer disclosure and the floating button ───────────
+
+test("the footer's blocks are a disclosure on a phone and columns above it", () => {
+  // The mobile comp draws the four blocks as accordion rows. Stacked open they
+  // run about 560px, and a visitor who wants the copyright scrolls past all of
+  // it. Driven in a browser at 390: four buttons, 358x44 each, and clicking
+  // one sets aria-expanded and renders five links. At 1280 there are none.
+  //
+  // A button, not `<details>`: `open` is an attribute the DOM owns, so setting
+  // it from React and letting the browser toggle it gives two sources of truth
+  // that drift on the first tap.
+  assert.match(footer, /aria-expanded=\{open\}/);
+  assert.match(footer, /aria-controls=\{panelId\}/);
+  assert.doesNotMatch(footer, /<details/, "not a details element");
+
+  // Collapsed means absent, not hidden — otherwise the links stay in the tab
+  // order behind a closed section.
+  assert.match(footer, /\{wide \|\| open \? \(/);
+
+  // 44px: `py-3` around a 20px line. The browser measured 358x44.
+  assert.match(footer, /flex w-full items-center justify-between py-3 text-left uppercase/);
+
+  // Above `sm` there is no button at all, just the heading text.
+  assert.match(footer, /\{wide \? \(\s*title\s*\) : \(/);
+  assert.match(footer, /useMediaQuery\("\(min-width: 40rem\)"\)/);
+});
+
+test("the media-query hook subscribes rather than setting state in an effect", () => {
+  // `matchMedia` is an external store and `useSyncExternalStore` is the API
+  // for reading one: the value is taken during render, so a desktop visitor
+  // never sees the mobile arrangement flash and corrected. `useState` plus an
+  // effect trips `react-hooks/set-state-in-effect`, and it is right to.
+  const hook = strip(read("hooks/useMediaQuery.js"));
+
+  assert.match(hook, /useSyncExternalStore\(subscribe, getSnapshot, getServerSnapshot\)/);
+  assert.doesNotMatch(hook, /useEffect/);
+  assert.match(hook, /removeEventListener\("change", onStoreChange\)/, "and it unsubscribes");
+  assert.match(hook, /typeof window === "undefined" \|\| !window\.matchMedia/, "guarded outside a browser");
+});
+
+test("the floating WhatsApp button is content, not a hardcoded number", () => {
+  // It renders the `whatsapp` row from the same social accounts the footer
+  // lists, so changing the number in admin changes this too and deleting the
+  // account removes the button rather than leaving a dead chat link.
+  const fab = strip(read("components/layout/WhatsAppButton.jsx"));
+
+  assert.match(fab, /social\?\.find\(\(row\) => row\.platform\?\.toLowerCase\(\)\.trim\(\) === "whatsapp"\)/);
+  assert.match(fab, /if \(!account\?\.url\) return null;/);
+  assert.doesNotMatch(fab, /wa\.me|\+?8801/, "no number in the bundle");
+
+  // Named, because the glyph is the only thing in it, and 56px square.
+  assert.match(fab, /aria-label="Chat with us on WhatsApp \(opens in a new tab\)"/);
+  assert.match(fab, /size-14/);
+
+  // Below the drawer and the dialogs: a button that floats over an open menu
+  // covers the thing someone is reading.
+  assert.match(fab, /\bz-40\b/);
+
+  // The brand green is a token, not a literal — `no-colour-literals` would
+  // reject the literal, and rightly: it is a third-party mark that must not
+  // follow primary_color.
+  assert.match(fab, /bg-whatsapp text-on-whatsapp/);
+  assert.match(
+    read("shared/theme/tokens.css"),
+    /--color-whatsapp: #25d366;/,
+  );
+});
+
+test("the floating button is mounted once, site-wide, after the footer", () => {
+  const layout = strip(read("components/layout/SiteLayout.jsx"));
+
+  // `{}` is what `strip` leaves behind where a JSX comment was.
+  assert.match(layout, /<Footer \/>\s*(\{\}\s*)?<WhatsAppButton \/>/);
+  assert.doesNotMatch(strip(read("pages/HomePage.jsx")), /WhatsAppButton/, "not per page");
+});
+
 test("the footer band sits on the shared section rhythm", () => {
   // `mt-16` on top of the previous band's own `py-(--space-section)` was two
   // gaps stacked — 112px where the reference butts the footer straight
