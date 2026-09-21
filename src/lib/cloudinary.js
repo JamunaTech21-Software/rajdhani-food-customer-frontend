@@ -301,16 +301,20 @@ export const SIZES = {
    *   * **From 1280** the container caps at 1232, the two 44px arrows and
    *     their two 12px gaps come out of it, and the remaining 1120 is divided
    *     into six tracks with five 20px gaps: `(1120 - 100) / 6 = 170`.
-   *   * **Below that** the arrows are hidden and the tracks are a fixed 15rem,
-   *     overflowing on purpose — so 240px however narrow the screen gets. A
-   *     `vw` unit there would describe the viewport rather than the card.
+   *   * **From 640 to 1279** the arrows are hidden and the tracks are a fixed
+   *     15rem, overflowing on purpose — so 240px however wide the screen gets.
+   *   * **Below 640** they narrow to 10rem. A 240px card on a 390px phone
+   *     shows one and a half of them; the mobile reference shows three and a
+   *     half, and a strip that does not visibly continue is a strip nobody
+   *     scrolls. A `vw` unit at either step would describe the viewport
+   *     rather than the card.
    *
    * The one case this overstates is a catalogue with so few featured products
    * that the tracks stop overflowing and stretch. Eight are published, which
    * overflows at every width, so it is right today and wrong only on a
    * catalogue that has nearly emptied.
    */
-  carouselCard: "(min-width: 1280px) 170px, 240px",
+  carouselCard: "(min-width: 1280px) 170px, (min-width: 640px) 240px, 84px",
 
   /** Half a split section: the welcome block and the page blocks. */
   half: gridSizes(SPLIT_GRID, { gap: 56 }),

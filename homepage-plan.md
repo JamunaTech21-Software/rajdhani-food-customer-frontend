@@ -1284,6 +1284,113 @@ layout rather than content, so they are listed here rather than edited.
 
 ---
 
+### H17 — the mobile reference, taken as far as it goes ✅ *done 2026-09-21*
+
+The client's mobile mock is the desktop layout photographed in a phone frame,
+plus three things that are genuinely mobile design. H16 built the footer
+accordion; this phase takes the density as far as 358px of content allows.
+
+**Adopted, because they survive at a legible size:**
+
+| Band | Was | Now | Reference |
+|---|---|---|---|
+| USP strip | 1 column | **2 × 2** | 2 × 2 ✅ |
+| Stats | 2 × 2 | **4 across** | 4 across ✅ |
+| Process | 1 column | **3 across** | 5 across |
+| Product strip | 240px tracks, 1½ visible | **160px, 2¼ visible** | ~3½ visible |
+
+**Declined, with the arithmetic:** at 390 the content column is 358px.
+
+* **Five process steps across** is 71px each — a 48px circle, a two-word title
+  and a three-line description in 71px. Three is 119px, the same width the
+  About page's manufacturing tiles use successfully, and the titles stay on
+  two lines rather than one word each.
+* **The hero side by side** would leave the headline about 180px. It is a band
+  under the text instead, which is what H13 established and which shows 100%
+  of the product where the reference's own arrangement shows it too.
+* **The dealer bar in one row** is a 64px mark, the copy and a 137px button in
+  358px.
+* **Quotes beside news** is 167px a column for a pull quote and for cards
+  carrying a cover, a date and a two-line title.
+
+Those four are where the mock stops being a mobile design and starts being a
+screenshot: its body text, scaled to a 390px screen, works out at about 7px.
+
+**Two second-order fixes the density forced.**
+
+`FeatureItem` gives its text about 115px in the 2 × 2 cell, so the description
+drops to 12px and the gutter to 10px below `sm` — at 14px "Carefully selected
+from the garden" ran to four lines and the strip grew taller than the hero it
+overlaps.
+
+The strip's tracks and its `sizes` attribute are one contract, so both moved:
+`(min-width: 1280px) 170px, (min-width: 640px) 240px, 160px`. Changing the
+class alone would have left every phone downloading a 240px image for a 160px
+card, which is the kind of wrong that never shows up on screen.
+
+**Result: 5380px → 4760px at 390**, on top of H16's 5799 → 5380. The page is
+**1,039px shorter than it was this morning** and no width from 320 to 1920
+scrolls sideways.
+
+**No WhatsApp button**, at the client's request — it stays parked and excluded
+from the stylesheet.
+
+---
+
+### H18 — the banner and four products, as redlined ✅ *done 2026-09-21*
+
+H17 declined both of these on legibility grounds. The client reaffirmed them
+with a redlined screenshot, so they are built, and the costs are recorded here
+rather than argued again.
+
+**The banner is the desktop composition on a phone.** Text left, product
+right, over the tea-garden hills.
+
+The product needed its own box to be there at all. The banner is 1983×793 and
+the product group runs 53%..92% of its width — 39% of the image. As a
+full-bleed backdrop at 390 the crop is about a third of the width, and a 39%
+subject does not fit a 33% window at any anchor; that was H13's finding and it
+has not changed. But a **square** box shows 40% of the width, and anchored at
+87% that window is 53%..93% — the whole group. So the backdrop stays (anchored
+`object-left`, which is the pale misty hillside the headline sits on) and the
+product is lifted into a 44% square beside the text.
+
+Two elements from one source: the small square is about 170px, so the second
+request is cheap, and the alternative is a composition that cannot exist.
+
+| | Before | Now |
+|---|---|---|
+| Headline | 36px | 24px, `sm:text-4xl` |
+| Subtitle | 16px | 12px, `sm:text-base` |
+| Buttons | 48px tall, 24px padding | **44px tall**, 16px padding, 12px label |
+| `--hero-min` | 480px | **320px**, with a new `sm` step at 480 |
+
+44px is the floor `responsive.test.mjs` enforces, so the height held and the
+padding gave instead: "Explore Our Products" and its arrow is 158px at 12px in
+a 196px column, against 204px at full size. The hero's content block also
+gained `pb-16` below `sm` — the USP card is pulled up 48px over the band, and
+on a 320px hero it was covering the second button.
+
+**Four products across**, which is 83px a card at 390:
+`auto-cols-[calc((100%-1.5rem)/4)]` with an 8px gap, a fixed 15rem again from
+`sm`. The `sizes` attribute moved with it — `(min-width: 1280px) 170px,
+(min-width: 640px) 240px, 84px` — because the class and the contract are one
+thing, and so did the skeleton in `HomePage`, which exists to be the same
+shape as the strip.
+
+**What 83px cannot carry.** The wishlist heart is a 44px target — half the
+card's width — and the badge is clipped by the card edge. Both stand down
+below `sm` in the compact variant only and return above it; the catalogue card
+on `/products`, which is never that narrow, keeps them at every width. Neither
+is in the reference at any size. **This is a feature removed on phones**, so
+it is worth a second opinion: the wishlist is still on the product page and on
+the catalogue, and a control nobody can hit is not a feature either.
+
+Page height at 390 is now **4,395px**, against 5,799 at the start of the
+mobile work.
+
+---
+
 ## 5a. Audit, 2026-09-20
 
 Asked after H5 whether the home page was finished. It was not, and mapping

@@ -51,7 +51,10 @@ export function FeatureItem({ item, size = 44, tone = "solid" }) {
   const background = item.icon_bg_color || undefined;
 
   return (
-    <li className="flex items-start gap-3.5">
+    // A tighter gutter on a phone: two of these share 358px of content in the
+    // home page's 2x2 strip, so the text column is about 115px and every
+    // saved pixel is a word that stays on its line.
+    <li className="flex items-start gap-2.5 sm:gap-3.5">
       <span
         className={cn("grid shrink-0 place-items-center rounded-full bg-brand-tint text-brand")}
         style={{ width: size, height: size, ...markStyle(background, tone) }}
@@ -74,7 +77,7 @@ export function FeatureItem({ item, size = 44, tone = "solid" }) {
       <span className="min-w-0">
         <span className="block text-sm font-semibold text-ink">{item.title}</span>
         {item.description ? (
-          <span className="mt-0.5 block text-sm leading-relaxed text-ink-muted">
+          <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted sm:text-sm">
             {item.description}
           </span>
         ) : null}

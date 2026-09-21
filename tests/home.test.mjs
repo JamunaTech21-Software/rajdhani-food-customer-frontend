@@ -334,7 +334,15 @@ test("the connector is decoration, not a sixth step", () => {
 test("the connector only appears once the five are in one row", () => {
   // Between two stacked steps a horizontal rule points nowhere.
   assert.ok(processBand.includes("border-t-2 border-dotted border-brand/40 lg:block"));
-  assert.match(processBand, /lg:grid-cols-5/);
+  // Five across from `md` — the mobile reference runs them in one row, and
+  // three on a phone is as close as 358px of content gets to that with the
+  // titles still on two lines rather than one word each. The connector still
+  // waits for `lg`, where the row is settled and the photograph is beside it.
+  // Five across at every width now. The client asked for the mobile
+  // reference literally, and the reference fits five on a phone by dropping
+  // the descriptions — 358px over five steps and four 4px gaps is 68px each,
+  // which holds a 48px mark and a two-line title but no prose.
+  assert.match(processBand, /grid-cols-5 gap-x-1/);
 });
 
 test("the mark is white inside a green ring, as the reference draws it", () => {
@@ -473,7 +481,7 @@ test("the strip no longer turns into a grid, so the arrows have something to dri
   // It became a four-column grid from `lg`. The arrows the reference draws are
   // shown on exactly those screens, and would have scrolled nothing.
   assert.doesNotMatch(featured, /lg:grid-flow-row|lg:grid-cols-4|lg:overflow-visible/);
-  assert.match(featured, /auto-cols-\[minmax\(15rem,1fr\)\] grid-flow-col gap-5 overflow-x-auto/);
+  assert.match(featured, /auto-cols-\[calc\(\(100%-1\.5rem\)\/4\)\] grid-flow-col gap-2 overflow-x-auto/);
 });
 
 test("the skeleton still mirrors the strip after that change", () => {
@@ -537,12 +545,37 @@ test("the DOM order is the order they are drawn in", () => {
   assert.ok(featured.indexOf('direction="next"') > featured.indexOf("ref={stripRef}"));
 });
 
+test("the range heading and View All share a line on a phone", () => {
+  // They wrapped: a 30px heading is about 280px on its own and the
+  // full-length button another 180px, against the 358px a 390 phone has. The
+  // heading drops a step below `sm` and the button loses its last word, which
+  // brings the pair to roughly 293px. Tablet and desktop are untouched.
+  assert.match(featured, /text-lg font-bold text-ink sm:text-4xl/);
+  // `includes`, not a regex: the markup contains a `/`, which closes a regex
+  // literal and turns the rest of the line into flags.
+  assert.ok(
+    featured.includes(`View All<span className="sr-only sm:not-sr-only sm:inline"> Products</span>`),
+    "the last word is hidden on a phone, not deleted",
+  );
+  assert.match(featured, /whitespace-nowrap rounded-md border border-line px-3 text-xs/);
+
+  // No `flex-wrap` on the row. At 320 the pair still does not fit, and
+  // wrapping would drop the button under the heading — the thing being fixed.
+  // Without it the heading takes two lines and the button stays beside it.
+  assert.match(featured, /<div className="flex items-end justify-between gap-3 sm:gap-4">/);
+  assert.match(featured, /<div className="min-w-0">/, "so the heading can shrink rather than push");
+
+  // The last word stays in the accessible name at every width — WCAG 2.5.3
+  // wants the name to contain the visible text, and it does.
+  assert.doesNotMatch(featured, /aria-label="View/, "the name comes from the text, not an override");
+});
+
 test("six across at xl, and the card width follows the row", () => {
   // The reference draws six. A fixed card width would have to be recomputed
   // by hand every time the arrows changed size, and be silently wrong in
   // between; a percentage of the strip follows it.
   assert.match(featured, /xl:auto-cols-\[calc\(\(100%-100px\)\/6\)\]/);
-  assert.equal(SIZES.carouselCard, "(min-width: 1280px) 170px, 240px");
+  assert.equal(SIZES.carouselCard, "(min-width: 1280px) 170px, (min-width: 640px) 240px, 84px");
 });
 
 test("that 170px is the arithmetic, not a guess", () => {
@@ -912,7 +945,9 @@ test("those rules wait for the single row", () => {
   const usp = strip(read("components/home/UspStrip.jsx"));
 
   assert.doesNotMatch(usp, /\bdivide-x\b(?<!lg:divide-x)/, "never unprefixed");
-  assert.match(usp, /sm:grid-cols-2 sm:p-8 lg:grid-cols-4/);
+  // Two across from the smallest width now, as the mobile reference draws
+  // them — the rules still wait for the single row at `lg`.
+  assert.match(usp, /grid-cols-2 gap-6[^"]*sm:p-8 lg:grid-cols-4/);
 });
 
 test("the dealer bar is joined to the process band, not floating between two", () => {
@@ -1005,7 +1040,7 @@ test("the headline is dark on a light hero, as the reference draws it", () => {
   // It was white over a 40% `bg-ink` scrim, with the highlight in gold.
   assert.match(hero, /font-bold leading-\[1\.1\] text-ink /);
   assert.match(hero, /<span className="block text-brand">\{banner\.title_highlight\}/);
-  assert.match(hero, /text-ink-muted sm:text-lg/, "and the subtitle with it");
+  assert.match(hero, /text-ink-muted sm:mt-5 sm:text-base lg:text-lg/, "and the subtitle with it");
   assert.doesNotMatch(hero, /text-ink-inverse/, "nothing is still painted for a dark hero");
   assert.doesNotMatch(hero, /text-gold|bg-gold/);
 });
@@ -1030,13 +1065,16 @@ test("but legibility is still the code's job, not the next upload's", () => {
   // reason: below `lg` the photograph is no longer behind the text at all, so
   // there is nothing to protect it from. A wash over the whole slide bought
   // legibility by spending the picture.
-  assert.match(hero, /absolute inset-0 -z-10 hidden lg:block lg:bg-gradient-to-r/);
+  assert.match(hero, /absolute inset-0 -z-10 bg-surface\/75 lg:bg-transparent lg:bg-gradient-to-r/);
   assert.doesNotMatch(
     hero,
     /className="absolute inset-0 -z-10 bg-gradient-to-r/,
     "an unprefixed gradient is the bug this test exists for",
   );
-  assert.doesNotMatch(hero, /bg-surface\/80/, "and no flat wash either, now that nothing overlaps");
+  // The flat wash is back below `lg`: the client asked for the desktop
+  // composition on a phone, so the text sits over the photograph again and
+  // has to be protected from it.
+  assert.match(hero, /bg-surface\/75 lg:bg-transparent/);
 });
 
 test("the phone shows the product, because the arithmetic says it otherwise cannot", () => {
@@ -1048,11 +1086,17 @@ test("the phone shows the product, because the arithmetic says it otherwise cann
   //
   // So the box changes shape below `lg`: a 224px band under the text, which
   // shows 70% of the width, anchored at 75% to put the window at 23%..92%.
-  assert.match(hero, /order-last h-56 w-full shrink-0 lg:absolute lg:inset-0 lg:-z-10 lg:order-none lg:h-auto/);
-  assert.match(hero, /size-full object-\[75%_center\] lg:object-center/);
+  // The product is lifted into a square of its own beside the text. A
+  // full-bleed backdrop crops the width to about a third on a 390 phone and
+  // the product group is 39% of the image, so it does not fit at any anchor.
+  // A square box shows 40% of the width, and anchored at 87% that window is
+  // 53%..93% — the whole group.
+  assert.match(hero, /w-\[38%\] shrink-0 sm:w-\[44%\] lg:hidden/);
+  assert.match(hero, /aspectRatio="1 \/ 1"/);
+  assert.match(hero, /size-full rounded-lg object-\[87%_center\]/);
 
-  // The slide is a column on a phone and a positioning context at lg.
-  assert.match(hero, /relative isolate flex min-h-\(--hero-min\) flex-col overflow-hidden lg:block/);
+  // And the backdrop keeps the pale hillside behind the headline.
+  assert.match(hero, /absolute inset-0 -z-10 size-full object-left lg:object-center/);
 });
 
 test("the admin's overlay slider still does something, but has a floor", () => {
@@ -1062,10 +1106,33 @@ test("the admin's overlay slider still does something, but has a floor", () => {
   assert.match(hero, /Math\.max\(MINIMUM_PROTECTION, Math\.min\(Math\.max\(overlayOpacity \?\? 40, 0\), 100\) \/ 100\)/);
 });
 
-test("the second CTA is the reference's white button, not a translucent one", () => {
-  // The old one only read because the image behind it was darkened.
-  assert.match(hero, /border border-line-strong bg-surface text-ink hover:border-brand/);
-  assert.doesNotMatch(hero, /bg-surface\/10|backdrop-blur-sm/);
+test("a hero button label never wraps, and its column is wide enough not to", () => {
+  // At 320 the text column was 145px against the 166px "Download Catalogue"
+  // needs, so the label broke across two lines inside a fixed-height button.
+  // Three changes buy the 22px: a narrower product square below `sm`, a
+  // tighter row gap, and less horizontal padding on the button itself.
+  //
+  // `whitespace-nowrap` is the guarantee; the widths are what stop it
+  // overflowing instead. Measured in a browser at 320: the button is 167px in
+  // a 167px column, on one line.
+  assert.match(hero, /whitespace-nowrap rounded-md px-3/);
+  assert.match(hero, /w-\[38%\] shrink-0 sm:w-\[44%\]/, "the square gives the column room");
+  assert.match(hero, /items-center gap-3 pb-16 pt-10 sm:gap-4/, "and so does the row gap");
+});
+
+test("the second CTA is the reference's ghost button", () => {
+  // H8 asserted the opposite — "the reference's white button, not a
+  // translucent one" — and it was wrong. That was read off the picture;
+  // measuring it says the photograph shows straight through. Down the button
+  // at x=300 of the comp: #e6dfb3, #e4deb1, #dad4a2, #d2d19d, which is the
+  // same gradient as the hillside above and below it. The border at x=239
+  // samples #78946d, the brand green at about 60% over that pale ground.
+  assert.match(hero, /border border-brand\/60 bg-transparent text-brand hover:bg-brand/);
+  assert.doesNotMatch(hero, /border-line-strong bg-surface text-ink/, "not the solid white one");
+
+  // The original translucent version had a blur behind it and depended on the
+  // hero being dark. It is not that either — the wash does the work now.
+  assert.doesNotMatch(hero, /backdrop-blur-sm/);
 });
 
 test("the slider controls follow the hero from dark to light", () => {
@@ -1274,8 +1341,8 @@ test("the mask's black is not a colour anyone sees", () => {
 test("the step description is a size down from its title", () => {
   // At the same size the two ran together and the row read as five
   // paragraphs rather than five labelled marks.
-  assert.match(processBand, /<h3 className="mt-4 text-sm font-semibold text-ink">/);
-  assert.match(processBand, /<p className="mt-1 text-xs leading-relaxed text-balance text-ink-muted">/);
+  assert.match(processBand, /text-\[0\.6875rem\] font-semibold leading-tight text-ink sm:mt-4 sm:text-sm/);
+  assert.match(processBand, /<p className="mt-1 hidden text-xs leading-relaxed text-balance text-ink-muted sm:block">/);
 });
 
 test("the photograph fills the band and meets the one above and below", () => {
@@ -1380,7 +1447,7 @@ test("the band titles keep the serif and the card titles do not", () => {
   // sans, plus the wishlist row, which is the same product name in a
   // different place and would look like a different component in serif.
   const sans = [
-    ["components/ProductCard.jsx", /<h3 className="text-base font-semibold text-ink">/],
+    ["components/ProductCard.jsx", /<h3 className="text-xs font-semibold text-ink sm:text-base">/],
     ["components/home/LatestNews.jsx", /<h3 className="mt-2 text-base font-semibold leading-snug text-ink">/],
     ["components/news/NewsCard.jsx", /<h2 className="mt-2 text-lg font-semibold leading-snug text-ink">/],
     ["pages/WishlistPage.jsx", /<h2 className="text-base font-semibold text-ink">/],
@@ -1391,7 +1458,7 @@ test("the band titles keep the serif and the card titles do not", () => {
   }
 
   // And the small headings that were only ever serif by inheritance.
-  assert.match(strip(read("components/home/ProcessBand.jsx")), /<h3 className="mt-4 text-sm font-semibold text-ink">/);
+  assert.match(strip(read("components/home/ProcessBand.jsx")), /text-\[0\.6875rem\] font-semibold leading-tight text-ink/);
   assert.doesNotMatch(strip(read("components/layout/Footer.jsx")), /font-display text-sm/, "footer column headings");
 });
 

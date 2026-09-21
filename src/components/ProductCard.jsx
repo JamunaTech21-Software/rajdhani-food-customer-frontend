@@ -59,7 +59,10 @@ export function ProductCard({
   return (
     <article
       className={cn(
-        "group relative flex h-full flex-col overflow-hidden rounded-xl transition-shadow duration-(--duration-fast) hover:shadow-card",
+        // Square, not rounded. Traced on the comp, the card panel insets by
+        // three pixels over three rows at its corner — a radius small enough
+        // to read as none, where the 24px it had was unmistakable.
+        "group relative flex h-full flex-col overflow-hidden transition-shadow duration-(--duration-fast) hover:shadow-card",
         compact ? "bg-ground text-center" : "border border-line bg-surface",
       )}
     >
@@ -75,11 +78,17 @@ export function ProductCard({
         {/* Over the image, inside the card's stretched link — so the button
             carries its own stacking context and stops the click reaching it.
             Without that, saving a product navigates to it. */}
-        <WishlistButton product={product} className="absolute right-2 top-2" />
+        <WishlistButton
+          product={product}
+          className={cn("absolute right-2 top-2", compact && "hidden sm:grid")}
+        />
 
         {badge ? (
           <span
-            className="absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-card"
+            className={cn(
+              "absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide shadow-card",
+              compact && "hidden sm:inline-block",
+            )}
             style={{
               backgroundColor: product.badge_color ?? undefined,
               color: product.badge_color ? readableOn(product.badge_color) : undefined,
@@ -90,8 +99,10 @@ export function ProductCard({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-base font-semibold text-ink">
+      {/* 83px wide at four across on a phone, 240px from `sm`. The padding and
+          the type step with it — at 16px a product name is one word a line. */}
+      <div className="flex flex-1 flex-col p-2 sm:p-4">
+        <h3 className="text-xs font-semibold text-ink sm:text-base">
           {/* The whole card is the link target, via the overlay below, but the
               accessible name comes from this heading rather than "Read more". */}
           <Link to={`/products/${product.slug}`} className="after:absolute after:inset-0">
@@ -102,7 +113,7 @@ export function ProductCard({
         {line ? (
           <p
             className={cn(
-              "mt-1.5 text-sm leading-relaxed text-ink-muted",
+              "mt-1 text-[0.6875rem] leading-snug text-ink-muted sm:mt-1.5 sm:text-sm sm:leading-relaxed",
               compact ? "line-clamp-1" : "line-clamp-2",
             )}
           >
@@ -112,7 +123,7 @@ export function ProductCard({
 
         <span
           className={cn(
-            "mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-brand",
+            "mt-2 inline-flex items-center gap-1 text-[0.6875rem] font-medium text-brand sm:mt-4 sm:gap-1.5 sm:text-sm",
             compact && "justify-center",
           )}
         >

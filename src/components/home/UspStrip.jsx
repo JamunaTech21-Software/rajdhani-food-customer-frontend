@@ -22,7 +22,7 @@ export function UspStrip({ items }) {
 
   return (
     <section aria-label="Why Rajdhani" className="relative z-10 -mt-12 pl-(--gutter-l) pr-(--gutter-r)">
-      <ul className="mx-auto grid max-w-(--container-max) gap-6 rounded-xl bg-surface p-6 shadow-modal sm:grid-cols-2 sm:p-8 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-line [&>li]:lg:px-6 [&>li:first-child]:lg:pl-0 [&>li:last-child]:lg:pr-0">
+      <ul className="mx-auto grid max-w-(--container-max) grid-cols-2 gap-6 rounded-xl bg-surface p-6 shadow-modal sm:p-8 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-line [&>li]:lg:px-6 [&>li:first-child]:lg:pl-0 [&>li:last-child]:lg:pr-0">
         {items.map((item) => (
           // Tinted, not filled: the reference draws pale mint circles with
           // green glyphs, and all four live items carry the solid brand green
