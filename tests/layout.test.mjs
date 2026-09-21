@@ -164,8 +164,15 @@ test("the newsletter field and its button read as one control", () => {
   const form = footer.match(/<form[\s\S]*?<\/form>/)[0];
   assert.match(form, /overflow-hidden rounded-md bg-surface/);
   assert.doesNotMatch(form, /className="mt-4 flex gap-/, "no gap between field and button");
-  assert.match(form, /bg-brand text-on-brand/);
+  // `bg-brand-dark`, not `bg-brand`: the footer itself became `bg-brand` in
+  // the same phase, so a `bg-brand` button was the same colour as the ground
+  // behind it and vanished — a white field with a paper plane floating on
+  // green beside it. The comp keeps its two greens a shade apart and draws a
+  // light stroke round the whole control; the ring is that stroke.
+  assert.match(form, /bg-brand-dark text-on-brand/);
+  assert.match(form, /ring-1 ring-ink-inverse\/25/);
   assert.doesNotMatch(form, /bg-gold/, "the subscribe button is brand green, not gold");
+  assert.doesNotMatch(form, /bg-brand text-on-brand/, "and not the footer's own colour");
 
   // The wrapper clips the children, so the input cannot draw its own focus
   // ring — the ring has to trace the whole control instead, or focus becomes

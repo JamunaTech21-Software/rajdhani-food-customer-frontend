@@ -667,9 +667,10 @@ test("the dots only exist when there is more than one", () => {
   assert.match(quotes, /\{many \? \(/);
 });
 
-test("each dot is a 44px target that says which one it is", () => {
+test("each dot is a 24x44 target that says which one it is", () => {
   // The button is the target; the 8px span is the dot the reference draws.
-  assert.match(quotes, /className="group grid h-11 place-items-center px-1"/);
+  // It was 16px wide — see the sweep note in responsive.test.mjs.
+  assert.match(quotes, /className="group grid h-11 w-6 place-items-center"/);
   assert.match(quotes, /aria-label=\{`Show testimonial \$\{i \+ 1\} of \$\{items\.length\}`\}/);
   assert.match(quotes, /aria-current=\{i === index \? "true" : undefined\}/);
 });
@@ -742,7 +743,10 @@ test("neither column still owns a container, a ground or a rhythm", () => {
     assert.doesNotMatch(source, /pl-\(--gutter-l\)/);
   }
   assert.match(voices, /max-w-\(--container-max\)/);
-  assert.match(voices, /py-\(--space-section\)/);
+  // `pt` rather than `py`: the band gives its bottom padding up to the footer
+  // join. What this assertion is about is that the wrapper owns the rhythm
+  // and neither column does.
+  assert.match(voices, /pt-\(--space-section\)/);
 });
 
 test("the split waits for xl, where the cards are a usable width", () => {
@@ -884,16 +888,42 @@ test("those rules wait for the single row", () => {
   assert.match(usp, /sm:grid-cols-2 sm:p-8 lg:grid-cols-4/);
 });
 
-test("the dealer bar sits the same distance from both neighbours", () => {
-  // Every other band carries `py-(--space-section)`, so a bar with a bottom
-  // padding of its own had one section of space above it and two below —
-  // visibly off-centre between the process band and the quotes.
+test("the dealer bar is joined to the process band, not floating between two", () => {
+  // In the comp the photograph's bottom edge and the bar's top edge are the
+  // same line — y=1100 and y=1102 of a 1024-wide frame — and the two read as
+  // one composition because of it.
+  //
+  // The bar still owns no vertical space itself; what changed is which
+  // neighbour gives it. Above is `ProcessBand`'s `pb-6`, the comp's own 24px
+  // scaled to our container; below is the quotes band's full section.
   const dealer = strip(read("components/home/DealerCta.jsx"));
+  const process = strip(read("components/home/ProcessBand.jsx"));
 
-  assert.doesNotMatch(dealer, /p[bty]-\(--space-section\)/);
-  for (const neighbour of ["ProcessBand", "VoicesBand"]) {
-    assert.match(strip(read(`components/home/${neighbour}.jsx`)), /py-\(--space-section\)/, neighbour);
-  }
+  assert.doesNotMatch(dealer, /p[bty]-\(--space-section\)/, "the bar spaces itself");
+
+  // On the `<section>`'s own class list, not the whole file — `mt-2` on the
+  // subtitle is ordinary. Pulling the section up with a negative margin would
+  // also close the gap, and would leave a tail of photograph showing past the
+  // container on a wide screen, where the bar stops at 1280 and the photo
+  // bleeds to the window.
+  const section = dealer.slice(dealer.indexOf("<section"), dealer.indexOf(">", dealer.indexOf("<section")));
+  assert.doesNotMatch(section, /\b-?mt-/, "the bar does not pull itself up");
+
+  assert.match(process, /pb-6 pt-\(--space-section\)/, "the join is on the band above");
+  assert.doesNotMatch(process, /py-\(--space-section\)/, "which means not `py`");
+  assert.match(strip(read("components/home/VoicesBand.jsx")), /pt-\(--space-section\)/, "VoicesBand");
+});
+
+test("the photograph reaches the join, so the bar starts where it ends", () => {
+  // `bottom-0` is the section's bottom edge, padding included — so shrinking
+  // the padding to 24px is what puts the photo's lower edge on the bar's
+  // upper one. An overlap would have done it too, and would have left a 24px
+  // tail of photograph visible past the container on a wide screen, where
+  // the bar stops at 1280 and the photo bleeds to the window.
+  const img = processBand.slice(processBand.indexOf("<img"), processBand.indexOf("/>", processBand.indexOf("<img")));
+
+  assert.match(img, /absolute inset-y-0 right-0/);
+  assert.match(processBand, /overflow-hidden pb-6/, "and the band clips it there");
 });
 
 test("every band the page renders owns its rhythm, or is exempt on purpose", () => {
@@ -910,6 +940,15 @@ test("every band the page renders owns its rhythm, or is exempt on purpose", () 
     DealerCta: /pl-\(--gutter-l\)/,
   };
 
+  // A fourth case, and not an exemption: `ProcessBand` keeps the token above
+  // and gives up its bottom padding to the 24px join with the dealer bar. It
+  // is still on the rhythm — on one side of it — so it is checked, not
+  // skipped.
+  const joined = {
+    ProcessBand: /pb-6 pt-\(--space-section\)/,
+    VoicesBand: /pb-2 pt-\(--space-section\)/,
+  };
+
   // The hero's entry spans several lines, so the component name may sit past
   // an opening paren and a newline.
   const rendered = [...new Set([...page.matchAll(/render: \(data\) => \(?\s*<(\w+)/g)].map((m) => m[1]))];
@@ -921,6 +960,11 @@ test("every band the page renders owns its rhythm, or is exempt on purpose", () 
     if (name in exempt) {
       assert.match(source, exempt[name], `${name} is exempt, and for the stated reason`);
       assert.doesNotMatch(source, /py-\(--space-section\)/, `${name} claims to be exempt but spaces itself`);
+      continue;
+    }
+
+    if (name in joined) {
+      assert.match(source, joined[name], `${name} joins the band below, and on the stated terms`);
       continue;
     }
 
@@ -947,7 +991,20 @@ test("but legibility is still the code's job, not the next upload's", () => {
   // Removing the scrim outright would make a dark photograph plus dark text an
   // AA failure nobody notices until it is live. It is inverted and localised
   // instead: a light wash fading left to right, behind the text only.
-  assert.match(hero, /bg-gradient-to-r from-surface from-0% via-surface\/60 via-35% to-transparent to-68%/);
+  assert.match(hero, /lg:bg-gradient-to-r lg:from-surface lg:from-0% lg:via-surface\/60 lg:via-35% lg:to-transparent lg:to-68%/);
+
+  // And "behind the text only" is a claim about geometry, so it only holds
+  // where the geometry does. The gradient clears at 68% of the viewport; the
+  // text column is `max-w-xl`, so it fits inside that only above about
+  // 1050px. At 768 the text ran to 78% and on a phone to 96%, with the last
+  // third of every line unprotected on the photograph. Below `lg` the wash is
+  // flat and covers the slide.
+  assert.match(hero, /bg-surface\/80 lg:bg-transparent/);
+  assert.doesNotMatch(
+    hero,
+    /className="absolute inset-0 -z-10 bg-gradient-to-r/,
+    "an unprefixed gradient is the bug this test exists for",
+  );
 });
 
 test("the admin's overlay slider still does something, but has a floor", () => {
@@ -975,13 +1032,15 @@ test("a banner with no image gets a pale ground, not the deep green", () => {
 });
 
 test("the other pages' heroes were not dragged along", () => {
-  // `PageHero` is a different component with its own dark overlay, used by
-  // About, Quality, Contact and four more. The reference covers the home page
-  // only, and nothing here should have reached them.
+  // `PageHero` is a different component with its own dark scrim, used by
+  // About, Quality, Contact and four more. The *home* reference covers the
+  // home page only, and its light treatment should not have reached them —
+  // the inner pages have a comp of their own, and it keeps them dark.
   const pageHero = strip(read("components/layout/PageHero.jsx"));
 
-  assert.match(pageHero, /bg-ink/);
-  assert.match(pageHero, /text-ink-inverse/);
+  assert.match(pageHero, /lg:from-ink lg:from-0% lg:via-ink\/75 lg:via-35%/, "still an ink scrim");
+  assert.match(pageHero, /text-ink-inverse/, "and still light text on it");
+  assert.doesNotMatch(pageHero, /from-surface|bg-surface\/80/, "the home hero's light wash has not leaked");
 });
 
 // ── The second hero button ───────────────────────────────────────────────
@@ -1148,7 +1207,7 @@ test("the photograph resolves out of the band rather than butting against it", (
   // The reference does not put a hard edge between the white section and the
   // photo — it fades in over roughly a quarter of its width. A hard edge
   // reads as a screenshot pasted onto the page.
-  assert.match(processBand, /className="fade-in-from-left absolute bottom-0 right-0 top-\(--space-section\)/);
+  assert.match(processBand, /className="fade-in-from-left absolute inset-y-0 right-0/);
 
   const css = readFileSync(join(SRC, "index.css"), "utf8");
   assert.match(css, /\.fade-in-from-left \{\s*mask-image: linear-gradient\(to right, transparent 0, #000 26%\);/);
@@ -1171,26 +1230,68 @@ test("the step description is a size down from its title", () => {
   assert.match(processBand, /<p className="mt-1 text-xs leading-relaxed text-balance text-ink-muted">/);
 });
 
-test("the photograph's top edge lines up with the text beside it", () => {
-  // It reads the same token as the section's own top padding, so the two stay
-  // level as `--space-section` steps 48 -> 80 -> 112px across breakpoints. A
-  // hardcoded offset matched it at exactly one width and drifted at the rest.
+test("the photograph fills the band and meets the one above and below", () => {
+  // Measured, not judged: in the comp the photo's top edge is y=945 and the
+  // About band's tint ends at y=944, and its bottom edge is y=1100 against
+  // the dealer bar's y=1102. It is a full-height panel between two bands.
+  //
+  // It used to start at `top-(--space-section)` so its top sat level with
+  // "OUR PROCESS", which left a white strip above it that the comp does not
+  // have. There is nothing for the offset to stay level with any more, so
+  // there is no offset.
   const img = processBand.slice(processBand.indexOf("<img"), processBand.indexOf("/>", processBand.indexOf("<img")));
 
-  assert.match(processBand, /py-\(--space-section\)/, "the section's padding");
-  assert.match(img, /top-\(--space-section\)/, "and the photo's offset, from the same token");
-  assert.doesNotMatch(img, /top-\d/, "no hardcoded offset on the photo to fall out of step");
+  assert.match(img, /absolute inset-y-0 right-0/);
+  assert.doesNotMatch(img, /\btop-/, "no top offset at all, token or number");
+  assert.match(processBand, /pt-\(--space-section\)/, "the text still starts on the rhythm");
+});
 
-  // It still bleeds to the band's lower edge.
-  assert.match(img, /absolute bottom-0 right-0/);
+test("an absolutely positioned image is given a height, or it computes its own", () => {
+  // The bug this pins, which survived five rounds of "the image is the wrong
+  // size" without being found:
+  //
+  // Tailwind's preflight sets `height: auto` on every img. An absolutely
+  // positioned *replaced* element resolves that from its width and intrinsic
+  // ratio, not from its offsets — and then, with top and bottom both set, the
+  // equation is over-constrained and the browser ignores `bottom`.
+  //
+  // The process photo is 1942x809, so in a 352px column it was 147px tall in
+  // a ~300px band: pinned to the top, 150px of white underneath, and moving
+  // the box could never fix it. The dealer bar's leaves are 1568x1003, which
+  // at 246px came to 157px against a bar about 148px tall — near enough to
+  // pass for working, and one extra line of copy from not.
+  //
+  // `AboutBand` had `size-full` from the start and never had the bug.
+  for (const name of ["AboutBand", "ProcessBand", "DealerCta"]) {
+    const source = strip(read(`components/home/${name}.jsx`));
+    const images = source.match(/<img[\s\S]*?\/>/g) ?? [];
+
+    for (const img of images) {
+      const classes = img.match(/className="([^"]*)"/)?.[1] ?? "";
+      if (!/\babsolute\b/.test(classes)) continue;
+
+      assert.match(
+        classes,
+        /\b(h-full|size-full|inset-0 [^"]*size-full)\b/,
+        `${name}: an absolute image with no height takes it from its own ratio`,
+      );
+    }
+  }
 });
 
 test("the vertical half of object-position is not used, because it cannot work", () => {
-  // The column is portrait (352x479 at xl) and the source is 1942x809, so
-  // `cover` scales to the *height* and crops only the width. The whole height
-  // of the photograph is already on screen, which makes `object-right bottom`
-  // or `right 70%` completely inert — an easy no-op to ship by accident.
-  const box = { w: (1280 - 1280) / 2 + 352, h: 112 * 2 + 255 };
+  // The column is portrait and the source is 1942x809, so `cover` scales to
+  // the *height* and crops only the width. The whole height of the photograph
+  // is already on screen, which makes `object-right bottom` or `right 70%`
+  // completely inert — an easy no-op to ship by accident.
+  //
+  // The box has changed twice since this was written — H9 cut the rhythm and
+  // H11/H12 turned the photo into a full-height panel — so the height is
+  // recomputed from what the band is today rather than left at the 479px it
+  // was: 48px of top padding, ~229px of content, 24px of join. The margin is
+  // wide enough that the conclusion survives either number, which is the
+  // point of asserting it rather than remembering it.
+  const box = { w: (1280 - 1280) / 2 + 352, h: 48 + 229 + 24 };
   const scale = Math.max(box.w / 1942, box.h / 809);
 
   assert.ok(box.h / scale >= 809 - 1, "the full height is visible, so a vertical anchor does nothing");
@@ -1200,9 +1301,90 @@ test("the vertical half of object-position is not used, because it cannot work",
 
 // ── The dealer bar's leaves ──────────────────────────────────────────────
 
+// ── The display serif is opt-in ──────────────────────────────────────────
+
+test("no base rule puts every heading in the display serif", () => {
+  // The comp uses the serif for band titles only. Checked at 4x on its own
+  // pixels: "Premium Tea", "Rajdhani Food Products at Tea Expo 2025",
+  // "Carefully Plucked" and "QUICK LINKS" are all sans there, and every one
+  // of them was rendering in Playfair here purely for being an h2 or an h3.
+  //
+  // Size is what decides it in the design and a base rule cannot see size,
+  // so the serif is opt-in and the rest inherit the body sans.
+  const css = readFileSync(join(SRC, "index.css"), "utf8");
+
+  assert.doesNotMatch(css, /h1,\s*h2,\s*h3\s*\{[^}]*font-family/);
+});
+
+test("the band titles keep the serif and the card titles do not", () => {
+  const serif = {
+    "components/home/Hero.jsx": "the hero headline",
+    "components/home/FeaturedProducts.jsx": "Our Premium Tea Range",
+    "components/home/ProcessBand.jsx": "From Garden To Your Cup",
+    "components/home/DealerCta.jsx": "the dealer bar",
+    "components/content/SectionHeading.jsx": "every other band title",
+  };
+  for (const [path, what] of Object.entries(serif)) {
+    assert.match(strip(read(path)), /font-display text-/, `${what} lost the serif`);
+  }
+
+  // A card title is not a band title. These are the four the comp shows as
+  // sans, plus the wishlist row, which is the same product name in a
+  // different place and would look like a different component in serif.
+  const sans = [
+    ["components/ProductCard.jsx", /<h3 className="text-base font-semibold text-ink">/],
+    ["components/home/LatestNews.jsx", /<h3 className="mt-2 text-base font-semibold leading-snug text-ink">/],
+    ["components/news/NewsCard.jsx", /<h2 className="mt-2 text-lg font-semibold leading-snug text-ink">/],
+    ["pages/WishlistPage.jsx", /<h2 className="text-base font-semibold text-ink">/],
+  ];
+  for (const [path, pattern] of sans) {
+    const source = strip(read(path));
+    assert.match(source, pattern, `${path}: a card title is sans in the comp`);
+  }
+
+  // And the small headings that were only ever serif by inheritance.
+  assert.match(strip(read("components/home/ProcessBand.jsx")), /<h3 className="mt-4 text-sm font-semibold text-ink">/);
+  assert.doesNotMatch(strip(read("components/layout/Footer.jsx")), /font-display text-sm/, "footer column headings");
+});
+
+test("the quotes band rests on the footer the way the comp draws it", () => {
+  // 9px in the comp at 1280-equivalent, from the news cards' lower border to
+  // the footer's top edge — 7px of a 1024-wide frame. It was a full section.
+  const voices = strip(read("components/home/VoicesBand.jsx"));
+
+  assert.match(voices, /pb-2 pt-\(--space-section\)/);
+  assert.doesNotMatch(voices, /py-\(--space-section\)/);
+});
+
+test("the dealer bar is the comp's size, not half again as tall", () => {
+  // Measured at 1280-equivalent off a 1024-wide comp: the bar is 95px tall,
+  // padded 14px, with a 65px mark, a ~20px title, a 14px subtitle on a 20px
+  // line and a 39px button. Ours was 148px — `py-8` around a title and a
+  // subtitle each a size too large.
+  //
+  // The mark is the one part that was already right, and it is asserted here
+  // so nobody "fixes" it to match the rest.
+  assert.match(dealerCta, /grid size-16 shrink-0 place-items-center rounded-full bg-surface/, "the 64px mark stays");
+
+  assert.match(dealerCta, /className="font-display text-xl font-bold text-on-brand"/);
+  assert.doesNotMatch(dealerCta, /sm:text-2xl/, "no size step above the comp's heading");
+
+  assert.match(dealerCta, /className="mt-1 max-w-xl text-sm text-on-brand\/85"/);
+  assert.doesNotMatch(dealerCta, /leading-relaxed/, "26px lines are what made the block too tall");
+
+  // Tightened only from lg, where the bar is the comp's row rather than a
+  // three-item column.
+  assert.match(dealerCta, /px-6 py-6 sm:px-8 lg:flex-row lg:items-center lg:gap-8 lg:py-3\.5 lg:pr-64/);
+
+  // 44px, not the comp's 39px: WCAG 2.5.5 is the floor and the responsive
+  // suite enforces it.
+  assert.match(dealerCta, /inline-flex h-11 shrink-0 items-center/);
+  assert.doesNotMatch(dealerCta, /h-12/);
+});
+
 test("the dealer bar carries the reference's leaves at its right end", () => {
   assert.match(dealerCta, /src="\/home-distibutor-right\.png"/);
-  assert.match(dealerCta, /fade-in-from-left absolute inset-y-0 right-0 -z-10 hidden w-\[20%\] object-cover lg:block/);
+  assert.match(dealerCta, /fade-in-from-left absolute inset-y-0 right-0 -z-10 hidden h-full w-\[20%\] object-cover lg:block/);
   assert.match(dealerCta, /relative isolate flex flex-col gap-6 overflow-hidden rounded-xl bg-brand/);
 });
 

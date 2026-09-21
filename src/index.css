@@ -33,11 +33,23 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* The comps set every heading in the display serif — this is the one place
-     the customer site and the dashboard deliberately diverge (decision D1). */
-  h1, h2, h3 {
-    font-family: var(--font-display);
-  }
+  /**
+   * No blanket serif on headings.
+   *
+   * This used to set `h1, h2, h3` in the display serif, on the basis that the
+   * earlier comps did. The current reference does not: it uses the serif for
+   * the *band titles* only — the hero, "Our Premium Tea Range", "From Garden
+   * To Your Cup", the dealer bar — and sets every smaller heading in the
+   * sans. Checked at 4x on the comp's own pixels: the product names, the news
+   * card titles, the process step labels and the footer's column headings are
+   * all sans there, and all four were rendering in Playfair here purely
+   * because they happen to be h2 or h3 elements.
+   *
+   * Size is what decides it in the design, and a base rule cannot see size.
+   * So the serif is opt-in: the headings that want it say `font-display`, and
+   * the rest inherit the body sans. That also stops the next small heading
+   * anyone adds from being a serif by accident.
+   */
 
   /* A visible focus ring on every interactive element, since §18 requires AA
      and the default ring disappears against the brand green. */

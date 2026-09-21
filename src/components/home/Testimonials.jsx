@@ -110,10 +110,22 @@ export function Testimonials({ testimonials }) {
             <div className="mt-4 flex items-center justify-center gap-1">
               {items.map((item, i) => (
                 /*
-                  The button is the 44px target; the span is the 8px dot the
-                  reference draws. Growing the dot itself to meet 2.5.8 would
-                  have changed the design — padding it does not. Same
-                  arrangement as the hero's.
+                  The span is the 8px dot the reference draws; the button is
+                  the target around it. Growing the dot itself to meet 2.5.8
+                  would have changed the design — padding it does not.
+
+                  **24×44, and the width is the part that was wrong.** This
+                  said "the 44px target" and was 44px in one direction only:
+                  4px of padding either side of an 8px dot is 16px wide, and
+                  with the 4px gap between them 2.5.8's spacing exemption
+                  does not apply either, so three dots 20px apart were
+                  failing AA on a phone. 24px is the criterion's minimum met
+                  outright.
+
+                  Not a 44px-wide target: that would space the dots 48px
+                  apart and turn a tight row of three into a scattered one.
+                  24px keeps the design and clears the bar. Same arrangement
+                  as the hero's, which had the same bug.
                 */
                 <button
                   key={item.id}
@@ -121,7 +133,7 @@ export function Testimonials({ testimonials }) {
                   aria-label={`Show testimonial ${i + 1} of ${items.length}`}
                   aria-current={i === index ? "true" : undefined}
                   onClick={() => setIndex(i)}
-                  className="group grid h-11 place-items-center px-1"
+                  className="group grid h-11 w-6 place-items-center"
                 >
                   <span
                     className={cn(

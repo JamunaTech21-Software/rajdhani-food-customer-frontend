@@ -32,7 +32,18 @@ export function VoicesBand({ testimonials, posts }) {
   if (!anything) return null;
 
   return (
-    <div className="mx-auto grid max-w-(--container-max) gap-12 py-(--space-section) pl-(--gutter-l) pr-(--gutter-r) xl:grid-cols-[1fr_2fr] xl:gap-10">
+    /*
+      `pb-2`, not a full section, and it is the comp's own figure: the news
+      cards' lower border sits 9px above the footer's top edge at
+      1280-equivalent — 7px of a 1024-wide frame. Ours was 48px.
+
+      The same reasoning as the process band's join with the dealer bar. This
+      is not a gap between two bands that each need air; it is the last
+      content on the page resting on a solid dark block, and the comp draws
+      the two almost touching. The footer supplies all the breathing room
+      needed on its own side.
+    */
+    <div className="mx-auto grid max-w-(--container-max) gap-12 pb-2 pt-(--space-section) pl-(--gutter-l) pr-(--gutter-r) xl:grid-cols-[1fr_2fr] xl:gap-10">
       <ErrorBoundary name="home:testimonials" title="Customer reviews could not be shown" inline>
         <Testimonials testimonials={testimonials} />
       </ErrorBoundary>

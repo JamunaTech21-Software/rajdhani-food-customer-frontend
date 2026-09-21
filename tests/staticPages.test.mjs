@@ -15,6 +15,85 @@ const certifications = strip(read("components/content/Certifications.jsx"));
 const content = strip(read("hooks/usePageContent.js"));
 const prose = strip(read("lib/prose.js"));
 const router = strip(read("routes/router.jsx"));
+const pageHero = strip(read("components/layout/PageHero.jsx"));
+
+// ── The About comp: the "Our Company" band ───────────────────────────────
+
+test("a block section is not two equal columns", () => {
+  // Measured off the About comp's "Our Company" band: text x 80..397 of a
+  // 1024-wide frame, photograph x 490..949 — 41% / 59% of the content width
+  // with a 116px gutter. At `grid-cols-2` the text had half the row and the
+  // picture was cramped by the same amount.
+  //
+  // It suits the other two users too: About's "Our Strength" puts five
+  // process steps in the wide half and Quality's commitment block a feature
+  // grid, and both were being squeezed into 50%.
+  assert.match(section, /lg:grid-cols-\[0\.7fr_1fr\] lg:items-center lg:gap-28/);
+  assert.doesNotMatch(section, /lg:grid-cols-2/);
+});
+
+test("the photograph sits on a card, as the comp draws it", () => {
+  // 16px and a soft shadow, lifting it off the near-white band. `rounded-xl`
+  // is 24px, which on a 575px-wide picture reads as a rounded button.
+  assert.match(section, /overflow-hidden rounded-lg shadow-card/);
+  assert.doesNotMatch(section, /overflow-hidden rounded-xl/);
+});
+
+// ── The About comp: the banner ───────────────────────────────────────────
+
+test("the banner scrim is a gradient, so the photograph survives it", () => {
+  // Sampled across the About comp's banner: #0a1612 at the left edge,
+  // #1a2d18 at 300, #807b47 at 600, #a3ab02 at 750 of a 1024-wide frame. The
+  // text sits on near black and the tea garden is at full brightness two
+  // thirds across. A flat `bg-ink` guaranteed the contrast by throwing the
+  // picture away.
+  assert.match(pageHero, /lg:bg-gradient-to-r lg:from-ink lg:from-0% lg:via-ink\/75 lg:via-35% lg:to-transparent lg:to-72%/);
+  assert.doesNotMatch(pageHero, /className="absolute inset-0 -z-10 bg-ink"/, "not a flat scrim");
+
+  // And flat below `lg`, the same fix the home hero needed: a gradient that
+  // clears at 72% of the viewport protects the text only while the text is
+  // in the left two thirds, and `max-w-xl` runs the full width of a phone.
+  // The browser had "the trust of millions" on bright sky at 390.
+  assert.match(pageHero, /bg-ink\/75 lg:bg-transparent/);
+
+  // The slider still scales it, so an editor can still add protection — but
+  // not remove it. The live About row is at 40, which rendered a white
+  // heading on a sunlit hillside; the comp's left edge is about 85% coverage,
+  // and that is the floor.
+  assert.match(pageHero, /style=\{\{ opacity: overlay \}\}/);
+  assert.match(pageHero, /const MINIMUM_PROTECTION = 0\.85;/);
+  assert.match(pageHero, /Math\.max\(\s*MINIMUM_PROTECTION,/);
+});
+
+test("the breadcrumb is a line of text under the heading, not a corner chip", () => {
+  // The comp sets heading, breadcrumb and subtitle as one left-aligned block:
+  // "Home » About Us", the link in a light green with an underline, the
+  // current page in white. It was a white chip pinned bottom-right and
+  // hanging out of the band, which put the page's own name as far from its
+  // heading as the banner allows.
+  assert.match(pageHero, /<nav aria-label="Breadcrumb" className="mt-3">/);
+  assert.match(pageHero, /text-brand-tint underline underline-offset-4/);
+  assert.match(pageHero, /&raquo;/);
+  assert.doesNotMatch(pageHero, /rounded-b-none|self-end/, "no corner chip");
+  assert.doesNotMatch(pageHero, /bg-surface px-4 py-2/, "and it is not a white pill any more");
+
+  // Where it sits changed; what it is did not.
+  assert.match(pageHero, /aria-current="page"/);
+  assert.match(pageHero, /<ol className=/);
+});
+
+test("the heading has no rule under it, because the comp draws none", () => {
+  assert.doesNotMatch(pageHero, /h-0\.5 w-16 bg-gold/);
+});
+
+test("the banner comes out the height the comp draws", () => {
+  // 296px at 1280-equivalent (237px of a 1024 frame). With `lg:pt-16` and
+  // `lg:pb-16` around a 48px heading, a 24px breadcrumb line and two 18px
+  // subtitle lines, ours computes to about 294 — so the existing padding is
+  // already right and this is here to stop it drifting.
+  assert.match(pageHero, /pb-12 pt-12 lg:pb-16 lg:pt-16/);
+  assert.match(pageHero, /text-3xl font-bold leading-tight text-ink-inverse sm:text-4xl lg:text-5xl/);
+});
 
 // ── The four dead links ───────────────────────────────────────────────────
 
