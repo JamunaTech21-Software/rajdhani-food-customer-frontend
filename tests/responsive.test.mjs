@@ -182,10 +182,19 @@ test("the two product grids do not share one sizes value", () => {
 });
 
 test("the scroll strip is sized by its track, not by the viewport", () => {
-  // Its tracks are a fixed 15rem and it overflows on purpose, so a vw unit
-  // there describes the screen rather than the card.
-  assert.match(SIZES.carouselCard, /240px$/);
-  assert.match(file("components/home/FeaturedProducts.jsx"), /auto-cols-\[minmax\(15rem,1fr\)\]/);
+  // Its tracks are a fixed width and it overflows on purpose, so a vw unit
+  // would describe the screen rather than the card. Two steps below the
+  // arrows: 15rem from 640, and 10rem under it — a 240px card on a 390px
+  // phone shows one and a half, where the mobile reference shows three and a
+  // half, and a strip that does not visibly continue is one nobody scrolls.
+  // Four tracks across a phone, which is what the redlined mock shows:
+  // (100% - three 8px gaps) / 4 is 83px at 390. From 640 the card is a fixed
+  // 15rem again and the strip overflows on purpose.
+  assert.match(SIZES.carouselCard, /84px$/);
+  assert.match(
+    file("components/home/FeaturedProducts.jsx"),
+    /auto-cols-\[calc\(\(100%-1\.5rem\)\/4\)\][\s\S]*sm:auto-cols-\[minmax\(15rem,1fr\)\]/,
+  );
 });
 
 // ── G1: nothing is wider than the viewport ────────────────────────────────
@@ -442,7 +451,10 @@ test("a skeleton is the shape of the thing it stands in for", () => {
   // The home skeleton drew a two-column grid where the real band is a
   // horizontal scroll strip until `lg` — so the page jumped when data arrived,
   // which is the one thing a skeleton exists to prevent.
-  const strip = /auto-cols-\[minmax\(15rem,1fr\)\] grid-flow-col gap-5/;
+  // Four tracks on a phone, a fixed 15rem from `sm`. The skeleton has to be
+  // the same shape as the strip it stands in for, or the row jumps when the
+  // real cards arrive.
+  const strip = /auto-cols-\[calc\(\(100%-1\.5rem\)\/4\)\] grid-flow-col gap-2/;
 
   assert.match(file("pages/HomePage.jsx"), strip);
   assert.match(file("components/home/FeaturedProducts.jsx"), strip);
@@ -945,8 +957,12 @@ test("the hero still clears its own content at every step", () => {
   // 60px headline, subtitle, buttons, and the block's own 80px padding.
   const steps = [...read("index.css").matchAll(/--hero-min: min\((\d+)rem/g)].map((m) => Number(m[1]) * 16);
 
-  assert.deepEqual(steps, [480, 544, 608], "three steps, ascending");
-  assert.ok(steps[1] > 477, "the lg step clears the desktop content");
+  // Four steps since the hero became a row on a phone: text one side and the
+  // product the other comes to about 290px of content, where a 480px floor
+  // left 190px of empty band under it. The mock draws the banner at roughly a
+  // third of the screen.
+  assert.deepEqual(steps, [320, 480, 544, 608], "four steps, ascending");
+  assert.ok(steps[2] > 477, "the lg step clears the desktop content");
 });
 
 test("the section rhythm is read as a property, not re-typed", () => {

@@ -156,8 +156,18 @@
    It stays a *minimum*, so a long headline or a third line still grows the
    hero rather than being clipped: at desktop the content is around 477px
    with its own padding, which the 34rem step clears. */
+/* A base step below the old floor. With the hero a row on a phone — text one
+   side, product the other — the content comes to about 290px, and a 480px
+   minimum left 190px of empty band under it. The redlined mock draws the
+   banner at roughly a third of the screen, not four fifths. */
 :root {
-  --hero-min: min(30rem, calc(100svh - 4rem));
+  --hero-min: min(20rem, calc(100svh - 4rem));
+}
+
+@media (width >= 40rem) {
+  :root {
+    --hero-min: min(30rem, calc(100svh - 4rem));
+  }
 }
 
 @media (width >= 64rem) {

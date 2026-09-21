@@ -230,8 +230,23 @@ test("signing out leaves nothing of that customer behind", () => {
 });
 
 test("the toggle is on the card and on the detail page", () => {
-  assert.match(strip(read("components/ProductCard.jsx")), /<WishlistButton product=\{product\}/);
+  assert.match(strip(read("components/ProductCard.jsx")), /<WishlistButton\s+product=\{product\}/);
   assert.match(strip(read("components/product/BuyPanel.jsx")), /<WishlistButton product=\{product\} variant="button"/);
+});
+
+test("it stands down only where it would not fit, and nowhere else", () => {
+  // The home strip runs four cards across a phone at the client's request, so
+  // each is 83px — a 44px button is half its width and the badge beside it is
+  // clipped by the card edge. Both return at `sm`, and the catalogue card,
+  // which is never that narrow, keeps them at every width.
+  const card = strip(read("components/ProductCard.jsx"));
+
+  assert.match(card, /compact && "hidden sm:grid"/, "the heart");
+  assert.match(card, /compact && "hidden sm:inline-block"/, "and the badge");
+
+  // `compact` is the home carousel only. If this ever became unconditional it
+  // would take the wishlist off `/products` too.
+  assert.match(card, /const compact = variant === "compact";/);
 });
 
 test("saving a product from a card does not navigate to it", () => {

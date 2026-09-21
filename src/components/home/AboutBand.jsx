@@ -81,7 +81,7 @@ export function AboutBand({ block, stats }) {
         {hasStats ? (
           <div
             className={cn(
-              "grid grid-cols-2 gap-8 md:grid-cols-4",
+              "grid grid-cols-4 gap-4 sm:gap-8",
               // The rule only exists when there is something on both sides of
               // it, and only once the two are actually side by side.
               split && "lg:border-l lg:border-line lg:pl-14",

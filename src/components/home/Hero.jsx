@@ -12,13 +12,28 @@ function Cta({ label, url, onClick, busy = false, variant = "primary", download 
   if (!label || (!url && !onClick)) return null;
 
   const className = cn(
-    "inline-flex h-12 items-center gap-2 rounded-md px-6 text-sm font-medium transition-colors duration-(--duration-fast)",
+    // 44px is the floor `responsive.test.mjs` enforces, so the height holds
+    // and the padding gives instead: "Explore Our Products" plus its arrow is
+    // 158px at 12px type in a 196px column, and 204px at the full size.
+    "inline-flex h-11 items-center gap-1.5 whitespace-nowrap rounded-md px-3 text-xs font-medium transition-colors duration-(--duration-fast) sm:h-12 sm:gap-2 sm:px-6 sm:text-sm",
     variant === "primary"
       ? "bg-brand text-on-brand hover:bg-brand-dark"
-      : // A solid white button with a border and dark text, as the reference
-        // draws "Download Catalogue" — not the translucent one it was, which
-        // only worked because the hero used to be darkened.
-        "border border-line-strong bg-surface text-ink hover:border-brand hover:text-brand",
+      : /*
+           A ghost button: no fill, a green hairline and a green label, which
+           is what the reference draws for "Download Catalogue".
+
+           H8 called this a solid white button. That was read off the picture
+           rather than measured, and it was wrong. Sampling the comp down the
+           button at x=300 gives #e6dfb3, #e4deb1, #dad4a2, #d2d19d — the same
+           gradient as the hillside above and below it, so the photograph
+           shows straight through. The border sits at x=239 and samples
+           #78946d, which is the brand green at about 60% over that pale
+           ground.
+
+           It stays legible because the wash behind the text column does, and
+           that has a floor: an editor may add protection, not remove it.
+         */
+        "border border-brand/60 bg-transparent text-brand hover:bg-brand hover:text-on-brand",
   );
 
   // A download gets a download glyph rather than an arrow: the reference puts
@@ -129,37 +144,27 @@ function Slide({ banner, onDownload, downloading, priority }) {
   return (
     // `--hero-min` caps 32rem against the viewport height, so a phone held
     // sideways can still show one whole slide. See index.css.
-    <div className="relative isolate flex min-h-(--hero-min) flex-col overflow-hidden lg:block">
+    // `--hero-min` caps against the viewport height, so a phone held sideways
+    // can still show one whole slide. See index.css.
+    <div className="relative isolate min-h-(--hero-min) overflow-hidden">
       {image?.url ? (
         /*
-          A band under the text on a phone; the backdrop behind it at `lg`.
-          **Not a styling preference — the arithmetic leaves no other option.**
+          The photograph is the backdrop at every width again — the client
+          wants the desktop composition on a phone, text over the hills with
+          the product beside it, and the redlined mock shows exactly that.
 
-          The banner is 1983×793, a 2.5:1 strip, and the product group — packet,
-          cups, gold seal — runs from 53% to 92% of its width. As a full-bleed
-          backdrop the box is 390×480 on a phone, so `object-cover` scales to
-          the *height* and crops the width to 32%. A 39%-wide subject does not
-          fit in a 32% window at any `object-position`: centred, 34% of the
-          product is in frame, and that is the sliver of packet edge the site
-          has been showing. At 1280 the same image shows 94% of its width and
-          all of the product, which is why this only looks broken on a phone.
-
-          So the box changes shape instead. 390×224 shows 70% of the width, and
-          anchored at 75% that window is 23%..92% — the whole product group,
-          and the hills it stands in.
-
-          `object-center` returns at `lg`, where the full width is nearly all
-          visible and the anchor would only push the composition off-centre.
+          It is anchored `object-left` below `lg`. At 390 the box is 390 tall
+          and `object-cover` crops the width to about a third, so something has
+          to be chosen: the left third is the pale misty hillside the headline
+          needs to sit on, and the product is handled separately below.
         */
-        <div className="order-last h-56 w-full shrink-0 lg:absolute lg:inset-0 lg:-z-10 lg:order-none lg:h-auto">
-          <CloudinaryImage
-            src={image.url}
-            alt={image.alt ?? ""}
-            sizes={SIZES.full}
-            priority={priority}
-            className="size-full object-[75%_center] lg:object-center"
-          />
-        </div>
+        <CloudinaryImage
+          src={image.url}
+          alt={image.alt ?? ""}
+          sizes={SIZES.full}
+          priority={priority}
+          className="absolute inset-0 -z-10 size-full object-left lg:object-center"
+        />
       ) : (
         // No image: a pale ground rather than the deep green it used to be,
         // because the text on top is now dark.
@@ -167,30 +172,23 @@ function Slide({ banner, onDownload, downloading, priority }) {
       )}
 
       {/*
-        A left-to-right wash only where there is room for one.
-
-        The gradient reaches `transparent` at 68% of the *viewport*, which
-        works while the text occupies the left half and fails the moment it
-        does not. The text column is `max-w-xl`, 576px, so it clears 68% only
-        above about 1050px wide: at 768 it runs to 78% and on a phone to 96%,
-        and the last third of every line was sitting on the photograph with
-        no protection under it at all. Near-black type on a sunlit hillside —
-        the first thing anyone sees on a phone, and unreadable.
-
-        Below `lg` there is now no wash at all, because there is nothing to
-        protect the text from: the photograph moved out from behind it into a
-        band of its own. A flat 80% wash over the whole slide was the previous
-        answer, and it worked — it just spent the photograph to buy
-        legibility, which is a poor trade once the two need not overlap.
+        A left-to-right wash where there is room for one, flat where there is
+        not. The gradient clears at 68% of the viewport, which protects the
+        text only while the text is in the left two thirds — on a phone the
+        column runs most of the width, so below `lg` it is flat instead.
       */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 hidden lg:block lg:bg-gradient-to-r lg:from-surface lg:from-0% lg:via-surface/60 lg:via-35% lg:to-transparent lg:to-68%"
+        className="absolute inset-0 -z-10 bg-surface/75 lg:bg-transparent lg:bg-gradient-to-r lg:from-surface lg:from-0% lg:via-surface/60 lg:via-35% lg:to-transparent lg:to-68%"
         style={{ opacity: protection(banner.overlay_opacity) }}
       />
 
-      <div className="mx-auto flex w-full max-w-(--container-max) flex-1 flex-col justify-center py-12 pl-(--gutter-l) pr-(--gutter-r) lg:h-full lg:flex-none lg:py-20">
-        <div className="max-w-xl">
+      {/*
+        A row on a phone: text on the left, the product on the right, which is
+        the composition the redlined mock marks out.
+      */}
+      <div className="mx-auto flex h-full max-w-(--container-max) items-center gap-3 pb-16 pt-10 sm:gap-4 pl-(--gutter-l) pr-(--gutter-r) sm:pb-10 lg:block lg:py-20">
+        <div className="min-w-0 flex-1 lg:max-w-xl">
           {banner.eyebrow_text ? (
             <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">
               {banner.eyebrow_text}
@@ -204,7 +202,7 @@ function Slide({ banner, onDownload, downloading, priority }) {
             image behind it was darkened.
           */}
           {banner.title || banner.title_highlight ? (
-            <h1 className="mt-3 font-display text-4xl font-bold leading-[1.1] text-ink sm:text-5xl lg:text-6xl">
+            <h1 className="mt-3 font-display text-2xl font-bold leading-[1.1] text-ink sm:text-4xl md:text-5xl lg:text-6xl">
               {banner.title ? <span className="block">{banner.title}</span> : null}
               {banner.title_highlight ? (
                 <span className="block text-brand">{banner.title_highlight}</span>
@@ -213,16 +211,42 @@ function Slide({ banner, onDownload, downloading, priority }) {
           ) : null}
 
           {banner.subtitle ? (
-            <p className="mt-5 max-w-lg text-base leading-relaxed text-ink-muted sm:text-lg">
+            <p className="mt-3 max-w-lg text-xs leading-relaxed text-ink-muted sm:mt-5 sm:text-base lg:text-lg">
               {banner.subtitle}
             </p>
           ) : null}
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-5 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
             <Cta label={banner.primary_cta_label} url={banner.primary_cta_url} />
             <Cta {...secondaryCta(banner, onDownload, downloading)} variant="secondary" />
           </div>
         </div>
+
+        {/*
+          The product, lifted out of the same photograph.
+
+          Why a second element rather than letting the backdrop show it: the
+          banner is 1983x793 and the product group — packet, cups, gold seal —
+          runs 53%..92% of its width, 39% of the image. As a full-bleed
+          backdrop on a 390x390 phone the crop is about a third of the width,
+          and a 39% subject does not fit a 33% window at any anchor. Give it a
+          square box of its own, though, and 40% of the width is in frame:
+          anchored at 87% that window is 53%..93%, which is the whole group.
+
+          Hidden from `lg`, where the backdrop shows 94% of its width and the
+          product is already in it.
+        */}
+        {image?.url ? (
+          <div className="w-[38%] shrink-0 sm:w-[44%] lg:hidden">
+            <CloudinaryImage
+              src={image.url}
+              alt=""
+              aspectRatio="1 / 1"
+              sizes={SIZES.thumbnail}
+              className="size-full rounded-lg object-[87%_center]"
+            />
+          </div>
+        ) : null}
       </div>
     </div>
   );
