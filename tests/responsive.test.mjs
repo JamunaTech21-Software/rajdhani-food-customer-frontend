@@ -187,13 +187,15 @@ test("the scroll strip is sized by its track, not by the viewport", () => {
   // arrows: 15rem from 640, and 10rem under it — a 240px card on a 390px
   // phone shows one and a half, where the mobile reference shows three and a
   // half, and a strip that does not visibly continue is one nobody scrolls.
-  // Four tracks across a phone, which is what the redlined mock shows:
-  // (100% - three 8px gaps) / 4 is 83px at 390. From 640 the card is a fixed
-  // 15rem again and the strip overflows on purpose.
-  assert.match(SIZES.carouselCard, /84px$/);
+  // 3.8 tracks across a phone, so the fourth card is cut by the edge — the
+  // mobile reference clips it, and that overhang is the only thing saying
+  // the row scrolls. Four fitted exactly and read as a finished grid.
+  // (100% - three 8px gaps) / 3.8 is 88px at 390. From 640 the card is a
+  // fixed 15rem again and the strip overflows on purpose.
+  assert.match(SIZES.carouselCard, /88px$/);
   assert.match(
     file("components/home/FeaturedProducts.jsx"),
-    /auto-cols-\[calc\(\(100%-1\.5rem\)\/4\)\][\s\S]*sm:auto-cols-\[minmax\(15rem,1fr\)\]/,
+    /auto-cols-\[calc\(\(100%-1\.5rem\)\/3\.8\)\][\s\S]*sm:auto-cols-\[minmax\(15rem,1fr\)\]/,
   );
 });
 
@@ -451,10 +453,10 @@ test("a skeleton is the shape of the thing it stands in for", () => {
   // The home skeleton drew a two-column grid where the real band is a
   // horizontal scroll strip until `lg` — so the page jumped when data arrived,
   // which is the one thing a skeleton exists to prevent.
-  // Four tracks on a phone, a fixed 15rem from `sm`. The skeleton has to be
+  // 3.8 tracks on a phone, a fixed 15rem from `sm`. The skeleton has to be
   // the same shape as the strip it stands in for, or the row jumps when the
-  // real cards arrive.
-  const strip = /auto-cols-\[calc\(\(100%-1\.5rem\)\/4\)\] grid-flow-col gap-2/;
+  // real cards arrive — so the clipped fourth card belongs in both.
+  const strip = /auto-cols-\[calc\(\(100%-1\.5rem\)\/3\.8\)\] grid-flow-col gap-2/;
 
   assert.match(file("pages/HomePage.jsx"), strip);
   assert.match(file("components/home/FeaturedProducts.jsx"), strip);

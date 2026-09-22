@@ -9,7 +9,7 @@ import { isExternal } from "../../lib/nav.js";
 // reference as the accessibility budget allows; the width lands at ~137
 // against the comp's 131 on its own.
 const ACTION =
-  "inline-flex h-11 shrink-0 items-center gap-2 rounded-md bg-surface px-6 text-sm font-medium text-brand transition-colors duration-(--duration-fast) hover:bg-ground";
+  "inline-flex h-11 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md bg-surface px-3 text-xs font-medium text-brand transition-colors duration-(--duration-fast) hover:bg-ground sm:gap-2 sm:px-6 sm:text-sm";
 
 /**
  * "Become Our Distributor / Dealer" (§10.1) — the `DEALER_CTA` banner.
@@ -70,16 +70,22 @@ export function DealerCta({ banner }) {
         and the text. It was 148px here, which is half as tall again — the
         `py-8` and a text block set two sizes too large.
 
-        The tightening is held back to `lg`. Below that the bar is a column:
-        mark, then text, then button stacked, and 14px of padding around a
-        three-item stack reads as cramped rather than as the reference's neat
-        row. The comp only ever draws the row.
+        **A row at every width**, where this used to be a column below `lg`.
+        The note that stood here said "the comp only ever draws the row", and
+        the mobile reference confirms it: mark, text and button across the
+        bar. Stacked, it was 256px tall on a phone for three short lines; as a
+        row it is 99px.
 
-        The mark stays at 64px. The comp's is 65px — the one part of the left
+        What makes it fit at 320 is that only the middle column gives — the
+        mark and the button are `shrink-0`, the text is `min-w-0 flex-1`, and
+        the type steps down rather than the layout changing.
+
+        The 14px padding is still held back to `lg`. The mark is 64px from
+        `sm` and 44px below it; the comp's is 65px — the one part of the left
         side that was already right, which is worth recording because it
         looked too big next to everything else that was.
       */}
-      <div className="relative isolate flex flex-col gap-6 overflow-hidden rounded-xl bg-brand px-6 py-6 sm:px-8 lg:flex-row lg:items-center lg:gap-8 lg:py-3.5 lg:pr-64">
+      <div className="relative isolate flex flex-row items-center gap-3 overflow-hidden rounded-xl bg-brand px-4 py-4 sm:gap-6 sm:px-8 lg:gap-8 lg:py-3.5 lg:pr-64">
         {/*
           The leaves at the right end of the bar, as the reference draws them.
           The file is the whole bar background — flat green on the left, leaves
@@ -121,18 +127,21 @@ export function DealerCta({ banner }) {
 
         <span
           aria-hidden="true"
-          className="grid size-16 shrink-0 place-items-center rounded-full bg-surface text-brand"
+          className="grid size-11 shrink-0 place-items-center rounded-full bg-surface text-brand sm:size-16"
         >
-          <Handshake size={30} strokeWidth={1.75} />
+          {/* 22px in the 44px mark, 30px in the 64px one — the same
+              proportion the comp draws at full size. */}
+          <Handshake className="size-[22px] sm:size-[30px]" strokeWidth={1.75} />
         </span>
 
         <div className="min-w-0 flex-1">
-          {/* 20px at every width. The `sm` step to 24px put the heading a
-              size above the comp, which sets "Become Our Distributor /
-              Dealer" at about 19–20px — measured from its 294px width in the
-              display serif, not from the ink height, since the slash makes
-              the tallest glyph taller than the caps. */}
-          <h2 id="dealer-cta-heading" className="font-display text-xl font-bold text-on-brand">
+          {/* 20px from `sm`, and no larger: the comp sets "Become Our
+              Distributor / Dealer" at about 19–20px — measured from its 294px
+              width in the display serif, not from the ink height, since the
+              slash makes the tallest glyph taller than the caps.
+              14px below that, where the title shares a 320px bar with a mark
+              and a button and 20px would take three lines. */}
+          <h2 id="dealer-cta-heading" className="font-display text-[0.8125rem] font-bold leading-tight text-on-brand sm:text-xl sm:leading-7">
             {banner.title}
             {banner.title_highlight ? (
               // The gold rather than a lighter green: on a solid brand bar a
@@ -146,7 +155,9 @@ export function DealerCta({ banner }) {
             // subtitle lines sit 20px apart and its first line starts 4px
             // below the title's line box; at 16px with relaxed leading ours
             // was 26px apart, which is what made the block two sizes too tall.
-            <p className="mt-1 max-w-xl text-sm text-on-brand/85">{banner.subtitle}</p>
+            <p className="mt-0.5 line-clamp-3 max-w-xl text-[0.625rem] leading-snug text-on-brand/85 sm:mt-1 sm:line-clamp-none sm:text-sm sm:leading-5">
+              {banner.subtitle}
+            </p>
           ) : null}
         </div>
 

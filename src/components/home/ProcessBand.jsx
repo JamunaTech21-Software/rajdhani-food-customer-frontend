@@ -18,11 +18,21 @@ function Step({ step, connected }) {
     <li className="relative flex flex-col items-center px-0.5 text-center sm:px-2">
       {/* Green, not grey. The reference's connector reads as part of the mark
           it joins; `border-line-strong` made it a neutral hairline that looked
-          like a table rule between the steps. */}
+          like a table rule between the steps.
+
+          Drawn at every width now. It used to wait for `lg`, and the note
+          here said a horizontal rule between two *stacked* steps would point
+          nowhere — which was true when the steps stacked below `lg`. They
+          have not since H18 put all five on one row at every width, so the
+          condition outlived its reason and the mobile reference draws the
+          dotted line exactly as the desktop one does.
+
+          `top-6` still lands on the centre of the mark, because the circle is
+          `size-12` at every width too. */}
       {connected ? (
         <span
           aria-hidden="true"
-          className="absolute left-1/2 -right-1/2 top-6 hidden border-t-2 border-dotted border-brand/40 lg:block"
+          className="absolute left-1/2 -right-1/2 top-6 border-t-2 border-dotted border-brand/40"
         />
       ) : null}
 

@@ -331,9 +331,13 @@ test("the connector is decoration, not a sixth step", () => {
   assert.match(processBand, /border-dotted/);
 });
 
-test("the connector only appears once the five are in one row", () => {
-  // Between two stacked steps a horizontal rule points nowhere.
-  assert.ok(processBand.includes("border-t-2 border-dotted border-brand/40 lg:block"));
+test("the connector is drawn at every width, because the row is", () => {
+  // It used to wait for `lg`, on the grounds that a horizontal rule between
+  // two *stacked* steps points nowhere. That was true while the steps
+  // stacked; they have not since H18 put five across at every width, and the
+  // mobile reference draws the dotted line exactly as the desktop one does.
+  assert.match(processBand, /top-6 border-t-2 border-dotted border-brand\/40"/);
+  assert.doesNotMatch(processBand, /border-dotted[^"]*lg:block/, "no longer gated on lg");
   // Five across from `md` — the mobile reference runs them in one row, and
   // three on a phone is as close as 358px of content gets to that with the
   // titles still on two lines rather than one word each. The connector still
@@ -481,7 +485,7 @@ test("the strip no longer turns into a grid, so the arrows have something to dri
   // It became a four-column grid from `lg`. The arrows the reference draws are
   // shown on exactly those screens, and would have scrolled nothing.
   assert.doesNotMatch(featured, /lg:grid-flow-row|lg:grid-cols-4|lg:overflow-visible/);
-  assert.match(featured, /auto-cols-\[calc\(\(100%-1\.5rem\)\/4\)\] grid-flow-col gap-2 overflow-x-auto/);
+  assert.match(featured, /auto-cols-\[calc\(\(100%-1\.5rem\)\/3\.8\)\] grid-flow-col gap-2 overflow-x-auto/);
 });
 
 test("the skeleton still mirrors the strip after that change", () => {
@@ -579,7 +583,7 @@ test("six across at xl, and the card width follows the row", () => {
   // by hand every time the arrows changed size, and be silently wrong in
   // between; a percentage of the strip follows it.
   assert.match(featured, /xl:auto-cols-\[calc\(\(100%-100px\)\/6\)\]/);
-  assert.equal(SIZES.carouselCard, "(min-width: 1280px) 170px, (min-width: 640px) 240px, 84px");
+  assert.equal(SIZES.carouselCard, "(min-width: 1280px) 170px, (min-width: 640px) 240px, 88px");
 });
 
 test("that 170px is the arithmetic, not a guess", () => {
@@ -648,7 +652,11 @@ test("a banner with no CTA still renders, without a dead button", () => {
 test("the handshake is decoration, not a field nobody set", () => {
   // The banner carries no icon, and this band is one fixed thing rather than a
   // list of varying ones.
-  assert.match(dealerCta, /aria-hidden="true"[\s\S]{0,120}<Handshake/);
+  // A wider window than it needs: the mark now carries a responsive size
+  // and a note about it, so the glyph sits further from the attribute than
+  // it used to. What is being asserted is that the two belong together, not
+  // how many characters apart they are.
+  assert.match(dealerCta, /aria-hidden="true"[\s\S]{0,260}<Handshake/);
 });
 
 test("a highlight on the bar is gold, not a lighter green", () => {
@@ -731,7 +739,10 @@ test("the eyebrow is the heading, so nothing invented sits under it", () => {
 test("the card is the reference's quiet panel, not a raised one", () => {
   // It was white-on-white with a `shadow-card`, which only read as a card
   // because of the shadow. The reference draws a pale panel on a white band.
-  assert.match(quotes, /<figure className="flex flex-col rounded-xl bg-ground p-6">/);
+  // 12px of padding on a phone, 24px from `sm`. The card shares the row
+  // with the news now, so 24px all round left the quote ~110px and broke it
+  // into three words a line.
+  assert.match(quotes, /<figure className="flex flex-col rounded-xl bg-ground p-3 sm:p-6">/);
   assert.doesNotMatch(quotes, /shadow-card|bg-surface/);
 });
 
@@ -740,7 +751,7 @@ test("no stars and no rule above the attribution", () => {
   // row and still returned by the API — it is simply not drawn.
   assert.doesNotMatch(quotes, /Rating|Star|out of 5/);
   assert.doesNotMatch(quotes, /border-t border-line/);
-  assert.match(quotes, /<figcaption className="mt-5">/);
+  assert.match(quotes, /<figcaption className="mt-3 sm:mt-5">/);
 });
 
 test("the attribution reads as the reference sets it", () => {
@@ -811,7 +822,7 @@ test("the arithmetic behind that 249px still holds", () => {
   assert.equal(Math.round((track - 48) / 3), 249);
 
   assert.match(voices, /xl:gap-10/, "the 40px row gap");
-  assert.match(news, /grid gap-6/, "the 24px grid gap");
+  assert.match(news, /grid gap-3[^"]*sm:gap-6/, "12px on a phone, 24px from sm");
 });
 
 test("below xl the home card is sized exactly as the news page's is", () => {
@@ -951,7 +962,7 @@ test("those rules wait for the single row", () => {
   assert.doesNotMatch(usp, /\bdivide-x\b(?<!lg:divide-x)/, "never unprefixed");
   // Two across from the smallest width now, as the mobile reference draws
   // them — the rules still wait for the single row at `lg`.
-  assert.match(usp, /grid-cols-2 gap-6[^"]*sm:p-8 lg:grid-cols-4/);
+  assert.match(usp, /grid-cols-2 gap-x-4 gap-y-5[^"]*sm:gap-6 sm:p-8 lg:grid-cols-4/);
 });
 
 test("the dealer bar is joined to the process band, not floating between two", () => {
@@ -1057,7 +1068,11 @@ test("but legibility is still the code's job, not the next upload's", () => {
   // Removing the scrim outright would make a dark photograph plus dark text an
   // AA failure nobody notices until it is live. It is inverted and localised
   // instead: a light wash fading left to right, behind the text only.
-  assert.match(hero, /lg:bg-gradient-to-r lg:from-surface lg:from-0% lg:via-surface\/60 lg:via-35% lg:to-transparent lg:to-68%/);
+  // The phone geometry is its own, and stated separately below; this is
+  // the desktop one, unchanged. `bg-gradient-to-r` is now declared at the
+  // base and inherited here rather than repeated.
+  assert.match(hero, /lg:from-surface lg:from-0% lg:via-surface\/60 lg:via-35% lg:to-transparent lg:to-68%/);
+
 
   // And "behind the text only" is a claim about geometry, so it only holds
   // where the geometry does. The gradient clears at 68% of the viewport; the
@@ -1065,20 +1080,30 @@ test("but legibility is still the code's job, not the next upload's", () => {
   // 1050px. At 768 the text ran to 78% and on a phone to 96%, with the last
   // third of every line unprotected on the photograph.
   //
-  // The flat mobile wash that fixed that is gone again, and for a better
-  // reason: below `lg` the photograph is no longer behind the text at all, so
-  // there is nothing to protect it from. A wash over the whole slide bought
-  // legibility by spending the picture.
-  assert.match(hero, /absolute inset-0 -z-10 bg-surface\/75 lg:bg-transparent lg:bg-gradient-to-r/);
-  assert.doesNotMatch(
-    hero,
-    /className="absolute inset-0 -z-10 bg-gradient-to-r/,
-    "an unprefixed gradient is the bug this test exists for",
-  );
-  // The flat wash is back below `lg`: the client asked for the desktop
-  // composition on a phone, so the text sits over the photograph again and
-  // has to be protected from it.
-  assert.match(hero, /bg-surface\/75 lg:bg-transparent/);
+  // The phone wash is a gradient again, which is what this test used to
+  // forbid outright — an unprefixed `bg-gradient-to-r` was the H16 bug,
+  // where the gradient cleared at 68% while the text ran to 96% and the end
+  // of every line sat unprotected on the photograph.
+  //
+  // What changed is the geometry, not the nerve. The phone layout is a row:
+  // measured across 320..430 the text occupies 4%..58% of the width and the
+  // product 61%..96%, and those figures barely move because the row divides
+  // by percentage. So a gradient can clear after the words instead of
+  // through them.
+  //
+  // The invariant that replaces the old ban: **the wash must still be at
+  // full strength where the text ends.** `via-58%` is the text column's
+  // right edge and it holds 0.80 there — more than the flat 0.75 it
+  // replaced, so the guaranteed floor went up, not down. If either number
+  // moves the wrong way this fails.
+  assert.match(hero, /bg-gradient-to-r from-surface from-0% via-surface\/80 via-58% to-surface\/5 to-88%/);
+  assert.doesNotMatch(hero, /bg-surface\/75/, "the flat sheet is gone");
+
+  // And the clearing stop has to sit past the text, not inside it.
+  const via = Number(hero.match(/via-surface\/80 via-(\d+)%/)[1]);
+  const to = Number(hero.match(/to-surface\/5 to-(\d+)%/)[1]);
+  assert.ok(via >= 58, `the wash must hold to the text's right edge, got ${via}%`);
+  assert.ok(to > via, "and only clear after it");
 });
 
 test("the phone shows the product, because the arithmetic says it otherwise cannot", () => {
@@ -1095,9 +1120,12 @@ test("the phone shows the product, because the arithmetic says it otherwise cann
   // the product group is 39% of the image, so it does not fit at any anchor.
   // A square box shows 40% of the width, and anchored at 87% that window is
   // 53%..93% — the whole group.
-  assert.match(hero, /w-\[38%\] shrink-0 sm:w-\[44%\] lg:hidden/);
+  assert.match(hero, /-mr-\(--gutter-r\) w-\[42%\] shrink-0 sm:mr-0 sm:w-\[44%\] lg:hidden/);
   assert.match(hero, /aspectRatio="1 \/ 1"/);
-  assert.match(hero, /size-full rounded-lg object-\[87%_center\]/);
+  // No corner on a phone — the reference runs the packet to the edge of the
+  // screen rather than framing it. The radius returns at `sm`, where the
+  // square sits inside the gutter again.
+  assert.match(hero, /size-full object-\[87%_center\] sm:rounded-lg/);
 
   // And the backdrop keeps the pale hillside behind the headline.
   assert.match(hero, /absolute inset-0 -z-10 size-full object-left lg:object-center/);
@@ -1120,7 +1148,11 @@ test("a hero button label never wraps, and its column is wide enough not to", ()
   // overflowing instead. Measured in a browser at 320: the button is 167px in
   // a 167px column, on one line.
   assert.match(hero, /whitespace-nowrap rounded-md px-3/);
-  assert.match(hero, /w-\[38%\] shrink-0 sm:w-\[44%\]/, "the square gives the column room");
+  assert.match(
+    hero,
+    /-mr-\(--gutter-r\) w-\[42%\] shrink-0 sm:mr-0 sm:w-\[44%\]/,
+    "the square gives the column room, and takes its extra size from the bleed",
+  );
   assert.match(hero, /items-center gap-3 pb-16 pt-10 sm:gap-4/, "and so does the row gap");
 });
 
@@ -1484,7 +1516,7 @@ test("the band titles keep the serif and the card titles do not", () => {
   // different place and would look like a different component in serif.
   const sans = [
     ["components/ProductCard.jsx", /<h3 className="text-xs font-semibold text-ink sm:text-base">/],
-    ["components/home/LatestNews.jsx", /<h3 className="mt-2 text-base font-semibold leading-snug text-ink">/],
+    ["components/home/LatestNews.jsx", /<h3 className="[^"]*font-semibold[^"]*text-ink[^"]*">/],
     ["components/news/NewsCard.jsx", /<h2 className="mt-2 text-lg font-semibold leading-snug text-ink">/],
     ["pages/WishlistPage.jsx", /<h2 className="text-base font-semibold text-ink">/],
   ];
@@ -1515,17 +1547,29 @@ test("the dealer bar is the comp's size, not half again as tall", () => {
   //
   // The mark is the one part that was already right, and it is asserted here
   // so nobody "fixes" it to match the rest.
-  assert.match(dealerCta, /grid size-16 shrink-0 place-items-center rounded-full bg-surface/, "the 64px mark stays");
+  assert.match(
+    dealerCta,
+    /grid size-11 shrink-0 place-items-center rounded-full bg-surface text-brand sm:size-16/,
+    "44px on a phone, the comp's 64px from sm",
+  );
 
-  assert.match(dealerCta, /className="font-display text-xl font-bold text-on-brand"/);
+  assert.match(
+    dealerCta,
+    /className="font-display text-\[0\.8125rem\] font-bold leading-tight text-on-brand sm:text-xl sm:leading-7"/,
+    "13px on a phone, the comp's 20px from sm",
+  );
   assert.doesNotMatch(dealerCta, /sm:text-2xl/, "no size step above the comp's heading");
 
-  assert.match(dealerCta, /className="mt-1 max-w-xl text-sm text-on-brand\/85"/);
+  assert.match(
+    dealerCta,
+    /className="mt-0\.5 line-clamp-3 max-w-xl text-\[0\.625rem\] leading-snug text-on-brand\/85 sm:mt-1 sm:line-clamp-none sm:text-sm sm:leading-5"/,
+    "10px and clamped on a phone, the comp's 14px from sm",
+  );
   assert.doesNotMatch(dealerCta, /leading-relaxed/, "26px lines are what made the block too tall");
 
   // Tightened only from lg, where the bar is the comp's row rather than a
   // three-item column.
-  assert.match(dealerCta, /px-6 py-6 sm:px-8 lg:flex-row lg:items-center lg:gap-8 lg:py-3\.5 lg:pr-64/);
+  assert.match(dealerCta, /px-4 py-4 sm:gap-6 sm:px-8 lg:gap-8 lg:py-3\.5 lg:pr-64/);
 
   // 44px, not the comp's 39px: WCAG 2.5.5 is the floor and the responsive
   // suite enforces it.
@@ -1536,7 +1580,7 @@ test("the dealer bar is the comp's size, not half again as tall", () => {
 test("the dealer bar carries the reference's leaves at its right end", () => {
   assert.match(dealerCta, /src="\/home-distibutor-right\.png"/);
   assert.match(dealerCta, /fade-in-from-left absolute inset-y-0 right-0 -z-10 hidden h-full w-\[20%\] object-cover lg:block/);
-  assert.match(dealerCta, /relative isolate flex flex-col gap-6 overflow-hidden rounded-xl bg-brand/);
+  assert.match(dealerCta, /relative isolate flex flex-row items-center gap-3 overflow-hidden rounded-xl bg-brand/);
 });
 
 test("the leaves do not stretch across the whole bar", () => {
@@ -1622,4 +1666,86 @@ test("the band keeps its colour if the picture never arrives", () => {
   assert.match(band, /loading="lazy"/);
   assert.match(band, /alt=""/);
   assert.match(band, /aria-hidden="true"/);
+});
+
+// ── H19: the mobile reference ────────────────────────────────────────────
+
+test("the quote and the news sit side by side on a phone", () => {
+  // Stacked they were 1332px of a 3959px page — a third of the scroll for
+  // the least of the content. The mobile reference puts them in one row.
+  //
+  // It goes back to one column at `sm`: the middle widths have always
+  // stacked and the desktop split at `xl` is untouched.
+  const band = strip(read("components/home/VoicesBand.jsx"));
+
+  assert.match(band, /grid-cols-\[48fr_52fr\] gap-4/);
+  assert.match(band, /sm:grid-cols-1 sm:gap-12/);
+  assert.match(band, /xl:grid-cols-\[1fr_2fr\] xl:gap-10/, "the desktop split is unchanged");
+});
+
+test("the two columns are allowed to shrink", () => {
+  // A grid column is `min-width: auto`, so it will not go below its content.
+  // Without this the news cards set the floor and the row pushes past the
+  // viewport — the usual way a two-column phone layout starts scrolling
+  // sideways.
+  assert.match(strip(read("components/home/VoicesBand.jsx")), /\[&>\*\]:min-w-0/);
+});
+
+test("a news item is a row on a phone and a card from sm", () => {
+  // A 16:9 cover with text under it needs width the 192px column has not
+  // got. The reference sets a small square cover at the start of the line.
+  const news = strip(read("components/home/LatestNews.jsx"));
+
+  assert.match(news, /flex h-full flex-row items-stretch[^"]*sm:flex-col/);
+  assert.match(news, /aspect-square w-14 shrink-0[^"]*sm:aspect-\[16\/9\] sm:w-auto/);
+});
+
+test("only two news items show on a phone", () => {
+  // The reference shows two. Hidden rather than sliced off the array, so one
+  // render still feeds the three-up desktop grid.
+  const news = strip(read("components/home/LatestNews.jsx"));
+
+  assert.match(news, /\[&>li:nth-child\(n\+3\)\]:hidden/);
+  assert.match(news, /sm:\[&>li:nth-child\(n\+3\)\]:block/, "and all three return at sm");
+});
+
+test("View All keeps its 44px target without a box around it", () => {
+  // There is no room for an outlined button beside the heading in 192px, so
+  // it is a text link on a phone. The height stays `h-11` regardless — WCAG
+  // 2.5.5 is about the target, not the border.
+  const news = strip(read("components/home/LatestNews.jsx"));
+
+  assert.match(news, /inline-flex h-11 shrink-0 items-center gap-1 whitespace-nowrap text-xs font-medium text-brand/);
+  assert.match(news, /sm:rounded-md sm:border sm:border-line sm:px-5/, "the button returns at sm");
+  // 2.5.3: the accessible name still says which list it opens.
+  //
+  // A plain space, not `&nbsp;`. The link is `inline-flex`, so the span is
+  // its own flex item and `gap-2` already separates it — a non-collapsible
+  // space lands on top of that gap and renders as a visible double space on
+  // desktop. The leading space here collapses, which is why
+  // `FeaturedProducts` writes its own the same way.
+  assert.match(news, /<span>\s*View All<span className="sr-only sm:not-sr-only"> News<\/span>\s*<\/span>/);
+  assert.doesNotMatch(news, /&nbsp;/, "no non-collapsible space beside a flex gap");
+});
+
+test("the 2x2 usp grid rules all four quadrants", () => {
+  // `divide-x` cannot do this: in two columns the third item starts a row and
+  // a left border there draws a line down the middle of nothing. The rules
+  // are named by position instead, and switched off at `lg` where `divide-x`
+  // on a single row is correct.
+  const usp = strip(read("components/home/UspStrip.jsx"));
+
+  assert.match(usp, /\[&>li:nth-child\(even\)\]:border-l/);
+  assert.match(usp, /\[&>li:nth-child\(n\+3\)\]:border-t/);
+  assert.match(usp, /lg:\[&>li:nth-child\(even\)\]:border-l-0/);
+  assert.match(usp, /lg:\[&>li:nth-child\(n\+3\)\]:border-t-0/);
+});
+
+test("the hero's two buttons are the same width on a phone", () => {
+  // Sized to their labels they were 136px and 168px, so the pair read as two
+  // unrelated controls. `grid w-fit` takes the wider label and stretches both
+  // to it, so they stay equal whatever an editor renames them to.
+  const hero = strip(read("components/home/Hero.jsx"));
+
+  assert.match(hero, /mt-5 grid w-fit gap-2 sm:mt-8 sm:flex sm:w-auto sm:flex-wrap sm:gap-3/);
 });

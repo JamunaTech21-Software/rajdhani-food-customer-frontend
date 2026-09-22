@@ -26,7 +26,7 @@ function Skeleton() {
             which is the one thing a skeleton exists to prevent. */}
         <div className="mt-8 flex items-center gap-3">
           <div aria-hidden="true" className="hidden size-11 shrink-0 xl:block" />
-          <div className="grid min-w-0 flex-1 auto-cols-[calc((100%-1.5rem)/4)] grid-flow-col gap-2 overflow-hidden pb-4 sm:auto-cols-[minmax(15rem,1fr)] sm:gap-5 xl:auto-cols-[calc((100%-100px)/6)] xl:pb-0">
+          <div className="grid min-w-0 flex-1 auto-cols-[calc((100%-1.5rem)/3.8)] grid-flow-col gap-2 overflow-hidden pb-4 sm:auto-cols-[minmax(15rem,1fr)] sm:gap-5 xl:auto-cols-[calc((100%-100px)/6)] xl:pb-0">
             {[0, 1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="aspect-[3/4] animate-pulse rounded-xl bg-ground" />
             ))}

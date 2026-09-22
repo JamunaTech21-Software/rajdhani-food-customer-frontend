@@ -66,7 +66,7 @@ export function Testimonials({ testimonials }) {
         */}
         <h2
           id="testimonials-heading"
-          className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand"
+          className="text-eyebrow font-semibold uppercase tracking-[0.08em] text-brand sm:tracking-[0.2em]"
         >
           What Our Clients Say
         </h2>
@@ -83,25 +83,25 @@ export function Testimonials({ testimonials }) {
           {/* A pale card on a white band, and no shadow — the reference draws
               it as a quiet panel, not a raised one. It was white-on-white with
               a `shadow-card`, which only read as a card because of the shadow. */}
-          <figure className="flex flex-col rounded-xl bg-ground p-6">
-            <Quote size={28} strokeWidth={1.75} aria-hidden="true" className="text-brand/30" />
+          <figure className="flex flex-col rounded-xl bg-ground p-3 sm:p-6">
+            <Quote strokeWidth={1.75} aria-hidden="true" className="size-5 text-brand/30 sm:size-7" />
 
             {/* Keyed on the testimonial so the element is replaced rather than
                 mutated — without it a screen reader reading the old quote is
                 not told the text under its cursor has changed. */}
-            <blockquote key={current.id} className="mt-3 leading-relaxed text-ink">
+            <blockquote key={current.id} className="mt-2 text-xs leading-snug text-ink sm:mt-3 sm:text-base sm:leading-relaxed">
               {current.quote}
             </blockquote>
 
             {/* No rule above the attribution, and no stars. Both were here and
                 the reference has neither — see the note on `rating` below. */}
-            <figcaption className="mt-5">
-              <p className="text-sm font-semibold text-ink">
+            <figcaption className="mt-3 sm:mt-5">
+              <p className="text-xs font-semibold text-ink sm:text-sm">
                 <span aria-hidden="true">– </span>
                 {current.author_name}
               </p>
               {current.author_role ? (
-                <p className="text-sm text-ink-muted">{current.author_role}</p>
+                <p className="text-[0.6875rem] text-ink-muted sm:text-sm">{current.author_role}</p>
               ) : null}
             </figcaption>
           </figure>

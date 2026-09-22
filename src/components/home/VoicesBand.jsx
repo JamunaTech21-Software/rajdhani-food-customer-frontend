@@ -43,7 +43,30 @@ export function VoicesBand({ testimonials, posts }) {
       the two almost touching. The footer supplies all the breathing room
       needed on its own side.
     */
-    <div className="mx-auto grid max-w-(--container-max) gap-12 pb-2 pt-(--space-section) pl-(--gutter-l) pr-(--gutter-r) xl:grid-cols-[1fr_2fr] xl:gap-10">
+    /*
+      Two columns on a phone, one from `sm`, the reference split from `xl`.
+
+      The mobile reference puts these side by side rather than stacked, and
+      measuring it gives roughly 162px for the quote against 192px for the
+      news at a 390 viewport. Stacked, these two bands were 1332px of a 3959px
+      page — a third of the scroll for the least of the content.
+
+      48/52 rather than the 46/54 the mock measures, and the extra 7px is
+      doing a job: "What Our Clients Say" needs 158px on one line and 46%
+      leaves 157. A heading that wraps for the sake of a pixel, next to one
+      that does not, reads as a mistake. The mock is a low-resolution render,
+      so its split is an estimate to begin with.
+
+      It reverts to one column at `sm` on purpose. The middle widths have
+      always stacked, the desktop split at `xl` is unchanged, and the only
+      thing being fixed here is the phone.
+
+      `[&>*]:min-w-0` because a grid column is `min-width: auto` by default
+      and will not shrink below its content. Without it the news column's
+      cards set the floor and the row pushes past the viewport — the classic
+      way a two-column phone layout starts scrolling sideways.
+    */
+    <div className="mx-auto grid max-w-(--container-max) grid-cols-[48fr_52fr] gap-4 pb-2 pt-(--space-section) pl-(--gutter-l) pr-(--gutter-r) [&>*]:min-w-0 sm:grid-cols-1 sm:gap-12 xl:grid-cols-[1fr_2fr] xl:gap-10">
       <ErrorBoundary name="home:testimonials" title="Customer reviews could not be shown" inline>
         <Testimonials testimonials={testimonials} />
       </ErrorBoundary>
