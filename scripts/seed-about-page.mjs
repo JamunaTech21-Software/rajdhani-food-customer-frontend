@@ -42,6 +42,7 @@ import { stdin, stdout } from "node:process";
 
 const API = (process.env.API_BASE ?? "https://rajdhanifood.com/api/v1").replace(/\/$/, "");
 const DRY = process.argv.includes("--dry");
+const FORCE = process.argv.includes("--force");
 
 /**
  * Ask for whatever the environment did not supply.
@@ -176,10 +177,29 @@ if (!token) {
 }
 const auth = { "content-type": "application/json", authorization: `Bearer ${token}` };
 
-/** POST or PATCH, reporting which. */
+/**
+ * Create what is missing. Leave what is there alone unless asked.
+ *
+ * This used to patch every row it recognised, which was wrong the moment
+ * anybody edited anything by hand. Rows are matched on a natural key — a
+ * counter on its label, a step on its number — and hand-entered copy rarely
+ * matches a script's idea of it to the character. Against the live data,
+ * "Years of expereince" did not match this file's "Years of Experience", so a
+ * patching run would have added a fifth, sixth and seventh counter beside the
+ * four already in the band rather than updating them.
+ *
+ * Creating only what is absent makes that harmless: an edited row simply is
+ * not touched. `--force` restores the overwriting behaviour for the case
+ * where you do want this file to win.
+ */
 async function upsert(label, existing, collection, fields, createExtra = {}) {
+  if (existing && !FORCE) {
+    console.log(`kept     ${label} (already there — pass --force to overwrite)`);
+    return;
+  }
+
   if (DRY) {
-    console.log(`${existing ? "would update" : "would create"}  ${label}`);
+    console.log(`${existing ? "would overwrite" : "would create"}  ${label}`);
     return;
   }
 
@@ -219,10 +239,22 @@ for (const [key, fields] of Object.entries(BLOCKS)) {
 const listedStats = await fetch(`${API}/admin/stat-counters?group=${STAT_GROUP}`, { headers: auth });
 const statRows = await body(listedStats);
 if (!listedStats.ok) fail("Listing counters", listedStats, statRows);
-const statsByLabel = new Map((Array.isArray(statRows.data) ? statRows.data : []).map((s) => [s.label, s]));
+const existingStats = Array.isArray(statRows.data) ? statRows.data : [];
 
-for (const stat of STATS) {
-  await upsert(`counter ${stat.value} ${stat.label}`, statsByLabel.get(stat.label), "stat-counters", { ...stat, is_active: true }, { group: STAT_GROUP });
+// Matching a counter on its label is only safe while nobody has typed one.
+// Once the band is populated, a label that differs by a character — and
+// hand-entered ones do — reads as "missing" and gets added *beside* the real
+// row. Four counters become seven. So the whole group is skipped the moment
+// it has anything in it; the band is already doing its job.
+if (existingStats.length) {
+  console.log(
+    `kept     all ${existingStats.length} ABOUT counter(s) — the band is already populated:`,
+  );
+  for (const s of existingStats) console.log(`           ${s.value} ${s.label}`);
+} else {
+  for (const stat of STATS) {
+    await upsert(`counter ${stat.value} ${stat.label}`, undefined, "stat-counters", { ...stat, is_active: true }, { group: STAT_GROUP });
+  }
 }
 
 // ── Steps ────────────────────────────────────────────────────────────────

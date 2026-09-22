@@ -151,7 +151,21 @@ export function FeaturedProducts({ products }) {
               divided by six — a percentage, so it follows the row rather than
               having to be re-derived whenever the arrows change size.
             */
-            className="grid min-w-0 flex-1 auto-cols-[calc((100%-1.5rem)/4)] grid-flow-col gap-2 overflow-x-auto pb-4 [scrollbar-width:thin] snap-x snap-mandatory sm:auto-cols-[minmax(15rem,1fr)] sm:gap-5 xl:auto-cols-[calc((100%-100px)/6)] xl:pb-0 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden"
+            /*
+              `/3.8` rather than `/4`, so the fourth card is cut by the edge.
+
+              Four tracks fitted the strip exactly, which made a scrolling row
+              look like a finished grid — there was nothing to say more
+              existed. The mobile reference clips its fourth card, and that
+              overhang is the affordance. At 390 this puts the card at 88px
+              against the reference's 91px and leaves ~18px of the next one
+              showing.
+
+              Still a fraction of the strip rather than a fixed width, so it
+              keeps scaling with the viewport instead of needing a breakpoint
+              per phone size.
+            */
+            className="grid min-w-0 flex-1 auto-cols-[calc((100%-1.5rem)/3.8)] grid-flow-col gap-2 overflow-x-auto pb-4 [scrollbar-width:thin] snap-x snap-mandatory sm:auto-cols-[minmax(15rem,1fr)] sm:gap-5 xl:auto-cols-[calc((100%-100px)/6)] xl:pb-0 xl:[scrollbar-width:none] xl:[&::-webkit-scrollbar]:hidden"
           >
             {products.map((product, index) => (
               <li key={product.id} className="snap-start">

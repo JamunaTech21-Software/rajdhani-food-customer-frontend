@@ -314,7 +314,7 @@ export const SIZES = {
    * overflows at every width, so it is right today and wrong only on a
    * catalogue that has nearly emptied.
    */
-  carouselCard: "(min-width: 1280px) 170px, (min-width: 640px) 240px, 84px",
+  carouselCard: "(min-width: 1280px) 170px, (min-width: 640px) 240px, 88px",
 
   /** Half a split section: the welcome block and the page blocks. */
   half: gridSizes(SPLIT_GRID, { gap: 56 }),

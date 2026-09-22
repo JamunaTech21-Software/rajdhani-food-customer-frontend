@@ -8,7 +8,14 @@ import { advance, swipeIntent } from "../../lib/carousel.js";
 import { SIZES } from "../../lib/cloudinary.js";
 import { isExternal } from "../../lib/nav.js";
 
-function Cta({ label, url, onClick, busy = false, variant = "primary", download = false }) {
+function Cta({
+  label,
+  url,
+  onClick,
+  busy = false,
+  variant = "primary",
+  download = false,
+}) {
   if (!label || (!url && !onClick)) return null;
 
   const className = cn(
@@ -46,7 +53,7 @@ function Cta({ label, url, onClick, busy = false, variant = "primary", download 
   const content = (
     <>
       {label}
-      <Glyph size={16} strokeWidth={2} aria-hidden="true" />
+      <Glyph size={16} strokeWidth={2} aria-hidden='true' />
     </>
   );
 
@@ -55,7 +62,12 @@ function Cta({ label, url, onClick, busy = false, variant = "primary", download 
   // focus mid-interaction, which drops a keyboard user out of the hero.
   if (onClick) {
     return (
-      <button type="button" onClick={onClick} aria-busy={busy || undefined} className={className}>
+      <button
+        type='button'
+        onClick={onClick}
+        aria-busy={busy || undefined}
+        className={className}
+      >
         {content}
       </button>
     );
@@ -68,7 +80,9 @@ function Cta({ label, url, onClick, busy = false, variant = "primary", download 
       // Back from a downloaded file does not always return them.
       <a
         href={url}
-        {...(download ? { target: "_blank", rel: "noopener noreferrer" } : null)}
+        {...(download
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : null)}
         className={className}
       >
         {content}
@@ -104,10 +118,19 @@ function Cta({ label, url, onClick, busy = false, variant = "primary", download 
  */
 function secondaryCta(banner, onDownload, busy) {
   if (banner.secondary_cta_label && banner.secondary_cta_url) {
-    return { label: banner.secondary_cta_label, url: banner.secondary_cta_url, download: false };
+    return {
+      label: banner.secondary_cta_label,
+      url: banner.secondary_cta_url,
+      download: false,
+    };
   }
 
-  return { label: "Download Catalogue", onClick: onDownload, busy, download: true };
+  return {
+    label: "Download Catalogue",
+    onClick: onDownload,
+    busy,
+    download: true,
+  };
 }
 
 /**
@@ -136,7 +159,10 @@ const MINIMUM_PROTECTION = 0.8;
 
 /** How opaque that wash is, floor included. */
 const protection = (overlayOpacity) =>
-  Math.max(MINIMUM_PROTECTION, Math.min(Math.max(overlayOpacity ?? 40, 0), 100) / 100);
+  Math.max(
+    MINIMUM_PROTECTION,
+    Math.min(Math.max(overlayOpacity ?? 40, 0), 100) / 100,
+  );
 
 function Slide({ banner, onDownload, downloading, priority }) {
   const image = banner.desktop_image;
@@ -146,7 +172,7 @@ function Slide({ banner, onDownload, downloading, priority }) {
     // sideways can still show one whole slide. See index.css.
     // `--hero-min` caps against the viewport height, so a phone held sideways
     // can still show one whole slide. See index.css.
-    <div className="relative isolate min-h-(--hero-min) overflow-hidden">
+    <div className='relative isolate min-h-(--hero-min) overflow-hidden'>
       {image?.url ? (
         /*
           The photograph is the backdrop at every width again — the client
@@ -163,23 +189,46 @@ function Slide({ banner, onDownload, downloading, priority }) {
           alt={image.alt ?? ""}
           sizes={SIZES.full}
           priority={priority}
-          className="absolute inset-0 -z-10 size-full object-left lg:object-center"
+          className='absolute inset-0 -z-10 size-full object-left lg:object-center'
         />
       ) : (
         // No image: a pale ground rather than the deep green it used to be,
         // because the text on top is now dark.
-        <div aria-hidden="true" className="absolute inset-0 -z-10 bg-ground" />
+        <div aria-hidden='true' className='absolute inset-0 -z-10 bg-ground' />
       )}
 
       {/*
-        A left-to-right wash where there is room for one, flat where there is
-        not. The gradient clears at 68% of the viewport, which protects the
-        text only while the text is in the left two thirds — on a phone the
-        column runs most of the width, so below `lg` it is flat instead.
+        A left-to-right wash, at both sizes now.
+
+        It used to be flat below `lg`, and the note here said why: the
+        gradient clears at 68% and on a phone the text column ran most of the
+        width, so anything that cleared would clear over words. That stopped
+        being true when the phone layout became a row — the text is in a
+        column of its own and the product sits beside it. Measured across
+        320..430 the text occupies 4%..58% of the width and the product
+        61%..96%, and those figures barely move, because the row divides by
+        percentage.
+
+        So the flat sheet was washing the whole photograph to protect a
+        column that only needs the left 58%. At 0.75 over an 0.8 floor it put
+        60% white over the hills, and the band read as pale grey rather than
+        as a photograph.
+
+        **It holds 0.80 all the way to 58% and only clears after that**, which
+        is more protection across the text than the flat 0.75 it replaces, not
+        less — the picture comes back in the 30% to the right of the column,
+        where there are no words. That ordering matters: the earlier attempt
+        here cleared from 45%, which still measured fine on this bright
+        photograph but dropped the *guaranteed* floor at the right of the
+        column from 0.60 to 0.50, and the floor is the whole point of
+        `MINIMUM_PROTECTION`. An editor may add protection; a layout change
+        must not quietly remove it.
+
+        The `lg` geometry is untouched.
       */}
       <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-surface/75 lg:bg-transparent lg:bg-gradient-to-r lg:from-surface lg:from-0% lg:via-surface/60 lg:via-35% lg:to-transparent lg:to-68%"
+        aria-hidden='true'
+        className='absolute inset-0 -z-10 bg-gradient-to-r from-surface from-0% via-surface/80 via-58% to-surface/5 to-88% lg:bg-transparent lg:from-surface lg:from-0% lg:via-surface/60 lg:via-35% lg:to-transparent lg:to-68%'
         style={{ opacity: protection(banner.overlay_opacity) }}
       />
 
@@ -187,10 +236,10 @@ function Slide({ banner, onDownload, downloading, priority }) {
         A row on a phone: text on the left, the product on the right, which is
         the composition the redlined mock marks out.
       */}
-      <div className="mx-auto flex h-full max-w-(--container-max) items-center gap-3 pb-16 pt-10 sm:gap-4 pl-(--gutter-l) pr-(--gutter-r) sm:pb-10 lg:block lg:py-20">
-        <div className="min-w-0 flex-1 lg:max-w-xl">
+      <div className='mx-auto flex h-full max-w-(--container-max) items-center gap-3 pb-16 pt-10 sm:gap-4 pl-(--gutter-l) pr-(--gutter-r) sm:pb-10 lg:block lg:py-20'>
+        <div className='min-w-0 flex-1 lg:max-w-xl'>
           {banner.eyebrow_text ? (
-            <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">
+            <p className='text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand'>
               {banner.eyebrow_text}
             </p>
           ) : null}
@@ -202,23 +251,48 @@ function Slide({ banner, onDownload, downloading, priority }) {
             image behind it was darkened.
           */}
           {banner.title || banner.title_highlight ? (
-            <h1 className="mt-3 font-display text-2xl font-bold leading-[1.1] text-ink sm:text-4xl md:text-5xl lg:text-6xl">
-              {banner.title ? <span className="block">{banner.title}</span> : null}
+            <h1 className='mt-3 font-display text-2xl font-bold leading-[1.1] text-ink sm:text-4xl md:text-5xl lg:text-6xl'>
+              {banner.title ? (
+                <span className='block'>{banner.title}</span>
+              ) : null}
               {banner.title_highlight ? (
-                <span className="block text-brand">{banner.title_highlight}</span>
+                <span className='block text-brand'>
+                  {banner.title_highlight}
+                </span>
               ) : null}
             </h1>
           ) : null}
 
           {banner.subtitle ? (
-            <p className="mt-3 max-w-lg text-xs leading-relaxed text-ink-muted sm:mt-5 sm:text-base lg:text-lg">
+            <p className='mt-3 max-w-lg text-xs leading-relaxed text-ink-muted sm:mt-5 sm:text-base lg:text-lg'>
               {banner.subtitle}
             </p>
           ) : null}
 
-          <div className="mt-5 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
-            <Cta label={banner.primary_cta_label} url={banner.primary_cta_url} />
-            <Cta {...secondaryCta(banner, onDownload, downloading)} variant="secondary" />
+          {/*
+            One column of equal-width buttons on a phone, the wrapping row
+            from `sm`.
+
+            The reference draws both hero buttons the same width, stacked. As
+            a `flex-wrap` row they were sized to their labels — 136px for
+            "Explore Our Tea" against 168px for "Download Catalogue" — so the
+            pair read as two unrelated controls rather than a primary and its
+            alternative.
+
+            `grid w-fit` is what makes them match without a width being
+            invented: the column takes the wider label and grid items stretch
+            to it by default, so the two stay equal whatever an editor renames
+            them to.
+          */}
+          <div className='mt-5 grid w-fit gap-2 sm:mt-8 sm:flex sm:w-auto sm:flex-wrap sm:gap-3'>
+            <Cta
+              label={banner.primary_cta_label}
+              url={banner.primary_cta_url}
+            />
+            <Cta
+              {...secondaryCta(banner, onDownload, downloading)}
+              variant='secondary'
+            />
           </div>
         </div>
 
@@ -235,15 +309,34 @@ function Slide({ banner, onDownload, downloading, priority }) {
 
           Hidden from `lg`, where the backdrop shows 94% of its width and the
           product is already in it.
+
+          **It bleeds off the right edge on a phone, and carries no corner.**
+          At 38% inside the gutter it was a 127px rounded square floating in
+          the middle of the band — it read as a thumbnail pasted
+          onto the hero rather than as part of the picture, and left the right
+          half looking empty, which is most of why the section felt cramped.
+          The reference runs the packet and cups to the edge of the screen
+          with the cup cut by it.
+
+          `-mr-(--gutter-r)` cancels the container's own gutter rather than
+          guessing a number, so the bleed is exactly the gutter at every
+          width and nothing can end up past the viewport.
+
+          42% and still square. Square is what keeps the whole group in
+          frame: `cover` on a 2.5:1 source crops to the window's ratio, so a
+          taller box would show *less* of the packet, not more — at 3:4 the
+          window is 30% of the photo's width against the group's 39%, and the
+          left of the packet falls out of it. The extra size comes from the
+          bleed instead, which costs the text column nothing it needs.
         */}
         {image?.url ? (
-          <div className="w-[38%] shrink-0 sm:w-[44%] lg:hidden">
+          <div className='-mr-(--gutter-r) w-[42%] shrink-0 sm:mr-0 sm:w-[44%] lg:hidden'>
             <CloudinaryImage
               src={image.url}
-              alt=""
-              aspectRatio="1 / 1"
+              alt=''
+              aspectRatio='1 / 1'
               sizes={SIZES.thumbnail}
-              className="size-full rounded-lg object-[87%_center]"
+              className='size-full object-[87%_center] sm:rounded-lg'
             />
           </div>
         ) : null}
@@ -282,7 +375,10 @@ export function Hero({ banners, onDownload, downloading = false }) {
     where the finger went down.
   */
   const onPointerDown = (event) => {
-    start.current = event.pointerType === "mouse" ? null : { x: event.clientX, y: event.clientY };
+    start.current =
+      event.pointerType === "mouse"
+        ? null
+        : { x: event.clientX, y: event.clientY };
   };
 
   const onPointerUp = (event) => {
@@ -290,19 +386,32 @@ export function Hero({ banners, onDownload, downloading = false }) {
     start.current = null;
     if (!from) return;
 
-    const direction = swipeIntent(event.clientX - from.x, event.clientY - from.y);
-    if (direction) setIndex((i) => advance(i, slides.length, direction === "next" ? 1 : -1));
+    const direction = swipeIntent(
+      event.clientX - from.x,
+      event.clientY - from.y,
+    );
+    if (direction)
+      setIndex((i) => advance(i, slides.length, direction === "next" ? 1 : -1));
   };
 
   return (
     <section
-      aria-label="Highlights"
-      className="relative"
+      aria-label='Highlights'
+      className='relative'
       {...(many
-        ? { onPointerDown, onPointerUp, onPointerCancel: () => (start.current = null) }
+        ? {
+            onPointerDown,
+            onPointerUp,
+            onPointerCancel: () => (start.current = null),
+          }
         : null)}
     >
-      <Slide banner={current} onDownload={onDownload} downloading={downloading} priority />
+      <Slide
+        banner={current}
+        onDownload={onDownload}
+        downloading={downloading}
+        priority
+      />
 
       {many ? (
         /*
@@ -318,14 +427,14 @@ export function Hero({ banners, onDownload, downloading = false }) {
           is pulled up 48px over the hero and carries `z-10`, so at the
           smaller value the dots were rendering *behind* it.
         */
-        <div className="absolute inset-x-0 bottom-16 flex items-center justify-center gap-1">
+        <div className='absolute inset-x-0 bottom-16 flex items-center justify-center gap-1'>
           <button
-            type="button"
-            aria-label="Previous slide"
+            type='button'
+            aria-label='Previous slide'
             onClick={() => setIndex((i) => advance(i, slides.length, -1))}
-            className="grid size-11 place-items-center rounded-full text-ink hover:bg-ink/10"
+            className='grid size-11 place-items-center rounded-full text-ink hover:bg-ink/10'
           >
-            <ChevronLeft size={20} strokeWidth={2} aria-hidden="true" />
+            <ChevronLeft size={20} strokeWidth={2} aria-hidden='true' />
           </button>
 
           {slides.map((slide, i) => (
@@ -343,11 +452,11 @@ export function Hero({ banners, onDownload, downloading = false }) {
             */
             <button
               key={slide.id}
-              type="button"
+              type='button'
               aria-label={`Go to slide ${i + 1}`}
               aria-current={i === index ? "true" : undefined}
               onClick={() => setIndex(i)}
-              className="group grid h-11 w-6 place-items-center"
+              className='group grid h-11 w-6 place-items-center'
             >
               <span
                 className={cn(
@@ -361,12 +470,12 @@ export function Hero({ banners, onDownload, downloading = false }) {
           ))}
 
           <button
-            type="button"
-            aria-label="Next slide"
+            type='button'
+            aria-label='Next slide'
             onClick={() => setIndex((i) => advance(i, slides.length, 1))}
-            className="grid size-11 place-items-center rounded-full text-ink hover:bg-ink/10"
+            className='grid size-11 place-items-center rounded-full text-ink hover:bg-ink/10'
           >
-            <ChevronRight size={20} strokeWidth={2} aria-hidden="true" />
+            <ChevronRight size={20} strokeWidth={2} aria-hidden='true' />
           </button>
         </div>
       ) : null}
