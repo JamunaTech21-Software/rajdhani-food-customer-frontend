@@ -884,7 +884,7 @@ test("the band has two tones, and the pages do not share one", () => {
   // #144a18 for brand-dark, #1b5e20 for brand and #0d3411 for brand-deep.
   const band = strip(read("components/home/StatsBand.jsx"));
 
-  assert.match(band, /dark \? "bg-brand-dark" : "bg-ground-warm"/);
+  assert.match(band, /dark \? "relative isolate bg-brand-dark" : "bg-ground-warm"/);
   assert.match(band, /dark \? "border border-ink-inverse\/40 text-ink-inverse" : "bg-brand-tint text-brand"/);
   assert.match(band, /dark \? "text-ink-inverse" : "text-brand"/);
 
@@ -1577,4 +1577,49 @@ test("the bar's own colour stays underneath the image", () => {
   // background if the image is slow or fails.
   assert.match(dealerCta, /bg-brand/);
   assert.match(dealerCta, /fade-in-from-left/);
+});
+
+// ── A8: the dark band is a photograph, not a fill ────────────────────────
+
+test("the dark band carries the comp's tea-garden picture", () => {
+  // Measured on the comp across the band, away from the text and the icon
+  // strokes: pixels run rgb(0,32,4) to rgb(105,139,113) — a spread of about
+  // 107 in every channel. A flat colour has a spread of zero, so what is
+  // behind the green is a picture.
+  const band = strip(read("components/home/StatsBand.jsx"));
+
+  assert.match(band, /src="\/about-us-stats-band\.png"/);
+  assert.match(band, /absolute inset-0 -z-20 size-full object-cover object-\[center_80%\]/);
+});
+
+test("the wash sits between the picture and the figures", () => {
+  // Order matters: the picture at -z-20, the wash at -z-10, the counters
+  // above both. Swap the two and the photograph covers its own overlay.
+  const band = strip(read("components/home/StatsBand.jsx"));
+
+  assert.match(band, /bg-brand-dark\/90/);
+  assert.match(band, /-z-10 bg-brand-dark/);
+  // `isolate`, so the stacking stays inside the band rather than putting the
+  // picture behind whatever the page painted before it.
+  assert.match(band, /relative isolate bg-brand-dark/);
+});
+
+test("the picture only ever draws on the dark tone", () => {
+  // The home page's band is pale with green figures. A photograph behind it
+  // would put white-on-photo nowhere near the contrast the dark band has.
+  const band = strip(read("components/home/StatsBand.jsx"));
+
+  assert.match(band, /\{dark \? \(\s*<>/);
+});
+
+test("the band keeps its colour if the picture never arrives", () => {
+  // The figures are white. A band that failed to an unpainted background
+  // would be white on white, so the tone stays on the section itself and the
+  // photograph is drawn over it.
+  const band = strip(read("components/home/StatsBand.jsx"));
+
+  assert.match(band, /className=\{cn\(\s*"py-\(--space-section\)",\s*dark \? "relative isolate bg-brand-dark"/);
+  assert.match(band, /loading="lazy"/);
+  assert.match(band, /alt=""/);
+  assert.match(band, /aria-hidden="true"/);
 });
