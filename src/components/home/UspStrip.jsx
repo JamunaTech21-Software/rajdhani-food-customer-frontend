@@ -9,7 +9,7 @@ export function UspStrip({ items }) {
       className='
         relative
         z-10
-        -mt-12
+        -mt-8
         px-0
 
         md:-mt-14

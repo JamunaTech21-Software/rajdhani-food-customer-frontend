@@ -52,7 +52,7 @@ export function AboutBand({ block, stats }) {
         instead of fighting it. The middle stop is the neutral token, which
         keeps the centre of the band clean under the text and the counters.
       */
-      className="relative isolate overflow-hidden bg-gradient-to-bl from-brand-tint/40 via-ground-warm via-50% to-brand-tint/30 py-(--space-section)"
+      className='relative isolate overflow-hidden bg-gradient-to-bl from-brand-tint/40 via-ground-warm via-50% to-brand-tint/30 py-(--space-section)'
     >
       {/*
         The reference's leaf watermark: pale tea leaves in the bottom-left and
@@ -87,12 +87,12 @@ export function AboutBand({ block, stats }) {
         band is already the right colour and the leaves resolve onto it.
       */}
       <img
-        src="/home-about-us.png"
-        alt=""
-        aria-hidden="true"
-        loading="lazy"
-        decoding="async"
-        className="absolute inset-0 -z-10 size-full object-cover opacity-70 mix-blend-multiply"
+        src='/home-about-us.png'
+        alt=''
+        aria-hidden='true'
+        loading='lazy'
+        decoding='async'
+        className='absolute inset-0 -z-10 size-full object-cover opacity-70 mix-blend-multiply'
       />
 
       <div
@@ -101,7 +101,9 @@ export function AboutBand({ block, stats }) {
           split && "lg:grid-cols-2 lg:items-center lg:gap-14",
         )}
       >
-        {hasText ? <PageBlockBody block={block} headingId="about-band-heading" /> : null}
+        {hasText ? (
+          <PageBlockBody block={block} headingId='about-band-heading' />
+        ) : null}
 
         {hasStats ? (
           <div
