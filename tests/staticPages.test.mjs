@@ -396,3 +396,78 @@ test("one renderer draws a feature item, wherever it appears", () => {
   assert.match(featureGrid, /export function FeatureItem/);
   assert.match(quality, /<FeatureGrid items=/);
 });
+
+// ── A7: the About comp's leaf watermarks ─────────────────────────────────
+
+const watermark = strip(read("components/content/LeafWatermark.jsx"));
+
+test("the two bands the comp draws leaves on are the two that get them", () => {
+  // Our Company on the left, Foundations on the right, matching both the comp
+  // and the filenames the client supplied.
+  assert.match(about, /watermark=\{\{ src: "\/about-us-our-company-left\.png", side: "left" \}\}/);
+  assert.match(about, /src="\/about-us-our-foundation-right-side\.png"[\s\S]*?side="right"/);
+});
+
+test("the art is opt-in, so the sections sharing the component keep none", () => {
+  // `PageBlockSection` also draws About's "Our Strength" and Quality's
+  // commitment block. The comp gives neither of them leaves, and a watermark
+  // switched on inside the component would put them on all three.
+  assert.match(section, /watermark && "relative isolate overflow-hidden"/);
+  assert.match(section, /\{watermark \? <LeafWatermark/);
+  assert.doesNotMatch(quality, /LeafWatermark|watermark=/);
+
+  // One call site per band, and "Our Strength" is not one of them.
+  assert.equal((about.match(/watermark=|<LeafWatermark/g) ?? []).length, 2);
+});
+
+test("the leaves multiply, because the files have no alpha channel", () => {
+  // Both PNGs are colour type 2 — RGB, opaque. They are not cut-outs; they are
+  // near-white rectangles with leaves painted on. Composited normally each one
+  // covers its band with a patch of white and the edge of that patch shows on
+  // any background that is not pure white.
+  //
+  // Multiply is base x overlay, so white leaves the band untouched. Drop it
+  // and the tone set on the section is painted and then hidden.
+  assert.match(watermark, /mix-blend-multiply/);
+  // The blend has to stop at the band, or it reaches the page behind it.
+  assert.match(section, /relative isolate overflow-hidden/);
+});
+
+test("the art is measured from the container, so it never crosses the text", () => {
+  // The comp puts both sprigs in the margin outside the content: Our Company's
+  // runs x 0..68 of a 1024 frame where the text column starts at x=80. Our
+  // container caps at 1280, so that margin only exists above 1280 and a fixed
+  // width would put leaves through the first line of every paragraph.
+  //
+  // Measured at 1536 after this: the worst background local to a glyph in the
+  // Our Company body is rgb(247,249,247) — the band itself, untouched by the
+  // leaf — for 5.45 against `ink-muted`.
+  assert.match(watermark, /calc\(\(100vw-min\(100vw,1280px\)\)\/2\+9rem\)/);
+  assert.match(watermark, /calc\(\(100vw-min\(100vw,1280px\)\)\/2\+12rem\)/);
+
+  // Nothing below `lg`: there is no margin to sit in and the comp does not
+  // draw it there.
+  assert.match(watermark, /hidden opacity-65 mix-blend-multiply lg:block/);
+});
+
+test("each sprig sits where the comp puts it vertically", () => {
+  // Our Company's opens with the band (y 315 against a band opening at 300);
+  // the Foundations one is level with the cards (y 643..773 of 600..863).
+  assert.match(watermark, /align === "middle" \? "top-1\/2 -translate-y-1\/2" : "top-0"/);
+  assert.match(about, /align="middle"/);
+});
+
+test("the two bands step apart the way the comp does", () => {
+  // Sampled off the comp: Our Company is rgb(248,248,248) and Foundations is
+  // rgb(240,243,239) — deeper and a shade greener. The page had white over
+  // `ground`, which put the step the wrong way round.
+  assert.match(about, /tone="ground"\s*\n?\s*watermark=\{\{ src: "\/about-us-our-company-left/);
+  assert.match(about, /bg-ground-warm py-\(--space-section\)/);
+});
+
+test("it is decoration, and announced as none", () => {
+  assert.match(watermark, /alt=""/);
+  assert.match(watermark, /aria-hidden="true"/);
+  assert.match(watermark, /pointer-events-none/);
+  assert.match(watermark, /loading="lazy"/);
+});

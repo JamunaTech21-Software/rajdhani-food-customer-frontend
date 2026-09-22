@@ -2,6 +2,7 @@ import { ArrowRight, CircleCheck } from "lucide-react";
 import { Link } from "react-router";
 
 import { CloudinaryImage } from "../CloudinaryImage.jsx";
+import { LeafWatermark } from "./LeafWatermark.jsx";
 import { RichText } from "./RichText.jsx";
 import { SIZES } from "../../lib/cloudinary.js";
 import { bulletsOf } from "../../lib/pageContent.js";
@@ -81,7 +82,16 @@ export function PageBlockBody({ block, headingId, headingLevel = 2, className })
  * an editor may not have created yet, and an empty heading over an empty column
  * is worse than a section that is simply not there.
  */
-export function PageBlockSection({ block, id, reversed = false, tone = "surface", children }) {
+export function PageBlockSection({
+  block,
+  id,
+  reversed = false,
+  tone = "surface",
+  // `{ src, side }`, and opt-in rather than automatic: three sections share
+  // this component and only About's "Our Company" is drawn with the art.
+  watermark,
+  children,
+}) {
   if (!block) return null;
 
   const headingId = id ? `${id}-heading` : undefined;
@@ -90,8 +100,17 @@ export function PageBlockSection({ block, id, reversed = false, tone = "surface"
     <section
       aria-labelledby={block.heading ? headingId : undefined}
       aria-label={block.heading ? undefined : block.eyebrow || undefined}
-      className={cn("py-(--space-section)", tone === "ground" ? "bg-ground" : "bg-surface")}
+      className={cn(
+        "py-(--space-section)",
+        tone === "ground" ? "bg-ground" : "bg-surface",
+        // Only when there is art to contain. `overflow-hidden` on every
+        // section would clip the image card's `shadow-card`, and `isolate`
+        // would create a stacking context three sections do not need.
+        watermark && "relative isolate overflow-hidden",
+      )}
     >
+      {watermark ? <LeafWatermark src={watermark.src} side={watermark.side} /> : null}
+
       {/*
         Not two equal columns.
 
