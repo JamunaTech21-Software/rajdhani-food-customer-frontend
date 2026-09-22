@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CircleCheck, Gem, Eye, Target } from "lucide-react";
 
 import { Certifications } from "../components/content/Certifications.jsx";
+import { LeafWatermark } from "../components/content/LeafWatermark.jsx";
 import { ProcessTimeline } from "../components/content/ProcessTimeline.jsx";
 import { PageBlockSection } from "../components/content/PageBlockSection.jsx";
 import { RichText } from "../components/content/RichText.jsx";
@@ -135,11 +136,38 @@ export function AboutPage() {
         emptyTitle="Our story is being written"
         emptyBody="This page is being prepared. In the meantime our teas and our contact details are all here."
       >
-        <PageBlockSection block={blockFor(all, "our_story")} id="our-story" />
+        {/* "Our Company" in the comp, and the one section of the three that
+            uses this component which the comp gives the leaf art to. */}
+        <PageBlockSection
+          block={blockFor(all, "our_story")}
+          id="our-story"
+          // Not white. Sampled off the comp left of the text column, this band
+          // is rgb(248,248,248) and the Foundations band under it is a deeper,
+          // greener rgb(240,243,239) — the two are meant to step apart. We had
+          // white over `ground`, which put the step the wrong way round and
+          // left the leaf art sitting on a brighter field than the comp draws.
+          tone="ground"
+          watermark={{ src: "/about-us-our-company-left.png", side: "left" }}
+        />
 
         {foundations.length ? (
-          <section aria-labelledby="foundations-heading" className="bg-ground py-(--space-section)">
-            <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
+          <section
+            aria-labelledby="foundations-heading"
+            // `ground-warm` rather than `ground`: the comp's Foundations band
+            // is rgb(240,243,239) against Our Company's rgb(248,248,248), so
+            // it is both deeper and a shade greener. Our two tokens are 247
+            // and 244 — a smaller step than the comp's, but the same order.
+            className="relative isolate overflow-hidden bg-ground-warm py-(--space-section)"
+          >
+            {/* On the right here, where the comp puts it — the sprig sits past
+                the third card, in the margin outside the container. */}
+            <LeafWatermark
+              src="/about-us-our-foundation-right-side.png"
+              side="right"
+              align="middle"
+            />
+
+            <div className="relative mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
               <SectionHeading
                 block={blockFor(all, "foundations")}
                 id="foundations-heading"

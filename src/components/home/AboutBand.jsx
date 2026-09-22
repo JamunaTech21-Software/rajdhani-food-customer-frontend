@@ -45,7 +45,14 @@ export function AboutBand({ block, stats }) {
       // stats band, and two landmarks with one name cannot be told apart.
       aria-labelledby={block?.heading ? "about-band-heading" : undefined}
       aria-label={block?.heading ? undefined : "Rajdhani by the numbers"}
-      className="relative isolate overflow-hidden bg-ground-warm py-(--space-section)"
+      /*
+        A wash rather than a flat fill, and the corners are where the green
+        sits: `to-bl` runs top-right to bottom-left, which is exactly where the
+        watermark's two leaf sprigs are, so the tint reinforces the artwork
+        instead of fighting it. The middle stop is the neutral token, which
+        keeps the centre of the band clean under the text and the counters.
+      */
+      className="relative isolate overflow-hidden bg-gradient-to-bl from-brand-tint/40 via-ground-warm via-50% to-brand-tint/30 py-(--space-section)"
     >
       {/*
         The reference's leaf watermark: pale tea leaves in the bottom-left and
@@ -55,11 +62,29 @@ export function AboutBand({ block, stats }) {
         srcset machinery has nothing to negotiate. Absolutely positioned, so it
         contributes no layout and cannot shift the text as it arrives.
 
+        **`mix-blend-multiply` is what makes the band's background exist at
+        all.** The file is PNG colour type 2 — RGB, no alpha channel — so it is
+        not a transparent overlay of leaves; it is an opaque near-white
+        rectangle with leaves painted on it. Dropped on top at `size-full` it
+        covered the section's own background completely, and whatever colour
+        the section was given underneath was simply never seen. The band
+        rendered as a flat white slab, which is what made it look unfinished
+        next to the bands either side of it.
+
+        Multiply fixes that without needing the asset re-cut: the result is
+        `base × overlay`, so the artwork's white areas (255) leave the gradient
+        exactly as it is, and only the leaf pixels darken it. The leaves end up
+        tinted *by* the background instead of sitting on their own patch of
+        white.
+
+        This is also the reason `isolate` on the section matters. Without it
+        the blend would reach past the section and multiply against whatever
+        the page painted underneath; the isolation group stops it at the band's
+        own edges.
+
         `loading="lazy"` because the band is the fourth on the page and well
-        below the fold. It is also why `bg-ground-warm` stays underneath: on a
-        slow connection the band is that colour first and the leaves fade in
-        over it, which is nearly invisible because the artwork's own base tone
-        is within a shade of the token.
+        below the fold. The gradient is underneath, so on a slow connection the
+        band is already the right colour and the leaves resolve onto it.
       */}
       <img
         src="/home-about-us.png"
@@ -67,7 +92,7 @@ export function AboutBand({ block, stats }) {
         aria-hidden="true"
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 -z-10 size-full object-cover"
+        className="absolute inset-0 -z-10 size-full object-cover opacity-70 mix-blend-multiply"
       />
 
       <div

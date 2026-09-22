@@ -1294,12 +1294,44 @@ test("it is decoration, and announced as none", () => {
 });
 
 test("it is lazy, because the band is four sections down", () => {
-  // And it is why the ground colour stays underneath: on a slow connection
-  // the band is that colour first and the leaves fade in over it.
+  // And it is why the wash stays underneath: on a slow connection the band is
+  // already the right colour and the leaves resolve onto it.
   const about = strip(read("components/home/AboutBand.jsx"));
 
   assert.match(about, /loading="lazy"/);
-  assert.match(about, /bg-ground-warm/);
+  assert.match(about, /via-ground-warm/);
+});
+
+test("the leaves composite onto the band rather than covering it", () => {
+  // `home-about-us.png` is PNG colour type 2 — RGB, no alpha — so it is an
+  // opaque near-white rectangle with leaves painted on, not a transparent
+  // overlay. At `size-full` it hid the section's own background completely and
+  // the band rendered as a flat white slab.
+  //
+  // `mix-blend-multiply` is the whole fix: white leaves the backdrop untouched,
+  // so only the leaf pixels darken the wash. Drop it and the gradient below is
+  // painted and then immediately covered up, which looks like the gradient
+  // "not working" rather than like the image being in the way.
+  const about = strip(read("components/home/AboutBand.jsx"));
+
+  assert.match(about, /object-cover opacity-70 mix-blend-multiply/);
+  // The blend has to stop at the band's edges, or it multiplies against
+  // whatever the page painted underneath.
+  assert.match(about, /relative isolate/);
+});
+
+test("the body copy clears AA where the leaf reaches it", () => {
+  // Measured on the render at 1280: the worst background local to a glyph is
+  // at x=28, where the bottom-left sprig meets the first characters of the
+  // paragraph. At full strength over the wash that read rgb(209,223,199) —
+  // 4.14 against `ink-muted`, under the 4.5 body text needs.
+  //
+  // `opacity-70` on the watermark and the lighter corner stop bring it to
+  // rgb(222,232,215), which is 4.56. Raise either and the copy fails.
+  const about = strip(read("components/home/AboutBand.jsx"));
+
+  assert.match(about, /opacity-70/);
+  assert.match(about, /to-brand-tint\/30/);
 });
 
 test("the background cannot shift the text as it arrives", () => {
@@ -1307,7 +1339,7 @@ test("the background cannot shift the text as it arrives", () => {
   // needs no reserved box despite being an image (G6).
   const about = strip(read("components/home/AboutBand.jsx"));
 
-  assert.match(about, /relative isolate overflow-hidden bg-ground-warm/);
+  assert.match(about, /relative isolate overflow-hidden bg-gradient-to-bl/);
   assert.doesNotMatch(about, /<CloudinaryImage/, "a local file has nothing to negotiate");
 });
 
