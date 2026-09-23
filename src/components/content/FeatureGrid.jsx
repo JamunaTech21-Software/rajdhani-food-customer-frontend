@@ -113,19 +113,70 @@ export function FeatureItem({ item, size = 44, tone = "solid", markClassName }) 
 }
 
 /**
+ * The hairline rules the Quality comp draws between its six commitment cells.
+ *
+ * **Three disjoint width bands, not three layers of overrides.** The column
+ * count changes at `sm` and again at `lg`, and so does which cell needs a left
+ * rule — cell 4 has one at two columns and none at three. Written as `sm:` and
+ * `lg:` those are two `border-left-width` declarations on one element in the
+ * same media query, and which one lands is decided by the order Tailwind emits
+ * its utilities in, not by the order they appear in the class attribute. That
+ * is not something a class list can promise.
+ *
+ * `max-sm` / `sm:max-lg` / `lg` never overlap, so every cell receives exactly
+ * one rule per edge at every width and the result is the same whatever order
+ * the sheet is written in. `divide-x` cannot do this at all: in two columns it
+ * draws a line down the middle of a half-empty final row.
+ *
+ * Vertical padding is uniform and the edges are not zeroed, which keeps the
+ * whole thing independent of how many items an editor publishes — six today,
+ * five or eight tomorrow, and no rule dangles.
+ */
+const RULED = [
+  // `px-4`, not `px-6`: at 1024 the three cells share about 520px, so every
+  // 8px of cell padding is 8px off a text column that is only ~92px wide to
+  // begin with. `[&>*]:min-w-0` for the usual grid-track reason — a long
+  // unbroken word in a title would otherwise set the column floor.
+  "[&>*]:min-w-0 [&>li]:border-line [&>li]:py-5 sm:[&>li]:px-4",
+
+  // One column: rules between rows only.
+  "max-sm:[&>li:not(:first-child)]:border-t",
+
+  // Two columns: a rule down the middle, and above every row after the first.
+  "sm:max-lg:[&>li:nth-child(even)]:border-l",
+  "sm:max-lg:[&>li:nth-child(n+3)]:border-t",
+
+  // Three columns: a rule left of every cell that does not start a row.
+  "lg:[&>li:not(:nth-child(3n+1))]:border-l",
+  "lg:[&>li:nth-child(n+4)]:border-t",
+].join(" ");
+
+/**
  * A group of them.
  *
  * Renders nothing when the section is empty — every one of these is a set of
  * rows an editor may not have created, and a heading over an empty grid is
  * worse than a section that is simply not there.
+ *
+ * `ruled`, `tone` and `markClassName` are opt-in and default to what the grid
+ * already drew, so the callers that predate them are unaffected.
  */
-export function FeatureGrid({ items, columns = "sm:grid-cols-2", className }) {
+export function FeatureGrid({
+  items,
+  columns = "sm:grid-cols-2",
+  className,
+  ruled = false,
+  tone,
+  markClassName,
+}) {
   if (!items?.length) return null;
 
   return (
-    <ul className={cn("grid gap-6", columns, className)}>
+    // `gap-6` and the ruled layout's `gap-0` are the same property, so the
+    // gap is chosen rather than overridden — see the note on `RULED`.
+    <ul className={cn("grid", ruled ? RULED : "gap-6", columns, className)}>
       {items.map((item) => (
-        <FeatureItem key={item.id} item={item} />
+        <FeatureItem key={item.id} item={item} tone={tone} markClassName={markClassName} />
       ))}
     </ul>
   );

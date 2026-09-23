@@ -74,7 +74,20 @@ function Certification({ certification }) {
  * The split is 1fr/2fr — measured off the comp, the heading occupies about a
  * third of the content width and the five cards the rest.
  */
-export function Certifications({ items, block, eyebrow, heading, subheading, tone = "ground", aside = false }) {
+export function Certifications({
+  items,
+  block,
+  eyebrow,
+  heading,
+  subheading,
+  tone = "ground",
+  aside = false,
+  // Forwarded to `SectionHeading` — see the note there.
+  headingClassName,
+  // The Quality comp draws six marks in one row where the default tops out at
+  // five. Opt-in, so About's row is the row it already was.
+  columns,
+}) {
   if (!items?.length) return null;
 
   return (
@@ -95,12 +108,17 @@ export function Certifications({ items, block, eyebrow, heading, subheading, ton
           heading={heading}
           subheading={subheading}
           align={aside ? "start" : "center"}
+          className={headingClassName}
         />
 
+        {/* `[&>*]:min-w-0` for the reason every grid here carries it: a track
+            is `min-width: auto`, so the longest certification name would
+            otherwise set the column floor and push the row off-screen. */}
         <ul
           className={cn(
-            "grid grid-cols-2 gap-4 sm:grid-cols-3",
-            aside ? "mt-8 lg:mt-0 lg:grid-cols-5" : "mt-10 lg:grid-cols-4 xl:grid-cols-5",
+            "grid grid-cols-2 gap-4 sm:grid-cols-3 [&>*]:min-w-0",
+            aside ? "mt-8 lg:mt-0" : "mt-10",
+            columns ?? (aside ? "lg:grid-cols-5" : "lg:grid-cols-4 xl:grid-cols-5"),
           )}
         >
           {items.map((certification) => (
