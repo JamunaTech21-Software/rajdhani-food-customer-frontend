@@ -82,6 +82,11 @@ export default defineConfig(({ command, mode }) => {
   const google = resolve(env, GOOGLE_NAMES);
   const gtm = resolve(env, GTM_NAMES);
 
+  // TEMPORARY — the Quality page fixture switch. Not a *_NAMES lookup: it is a
+  // local development flag with one spelling, not a value a host supplies
+  // under whatever prefix it prefers. Delete with `lib/contentFixtures.js`.
+  const fixtures = env.VITE_CONTENT_FIXTURES ?? null;
+
   // Say which name was used: the failure this guards against is silent — a
   // misspelled variable builds cleanly and 404s on every request at runtime.
   console.log(
@@ -156,6 +161,7 @@ export default defineConfig(({ command, mode }) => {
       "import.meta.env.VITE_RECAPTCHA_SITE_KEY": literal(recaptcha),
       "import.meta.env.VITE_GOOGLE_CLIENT_ID": literal(google),
       "import.meta.env.VITE_GTM_ID": literal(gtm),
+      "import.meta.env.VITE_CONTENT_FIXTURES": literal(fixtures),
     },
     resolve: {
       alias: {

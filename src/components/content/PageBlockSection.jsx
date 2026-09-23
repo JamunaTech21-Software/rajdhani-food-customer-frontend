@@ -3,6 +3,7 @@ import { Link } from "react-router";
 
 import { CloudinaryImage } from "../CloudinaryImage.jsx";
 import { LeafWatermark } from "./LeafWatermark.jsx";
+import { Ornament } from "./Ornament.jsx";
 import { RichText } from "./RichText.jsx";
 import { SIZES } from "../../lib/cloudinary.js";
 import { bulletsOf } from "../../lib/pageContent.js";
@@ -18,7 +19,7 @@ import { isExternal } from "../../lib/nav.js";
  * (`HomeWelcomeBlock` in the schema) drawn at different widths, and the way to
  * keep them consistent is for there to be one of them.
  */
-export function PageBlockBody({ block, headingId, headingLevel = 2, className }) {
+export function PageBlockBody({ block, headingId, headingLevel = 2, ornament = false, className }) {
   const Heading = headingLevel === 1 ? "h1" : headingLevel === 3 ? "h3" : "h2";
   const bullets = bulletsOf(block);
 
@@ -32,6 +33,14 @@ export function PageBlockBody({ block, headingId, headingLevel = 2, className })
         <Heading id={headingId} className="mt-2 font-display text-3xl font-bold text-ink sm:text-4xl">
           {block.heading}
         </Heading>
+      ) : null}
+
+      {/* Under the heading, above the copy — where the Quality comp draws it.
+          Opt-in: About's three blocks have none. `"center"` is the assurance
+          band, where the heading is a centred banner line rather than the
+          left-aligned opening of a section. */}
+      {ornament ? (
+        <Ornament align={ornament === "center" ? "center" : "start"} className="mt-5" />
       ) : null}
 
       {block.subheading ? <p className="mt-3 text-lg text-ink-muted">{block.subheading}</p> : null}
@@ -75,6 +84,22 @@ export function PageBlockBody({ block, headingId, headingLevel = 2, className })
 }
 
 /**
+ * The gutter wrapper a framed section needs and a flat one does not.
+ *
+ * Returning the children untouched when `framed` is false keeps the flat
+ * section's DOM exactly as it was. About draws two of these, and an extra
+ * wrapper element there would be a real layout change bought for a prop that
+ * page never passes.
+ */
+function Frame({ framed, children }) {
+  if (!framed) return children;
+
+  return (
+    <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">{children}</div>
+  );
+}
+
+/**
  * A whole page section built from one block — text on one side, its image on
  * the other, as both the About and Quality comps draw it.
  *
@@ -90,6 +115,14 @@ export function PageBlockSection({
   // `{ src, side }`, and opt-in rather than automatic: three sections share
   // this component and only About's "Our Company" is drawn with the art.
   watermark,
+  // The Quality comp draws its commitment band as a pale rounded card inset
+  // from the gutters, where About draws the same component flat on the page.
+  // Opt-in for that reason — the default is the flat band About already has.
+  framed = false,
+  ornament = false,
+  // Merged onto `PageBlockBody`'s root, so a caller can reach the heading with
+  // `[&_h2]:…` for a column whose width the block does not know about.
+  bodyClassName,
   children,
 }) {
   if (!block) return null;
@@ -125,14 +158,41 @@ export function PageBlockSection({
         process steps in the wide half and Quality's commitment block puts a
         feature grid there, and both were being squeezed into 50%.
       */}
-      <div
-        className={cn(
-          "mx-auto grid max-w-(--container-max) gap-10 pl-(--gutter-l) pr-(--gutter-r)",
-          (block.image?.url || children) &&
-            "lg:grid-cols-[0.7fr_minmax(0,1fr)] lg:items-center lg:gap-28",
-        )}
-      >
-        <PageBlockBody block={block} headingId={headingId} className={cn(reversed && "lg:order-2")} />
+      {/*
+        Framed, the gutters move to a wrapper and the card takes their place —
+        a card cannot carry the page's gutters as its own padding without the
+        two meaning different things at different widths.
+
+        The split is written twice rather than once with an overriding gap: two
+        `lg:gap-*` utilities on one element are resolved by their order in
+        Tailwind's generated sheet, not by their order in the attribute, so
+        "the later one wins" is not something the class list can promise. The
+        112px gutter is right between two columns on an open page and far too
+        wide inside a card that already has padding.
+      */}
+      <Frame framed={framed}>
+        <div
+          className={cn(
+            "mx-auto grid max-w-(--container-max) gap-10",
+            framed ? "rounded-xl bg-ground p-5 sm:p-8 lg:p-10" : "pl-(--gutter-l) pr-(--gutter-r)",
+            (block.image?.url || children) &&
+              (framed
+                ? // A narrower text column than the flat band's 41%, because
+                  // the panel beside it is a three-column grid rather than one
+                  // photograph. At 1024 the 0.7 ratio left each of those three
+                  // cells about 63px of text after its icon and its rules —
+                  // "Advanced Technology" in 63px is five lines. 0.62 and a
+                  // 48px gutter give it 92px, which is what the comp draws.
+                  "lg:grid-cols-[0.62fr_minmax(0,1fr)] lg:items-center lg:gap-12"
+                : "lg:grid-cols-[0.7fr_minmax(0,1fr)] lg:items-center lg:gap-28"),
+          )}
+        >
+        <PageBlockBody
+          block={block}
+          headingId={headingId}
+          ornament={ornament}
+          className={cn(reversed && "lg:order-2", bodyClassName)}
+        />
 
         {/* `children` is the panel beside the text — the process strip on
             About's "Our Strength", the feature grid on Quality's commitment.
@@ -160,7 +220,8 @@ export function PageBlockSection({
               />
             </div>
           ) : null)}
-      </div>
+        </div>
+      </Frame>
     </section>
   );
 }

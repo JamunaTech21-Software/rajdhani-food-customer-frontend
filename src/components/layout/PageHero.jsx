@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 
 import { CloudinaryImage } from "../CloudinaryImage.jsx";
+import { Ornament } from "../content/Ornament.jsx";
 import { SIZES } from "../../lib/cloudinary.js";
 
 /**
@@ -31,7 +32,7 @@ const MINIMUM_PROTECTION = 0.85;
  * covers the window before one exists, because a page with no `<h1>` is a page
  * with no accessible or indexable name. Everything an editor sets wins over it.
  */
-export function PageHero({ banner, title, breadcrumb }) {
+export function PageHero({ banner, title, breadcrumb, lead, ornament = false }) {
   const overlay = Math.max(
     MINIMUM_PROTECTION,
     Math.min(Math.max(banner?.overlay_opacity ?? 55, 0), 100) / 100,
@@ -139,6 +140,26 @@ export function PageHero({ banner, title, breadcrumb }) {
             <p className="mt-5 text-base leading-snug text-ink-inverse/90 sm:text-lg">
               {banner.subtitle}
             </p>
+          ) : null}
+
+          {/*
+            The Quality comp's gold flourish between the banner's two
+            paragraphs, and the second paragraph under it.
+
+            Both are opt-in: the other five pages wearing this banner draw one
+            paragraph and no ornament, and a divider that appears on a page
+            with nothing under it is a rule hanging in space. `lead` is a prop
+            rather than a second banner column because `PublicBanner` has one
+            `subtitle` — the API decides what a banner holds, not this.
+
+            `aria-hidden` and no text: it is punctuation between two
+            paragraphs, and a screen reader announcing a leaf between them is
+            noise.
+          */}
+          {ornament && lead ? <Ornament className="mt-6" /> : null}
+
+          {lead ? (
+            <p className="mt-5 text-sm leading-relaxed text-ink-inverse/85 sm:text-base">{lead}</p>
           ) : null}
         </div>
       </div>

@@ -13,7 +13,23 @@ import { cn } from "../../lib/cn.js";
  * headings *are* editable from Page Content — without the page falling apart
  * before anyone has been there.
  */
-export function SectionHeading({ block, id, eyebrow, heading, subheading, align = "center" }) {
+export function SectionHeading({
+  block,
+  id,
+  eyebrow,
+  heading,
+  subheading,
+  align = "center",
+  // Merged onto the root, so a caller can reach the `h2` with `[&_h2]:…` and
+  // size it for a width the heading does not know about.
+  //
+  // On the wrapper rather than on the `h2` itself, deliberately: a descendant
+  // rule is specificity (0,1,1) against the heading's own (0,1,0) class, so it
+  // wins wherever it applies whatever order the sheet happens to be in. Two
+  // font sizes *on* the `h2` would be a tie broken by emission order, which is
+  // not something a class list can promise.
+  className,
+}) {
   const text = block?.heading || heading;
   const above = block?.eyebrow ?? eyebrow;
   const below = block?.subheading ?? subheading;
@@ -30,7 +46,7 @@ export function SectionHeading({ block, id, eyebrow, heading, subheading, align 
   const start = align === "start";
 
   return (
-    <div className={start ? "text-left" : "text-center"}>
+    <div className={cn(start ? "text-left" : "text-center", className)}>
       {above ? (
         <p className="text-eyebrow font-semibold uppercase tracking-[0.2em] text-brand">{above}</p>
       ) : null}

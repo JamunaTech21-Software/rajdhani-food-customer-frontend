@@ -48,3 +48,23 @@ export const GTM_ID = import.meta.env.VITE_GTM_ID ?? null;
  * or leaks internals to a visitor.
  */
 export const IS_DEV = import.meta.env.DEV === true;
+
+/**
+ * TEMPORARY — whether the Quality page's stand-in content is used (§10.4).
+ *
+ * The comp draws six sections and four of their resources are still empty on
+ * the live API, so there is nothing to design against. `lib/contentFixtures.js`
+ * supplies rows in the API's own shape until an editor publishes the real ones,
+ * and real rows always win over them.
+ *
+ * On in development and off in a production build, so a deployed site never
+ * shows invented certifications or a process the company has not described.
+ * `VITE_CONTENT_FIXTURES=1` turns them on in a preview build — useful for
+ * showing the finished design to the client — and `=0` turns them off locally,
+ * to develop against the real, emptier API.
+ *
+ * Delete this along with the fixtures module.
+ */
+export const CONTENT_FIXTURES =
+  import.meta.env.VITE_CONTENT_FIXTURES === "1" ||
+  (import.meta.env.VITE_CONTENT_FIXTURES !== "0" && import.meta.env.DEV === true);

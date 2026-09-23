@@ -159,7 +159,11 @@ test("a group heading is editable too, with a structural label as the floor", ()
   // arrangement as PageHero's title.
   assert.match(heading, /const text = block\?\.heading \|\| heading;/);
   assert.match(about, /block=\{blockFor\(all, "foundations"\)\}/);
-  assert.match(quality, /block=\{blockFor\(all, "certifications"\)\}/);
+  // Quality names the resolved block rather than inlining the lookup, so both
+  // halves are asserted: it still reads the editable block, and still passes
+  // it to the heading.
+  assert.match(quality, /blockFor\(all, "certifications"\)/);
+  assert.match(quality, /block=\{certificationsBlock\}/);
 });
 
 test("one renderer draws a page block, wherever it appears", () => {
@@ -317,7 +321,11 @@ test("a section with no rows yet is absent, not an empty heading", () => {
   // state the pages are actually in.
   assert.match(featureGrid, /if \(!items\?\.length\) return null;/);
   assert.match(timeline, /if \(!steps\?\.length\) return null;/);
-  assert.match(quality, /\{itemsOf\(process\)\.length \? \(/);
+  // Quality guards on `processSteps`, which is `itemsOf(process)` resolved
+  // against the temporary design fixture — the same guard, on the resolved
+  // list, so the section is still absent when there is nothing to draw.
+  assert.match(quality, /const processSteps = orFixture\(itemsOf\(process\)/);
+  assert.match(quality, /\{processSteps\.length \? \(/);
   assert.match(about, /\{itemsOf\(manufacturing\)\.length \? \(/);
 });
 
@@ -327,7 +335,7 @@ test("a block and its panel can be absent independently", () => {
   // block falls back to its own image — `undefined`, not `null`, because
   // `children ?? image` is what chooses.
   assert.match(about, /<ProcessTimeline steps=\{itemsOf\(manufacturing\)\} compact \/>\s*\n\s*\) : undefined\}/);
-  assert.match(quality, /<FeatureGrid items=\{itemsOf\(commitments\)\} \/> : undefined\}/);
+  assert.match(quality, /<FeatureGrid[\s\S]*?\/>\s*\n\s*\) : undefined\}/);
   assert.match(section, /\{children \?\?/);
 });
 
@@ -394,7 +402,7 @@ test("one renderer draws a feature item, wherever it appears", () => {
   // same payload. It lived inside UspStrip until the other two had an endpoint.
   assert.match(strip(read("components/home/UspStrip.jsx")), /<FeatureItem key=\{item\.id\}/);
   assert.match(featureGrid, /export function FeatureItem/);
-  assert.match(quality, /<FeatureGrid items=/);
+  assert.match(quality, /<FeatureGrid[\s\S]*?items=/);
 });
 
 // ── A7: the About comp's leaf watermarks ─────────────────────────────────
