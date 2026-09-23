@@ -47,7 +47,7 @@ function markStyle(colour, tone) {
  * and the dealer benefits, because it is the same payload each time. It lived
  * inside `UspStrip` until the other sections had an endpoint to read.
  */
-export function FeatureItem({ item, size = 44, tone = "solid" }) {
+export function FeatureItem({ item, size = 44, tone = "solid", markClassName }) {
   const background = item.icon_bg_color || undefined;
 
   return (
@@ -56,8 +56,16 @@ export function FeatureItem({ item, size = 44, tone = "solid" }) {
     // saved pixel is a word that stays on its line.
     <li className="flex items-start gap-2.5 sm:gap-3.5">
       <span
-        className={cn("grid shrink-0 place-items-center rounded-full bg-brand-tint text-brand")}
-        style={{ width: size, height: size, ...markStyle(background, tone) }}
+        className={cn(
+          "grid shrink-0 place-items-center rounded-full bg-brand-tint text-brand",
+          markClassName,
+        )}
+        style={{
+          // `markClassName` is how a caller makes the disc responsive: an
+          // inline width beats any class, so the two cannot both be set.
+          ...(markClassName ? null : { width: size, height: size }),
+          ...markStyle(background, tone),
+        }}
       >
         {/* An uploaded icon wins over a named one — the admin allows either. */}
         {item.icon?.url ? (
@@ -70,14 +78,32 @@ export function FeatureItem({ item, size = 44, tone = "solid" }) {
             imgClassName="object-contain"
           />
         ) : (
-          <Icon name={item.icon_name} size={Math.round(size * 0.45)} />
+          <Icon
+            name={item.icon_name}
+            size={Math.round(size * 0.45)}
+            // Same reason as the uploaded branch's `size-1/2`: a CSS length
+            // overrides the SVG's width attribute, so the glyph tracks a
+            // responsive disc instead of staying at the numeric size.
+            className={markClassName ? "size-[45%]" : undefined}
+          />
         )}
       </span>
 
+      {/*
+        `data-feature-title` / `data-feature-text` are the hooks a caller
+        styles through. These are spans, not an h3 and a p — a strip of four
+        marketing lines is not four headings — so a parent cannot reach them
+        by tag name without also catching whatever else it contains.
+      */}
       <span className="min-w-0">
-        <span className="block text-sm font-semibold text-ink">{item.title}</span>
+        <span data-feature-title className="block text-sm font-semibold text-ink">
+          {item.title}
+        </span>
         {item.description ? (
-          <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted sm:text-sm">
+          <span
+            data-feature-text
+            className="mt-0.5 block text-xs leading-relaxed text-ink-muted sm:text-sm"
+          >
             {item.description}
           </span>
         ) : null}

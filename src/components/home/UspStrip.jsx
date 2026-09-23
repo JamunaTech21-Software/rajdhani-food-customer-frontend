@@ -36,31 +36,29 @@ export function UspStrip({ items }) {
 
           gap-x-0
           gap-y-0
-          px-1
-          py-1
+          rounded-lg
+          px-2
+          py-2.5
 
-          text-[4px]
-          leading-none
-
-          [&>li:nth-child(odd)]:pr-1
+          [&>li:nth-child(odd)]:pr-2.5
 
           [&>li:nth-child(even)]:border-l
           [&>li:nth-child(even)]:border-line
-          [&>li:nth-child(even)]:pl-1
+          [&>li:nth-child(even)]:pl-2.5
 
           [&>li:nth-child(n+3)]:border-t
           [&>li:nth-child(n+3)]:border-line
-          [&>li:nth-child(n+3)]:pt-1
+          [&>li:nth-child(n+3)]:pt-2.5
 
-          [&>li:nth-child(-n+2)]:pb-1
+          [&>li:nth-child(-n+2)]:pb-2.5
 
-          [&_h3]:text-[4px]
-          [&_h3]:leading-none
-          [&_h3]:whitespace-nowrap
+          [&_[data-feature-title]]:text-[11px]
+          [&_[data-feature-title]]:leading-tight
+          [&_[data-feature-title]]:whitespace-normal
 
-          [&_p]:text-[4px]
-          [&_p]:leading-none
-          [&_p]:whitespace-nowrap
+          [&_[data-feature-text]]:text-[9px]
+          [&_[data-feature-text]]:leading-snug
+          [&_[data-feature-text]]:whitespace-normal
 
           /* =========================
              TABLET
@@ -91,13 +89,13 @@ export function UspStrip({ items }) {
           md:[&>li:nth-child(3)]:border-r
           md:[&>li:nth-child(3)]:border-line
 
-          md:[&_h3]:text-[10px]
-          md:[&_h3]:leading-tight
-          md:[&_h3]:whitespace-nowrap
+          md:[&_[data-feature-title]]:text-[10px]
+          md:[&_[data-feature-title]]:leading-tight
+          md:[&_[data-feature-title]]:whitespace-nowrap
 
-          md:[&_p]:text-[8px]
-          md:[&_p]:leading-tight
-          md:[&_p]:whitespace-normal
+          md:[&_[data-feature-text]]:text-[8px]
+          md:[&_[data-feature-text]]:leading-tight
+          md:[&_[data-feature-text]]:whitespace-normal
 
           /* =========================
              DESKTOP
@@ -129,17 +127,17 @@ export function UspStrip({ items }) {
           lg:[&>li:nth-child(even)]:border-l-0
           lg:[&>li:nth-child(even)]:pl-6
 
-          lg:[&_h3]:text-xs
-          lg:[&_h3]:leading-tight
-          lg:[&_h3]:whitespace-nowrap
+          lg:[&_[data-feature-title]]:text-xs
+          lg:[&_[data-feature-title]]:leading-tight
+          lg:[&_[data-feature-title]]:whitespace-nowrap
 
-          lg:[&_p]:text-[10px]
-          lg:[&_p]:leading-tight
-          lg:[&_p]:whitespace-normal
+          lg:[&_[data-feature-text]]:text-[10px]
+          lg:[&_[data-feature-text]]:leading-tight
+          lg:[&_[data-feature-text]]:whitespace-normal
         '
       >
         {items.map((item) => (
-          <FeatureItem key={item.id} item={item} tone='tint' />
+          <FeatureItem key={item.id} item={item} tone='tint' markClassName='size-8 md:size-9 lg:size-11' />
         ))}
       </ul>
     </section>
