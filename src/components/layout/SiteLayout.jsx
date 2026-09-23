@@ -3,40 +3,13 @@ import { Outlet, useLocation } from "react-router";
 
 import { Footer } from "./Footer.jsx";
 import { Header } from "./Header.jsx";
+import { ScrollManager } from "./ScrollManager.jsx";
 import { JsonLd } from "../seo/Seo.jsx";
 import { ErrorBoundary } from "../state/ErrorBoundary.jsx";
 import { organizationJsonLd, webSiteJsonLd } from "../../lib/seo.js";
 import { startTagManager, trackPageView } from "../../lib/gtm.js";
 import { SITE_URL } from "../../config.js";
 import { useSiteStore } from "../../stores/siteStore.js";
-import { useAuthStore } from "../../stores/authStore.js";
-import { useWishlistStore } from "../../stores/wishlistStore.js";
-
-/**
- * Keep the wishlist in step with the session.
- *
- * Signing in merges whatever this browser saved as a guest and then holds the
- * server's list; signing out drops it, because the next person at this browser
- * must not inherit it. Lives in the layout rather than in a page because the
- * hearts are on the catalogue, not only on `/wishlist`.
- */
-function useWishlistSession() {
-  const session = useAuthStore((s) => s.status);
-  const mergeGuest = useWishlistStore((s) => s.mergeGuest);
-  const hydrateGuest = useWishlistStore((s) => s.hydrateGuest);
-  const reset = useWishlistStore((s) => s.reset);
-
-  useEffect(() => {
-    if (session === "authenticated") {
-      mergeGuest();
-    } else if (session === "anonymous") {
-      // Reset first: a previous customer's ids must not survive into the
-      // guest list this then hydrates from storage.
-      reset();
-      hydrateGuest();
-    }
-  }, [session, mergeGuest, hydrateGuest, reset]);
-}
 
 /**
  * Analytics, and the page views a single-page app does not fire for itself.
@@ -98,11 +71,13 @@ function SiteSeo() {
 export function SiteLayout() {
   const { pathname } = useLocation();
 
-  useWishlistSession();
   useAnalytics();
 
   return (
     <div className="flex min-h-dvh flex-col">
+      {/* Renders nothing; decides where each route change leaves the window. */}
+      <ScrollManager />
+
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-brand focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-on-brand"

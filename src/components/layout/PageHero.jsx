@@ -136,6 +136,15 @@ export function PageHero({ banner, title, breadcrumb, lead, ornament = false }) 
             </nav>
           ) : null}
 
+          {/*
+            The flourish separates the heading from the last paragraph, so
+            where it sits depends on how many paragraphs there are. Quality
+            draws subtitle → flourish → lead; Gallery has one paragraph and
+            draws heading → flourish → paragraph. One rule, both comps: it
+            goes immediately above whatever the final paragraph is.
+          */}
+          {ornament && !lead ? <Ornament className="mt-5" /> : null}
+
           {banner?.subtitle ? (
             <p className="mt-5 text-base leading-snug text-ink-inverse/90 sm:text-lg">
               {banner.subtitle}

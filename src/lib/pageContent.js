@@ -15,6 +15,12 @@
 
 export const PAGE_KEYS = {
   about: "about",
+  // The gallery is not a page of blocks like the other four — it is its images
+  // — but its comp closes on a strip of copy, and that copy has to come from
+  // somewhere an editor can reach. The key is accepted: `page_key` is a free
+  // string on the API, and `/public/page-blocks/gallery` answers 200 with an
+  // empty list rather than 404.
+  gallery: "gallery",
   quality: "quality",
   privacy: "privacy",
   terms: "terms",

@@ -10,9 +10,36 @@ import { useCountUp } from "../../hooks/useCountUp.js";
  * the screen-reader arrangement below should exist once. The *band* stays here
  * because the About page still renders one from group `ABOUT`.
  */
-export function Stat({ stat, tone = "light" }) {
+export function Stat({ stat, tone = "light", layout = "stacked" }) {
   const { ref, display } = useCountUp(stat.value);
   const dark = tone === "dark";
+
+  /*
+    The gallery comp's arrangement: a bare glyph with the figure and its label
+    stacked beside it, four across a pale strip. No disc — that band is already
+    a panel, and a tinted circle on a tinted panel is a circle nobody can see.
+
+    A branch here rather than a second component, because the part worth
+    sharing is the part below: the counting, the observer that starts it, the
+    reduced-motion handling and the aria-hidden/sr-only pair. Written twice,
+    that pair is what drifts — and when it drifts a screen reader announces
+    every frame of the animation.
+  */
+  if (layout === "inline") {
+    return (
+      <div ref={ref} className="flex items-center gap-3">
+        <Icon name={stat.icon_name} size={30} className="shrink-0 text-brand" />
+
+        <div className="min-w-0">
+          <p className="font-display text-xl font-bold leading-none text-brand sm:text-2xl">
+            <span aria-hidden="true">{display}</span>
+            <span className="sr-only">{stat.value}</span>
+          </p>
+          <p className="mt-1.5 text-xs leading-snug text-ink-muted sm:text-sm">{stat.label}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={ref} className="flex flex-col items-center text-center">

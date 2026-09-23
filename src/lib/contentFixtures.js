@@ -9,9 +9,12 @@
  *   * `process-steps?group=QUALITY_PROCESS`       → []
  *   * `page-blocks/quality` → only `commitment` exists; `process`,
  *     `certifications` and `assurance` do not.
+ *   * `page-blocks/gallery` and `stats?group=GALLERY` → both `[]`, which is
+ *     the Gallery comp's closing strip.
  *
- * So the page renders three of its six sections and there is nothing to design
- * against. These rows stand in until an editor creates the real ones.
+ * So those pages render a fraction of what they are meant to and there is
+ * nothing to design against. These rows stand in until an editor writes the
+ * real ones.
  *
  * **Real data always wins.** `orFixture` returns the API's rows whenever the
  * API sent any, so the moment a row is published through the admin panel the
@@ -288,4 +291,33 @@ export const QUALITY_CERTIFICATIONS = [
   { id: "fixture-cert-4", name: "Halal", subtitle: "Certified", logo: null, certificate_url: null },
   { id: "fixture-cert-5", name: "Environment", subtitle: "Friendly", logo: null, certificate_url: null },
   { id: "fixture-cert-6", name: "Food Safety", subtitle: "Assured", logo: null, certificate_url: null },
+];
+
+/**
+ * `PublicPageBlock` — `page-blocks/gallery`, and `PublicStatCounter[]` —
+ * `stats?group=GALLERY`.
+ *
+ * The gallery's closing strip. Both resources are live and both return `[]`:
+ * the page key is accepted (the endpoint answers 200 with an empty list, not a
+ * 404) and the admin has offered the `GALLERY` stat group all along. Nobody has
+ * written the rows yet, so these stand in until someone does.
+ */
+export const GALLERY_HIGHLIGHT_BLOCK = {
+  block_key: "closing",
+  eyebrow: null,
+  heading: "Capturing Quality, Delivering Trust",
+  subheading: null,
+  body:
+    "<p>From garden to cup – every moment reflects our commitment to quality, care and excellence.</p>",
+  bullet_points: [],
+  cta_label: null,
+  cta_url: null,
+  image: null,
+};
+
+export const GALLERY_STATS = [
+  { id: "fixture-gallery-stat-1", value: "12+", label: "Tea Gardens", icon_name: "leaf" },
+  { id: "fixture-gallery-stat-2", value: "4+", label: "Manufacturing Units", icon_name: "factory" },
+  { id: "fixture-gallery-stat-3", value: "200+", label: "Team Members", icon_name: "users" },
+  { id: "fixture-gallery-stat-4", value: "64+", label: "Districts Covered", icon_name: "globe" },
 ];

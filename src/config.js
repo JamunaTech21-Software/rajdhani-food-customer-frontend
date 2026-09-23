@@ -19,17 +19,6 @@ export const SITE_URL =
 export const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY ?? null;
 
 /**
- * Google Identity Services **client** ID — publishable by design (§7.1), and it
- * has to be: the browser is what mints the ID token the API then verifies
- * against Google's public keys.
- *
- * Unset today. Sign-in is hidden rather than broken when it is missing, the
- * same arrangement as the reCAPTCHA key: a button that opens a Google dialog
- * saying "invalid client" is worse than no button.
- */
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? null;
-
-/**
  * Google Tag Manager container ID (§14.3).
  *
  * Unset today, and nothing loads without it — see `lib/gtm.js` for why that is

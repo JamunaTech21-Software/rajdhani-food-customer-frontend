@@ -88,7 +88,7 @@ export function useSeo({
       if (attributes.content || attributes.href) upsertHeadTag(selector, attributes);
     }
 
-    // Keep the account and wishlist pages out of the index. `follow` rather
+    // Keep private pages out of the index. `follow` rather
     // than `nofollow`, so the links out of them still count. Removed again on
     // every other route rather than left behind — a stale `noindex` carried
     // from `/account` onto the catalogue would quietly take the catalogue out

@@ -325,7 +325,19 @@ export function Footer() {
       */}
       <div className="mx-auto max-w-(--container-max) pl-(--gutter-l) pr-(--gutter-r)">
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-inverse/15 py-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] text-sm text-ink-inverse/70">
-          <p>{site?.footer?.copyright ?? `© ${new Date().getFullYear()} Rajdhani Food Products`}</p>
+          {/*
+            The developer credit is a separate span, not part of the copyright
+            string. `footer.copyright` is an editable setting — the live value
+            is "© 2026 Rajdhani Food Products. All rights reserved." — so
+            folding the attribution into it would put it at the mercy of the
+            next person who edits the year, and it would have to be re-typed
+            on every site built from this codebase. The comp runs the two on
+            one line, which is what the space between them does.
+          */}
+          <p>
+            {site?.footer?.copyright ?? `© ${new Date().getFullYear()} Rajdhani Food Products`}{" "}
+            <span className="whitespace-nowrap">Developed by Jamuna Tech</span>
+          </p>
 
           {menus?.legal?.length ? (
             <nav aria-label="Legal">
