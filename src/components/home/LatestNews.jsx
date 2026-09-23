@@ -23,7 +23,7 @@ export function LatestNews({ posts }) {
           <div className='min-w-0'>
             <h2
               id='news-heading'
-              className='whitespace-nowrap text-[0.58rem] font-semibold uppercase tracking-[0.05em] text-brand sm:text-eyebrow sm:tracking-[0.2em]'
+              className='whitespace-nowrap text-[clamp(0.5rem,2.45vw,0.68rem)] font-semibold uppercase tracking-[0.05em] text-brand sm:text-eyebrow sm:tracking-[0.2em]'
             >
               Latest News &amp; Updates
             </h2>
@@ -31,22 +31,22 @@ export function LatestNews({ posts }) {
 
           <Link
             to='/news'
-            className='inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap text-[0.6rem] font-medium text-brand transition-colors duration-(--duration-fast) hover:text-brand-dark sm:h-11 sm:gap-2 sm:rounded-md sm:border sm:border-line sm:px-5 sm:text-sm sm:text-ink sm:hover:border-brand sm:hover:text-brand'
+            className='inline-flex h-9 shrink-0 items-center gap-1 whitespace-nowrap text-[clamp(0.5rem,2.45vw,0.68rem)] font-medium text-brand transition-colors duration-(--duration-fast) hover:text-brand-dark sm:h-11 sm:gap-2 sm:rounded-md sm:border sm:border-line sm:px-5 sm:text-sm sm:text-ink sm:hover:border-brand sm:hover:text-brand'
           >
             <span>
               View All
               <span className='sr-only sm:not-sr-only'> News</span>
             </span>
 
-            <ArrowRight size={13} strokeWidth={2} aria-hidden='true' />
+            <ArrowRight size={13} strokeWidth={2} aria-hidden='true' className='hidden sm:block' />
           </Link>
         </div>
 
         <ul className='mt-3 grid gap-2.5 [&>li:nth-child(n+3)]:hidden sm:mt-6 sm:gap-6 sm:[&>li:nth-child(n+3)]:block md:grid-cols-2 lg:grid-cols-3'>
           {posts.map((post) => (
             <li key={post.slug}>
-              <article className='group relative flex h-full flex-row items-stretch overflow-hidden rounded-md border border-line bg-surface sm:flex-col sm:rounded-xl'>
-                <div className='aspect-[16/9] w-[7.25rem] shrink-0 overflow-hidden bg-ground sm:aspect-[16/9] sm:w-auto'>
+              <article className='group relative flex h-full min-h-[5.25rem] flex-row items-stretch overflow-hidden rounded-md border border-line bg-surface sm:min-h-0 sm:flex-col sm:rounded-xl'>
+                <div className='w-[5.75rem] shrink-0 self-stretch overflow-hidden bg-ground sm:aspect-[16/9] sm:w-auto sm:self-auto'>
                   <CloudinaryImage
                     src={post.cover_image?.url}
                     alt={post.cover_image?.alt ?? ""}

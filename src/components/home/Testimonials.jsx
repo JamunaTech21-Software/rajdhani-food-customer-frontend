@@ -66,7 +66,7 @@ export function Testimonials({ testimonials }) {
         */}
         <h2
           id="testimonials-heading"
-          className="text-eyebrow font-semibold uppercase tracking-[0.08em] text-brand sm:tracking-[0.2em]"
+          className="flex h-9 items-center whitespace-nowrap text-[clamp(0.5rem,2.45vw,0.68rem)] font-semibold uppercase tracking-[0.05em] text-brand sm:block sm:h-auto sm:text-eyebrow sm:tracking-[0.2em]"
         >
           What Our Clients Say
         </h2>
@@ -75,7 +75,7 @@ export function Testimonials({ testimonials }) {
             than a third of the row: one quote across a 1232px container is a
             line nobody can track back from. */}
         <div
-          className="mt-6 max-w-2xl xl:max-w-none"
+          className="mt-3 max-w-2xl sm:mt-6 xl:max-w-none"
           {...(many
             ? { onPointerDown, onPointerUp, onPointerCancel: () => (start.current = null) }
             : null)}
