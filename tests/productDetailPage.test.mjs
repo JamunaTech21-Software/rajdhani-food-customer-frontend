@@ -117,13 +117,14 @@ test("share falls back to the clipboard where there is no share sheet", () => {
   assert.match(page, /catch \{/, "a dismissed share sheet rejects, which is not an error");
 });
 
-test("the wishlist control is a real one now, not the placeholder", () => {
-  // It was a disabled button saying saving arrives with customer accounts.
-  // RTPP-69 is that, so the placeholder is gone and the control moved up beside
-  // "Enquire Now" — an action rather than an afterthought.
+test("the panel offers no saving control at all", () => {
+  // It was a disabled "Add to Wishlist" placeholder, then a real control under
+  // RTPP-69, and now neither: the site has no accounts to save against. The
+  // placeholder must not come back with it — a button that says saving is
+  // coming is a promise nothing is going to keep.
   assert.doesNotMatch(panel, /Saving products arrives with customer accounts/);
   assert.doesNotMatch(panel, /Add to Wishlist/);
-  assert.match(panel, /<WishlistButton product=\{product\} variant="button" \/>/);
+  assert.doesNotMatch(panel, /WishlistButton/);
 });
 
 // ── Ratings ───────────────────────────────────────────────────────────────

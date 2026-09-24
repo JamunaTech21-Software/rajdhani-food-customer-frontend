@@ -50,7 +50,13 @@ const COMMITMENT = {
 test("the page keys are the backend's own", () => {
   // SeoMetaSeeder and NavigationSeeder both spell them this way, and the live
   // `legal` menu links /privacy and /terms — not /privacy-policy.
-  assert.deepEqual(Object.values(PAGE_KEYS), ["about", "quality", "privacy", "terms"]);
+  //
+  // `gallery` joined them for the closing strip. It is not a page built from
+  // blocks like the other four, but its last band is copy, and copy has to
+  // come from somewhere an editor can reach. The key is the backend's in the
+  // same sense as the rest: `page_key` is a free string there, and
+  // `/public/page-blocks/gallery` answers 200 with an empty list, not a 404.
+  assert.deepEqual(Object.values(PAGE_KEYS), ["about", "gallery", "quality", "privacy", "terms"]);
 });
 
 // ── Block lookup ──────────────────────────────────────────────────────────

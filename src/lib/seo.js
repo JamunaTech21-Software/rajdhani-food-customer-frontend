@@ -103,14 +103,6 @@ export const PAGE_META = {
     description:
       "Browse the full Rajdhani range — black, green, premium and blended teas, in pack sizes from sachets to bulk supply.",
   },
-  wishlist: {
-    title: "Your Wishlist",
-    description: "The teas you have saved, ready to enquire about together.",
-  },
-  account: {
-    title: "Your Account",
-    description: "Your profile, your reviews and your enquiries with Rajdhani Food Products.",
-  },
   privacy: {
     title: "Privacy Policy",
     description:

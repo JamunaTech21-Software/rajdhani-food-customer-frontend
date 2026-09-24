@@ -1,11 +1,10 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { Phone, User, X } from "lucide-react";
+import { Phone, X } from "lucide-react";
 import { Link, useLocation } from "react-router";
 
 import { Icon } from "../ui/Icon.jsx";
 import { cn } from "../../lib/cn.js";
 import { ALL_PRODUCTS, categoryLinks, isActiveLink, isExternal } from "../../lib/nav.js";
-import { useAuthStore } from "../../stores/authStore.js";
 
 /**
  * Navigation on a phone.
@@ -22,7 +21,6 @@ import { useAuthStore } from "../../stores/authStore.js";
  */
 export function MobileDrawer({ open, onOpenChange, links, categories, phone }) {
   const { pathname } = useLocation();
-  const session = useAuthStore((s) => s.status);
   const categoryItems = categoryLinks(categories);
 
   const close = () => onOpenChange(false);
@@ -120,20 +118,6 @@ export function MobileDrawer({ open, onOpenChange, links, categories, phone }) {
               </>
             ) : null}
           </nav>
-
-          {/* The account link, on the one surface where the header has no room
-              for it. Above the phone CTA because it is navigation and that is
-              an action. */}
-          <div className="border-t border-line p-2">
-            <Link
-              to="/account"
-              onClick={close}
-              className="flex items-center gap-2.5 rounded-md px-3 py-3 text-sm font-medium text-ink hover:bg-ground"
-            >
-              <User size={17} strokeWidth={1.75} aria-hidden="true" className="text-brand" />
-              {session === "authenticated" ? "Your account" : "Sign in"}
-            </Link>
-          </div>
 
           {phone ? (
             <div className="border-t border-line p-4">

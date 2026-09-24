@@ -470,15 +470,13 @@ test("the compact card says View Product, as the reference does", () => {
   assert.match(card, /compact \? "View Product" : "View Details"/);
 });
 
-test("the wishlist button and the badge survive both variants", () => {
-  // The reference predates RTPP-69, and badge_text is live editable data —
-  // "CLASSIC" is set on a product today. Neither is inside a variant branch.
-  const wishlistAt = card.indexOf("<WishlistButton");
-  const badgeAt = card.indexOf("{badge ? (");
-
-  assert.ok(wishlistAt > 0 && badgeAt > 0);
-  assert.doesNotMatch(card, /compact[^\n]*WishlistButton/);
+test("the badge survives both variants", () => {
+  // badge_text is live editable data — "CLASSIC" is set on a product today —
+  // so it is not inside a variant branch. The wishlist button this used to
+  // assert beside it went with the account feature.
+  assert.ok(card.indexOf("{badge ? (") > 0);
   assert.doesNotMatch(card, /compact[^\n]*badge/);
+  assert.doesNotMatch(card, /WishlistButton/, "the card saves nothing now");
 });
 
 test("the strip no longer turns into a grid, so the arrows have something to drive", () => {

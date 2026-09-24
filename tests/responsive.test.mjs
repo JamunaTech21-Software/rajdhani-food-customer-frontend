@@ -393,6 +393,7 @@ const NO_768_STEP = [
   ["components/home/DealerCta.jsx", "a mark, a heading and one button — the button beside a two-line heading at 768 leaves the heading about 400px, and it is the only thing on the bar that has to stay on one line"],
   ["components/content/FeatureGrid.jsx", "the columns are the caller's — the USP strip asks for four and Quality's commitment grid for two"],
   ["components/content/ProcessTimeline.jsx", "a wrapping flex row, not a grid: it stops wrapping at `sm` when compact and `md` when not, which is its breakpoint"],
+  ["components/gallery/GalleryHighlight.jsx", "four counters across 720px is 180px each, and each is a 30px glyph beside a figure and a label — \"Manufacturing Units\" alone wants about 150px, so the tablet keeps two up"],
   ["pages/HomePage.jsx", "its skeleton mirrors that strip, and has to keep mirroring it"],
   ["pages/AccountPage.jsx", "a fixed 22rem profile column beside the reviews, which is the same shape the contact page settled on"],
   ["components/product/RatingSummary.jsx", "the average and the bars sit side by side from `sm`; a tablet has no more to give them than a wide phone, and the panel is already half a page at `md`"],

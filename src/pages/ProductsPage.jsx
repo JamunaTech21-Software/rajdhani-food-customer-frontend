@@ -4,6 +4,7 @@ import { useSearchParams } from "react-router";
 import { ProductCard } from "../components/ProductCard.jsx";
 import { BulkSupplyCta } from "../components/products/BulkSupplyCta.jsx";
 import { CategoryFilterBar } from "../components/products/CategoryFilterBar.jsx";
+import { PageHero } from "../components/layout/PageHero.jsx";
 import { useCategories } from "../hooks/useCategories.js";
 import { useSeo } from "../hooks/useSeo.js";
 import { publicApi } from "../lib/api.js";
@@ -73,6 +74,25 @@ export function ProductsPage() {
     placeholderData: (previous) => previous,
   });
 
+  /*
+    The page banner (§10.2).
+
+    `PRODUCTS_HERO` is in the API's placement enum and offered by the admin's
+    Banners screen, and this page read neither it nor anything like it — so a
+    banner could be uploaded, published and returned by the API while the page
+    carried on drawing a hand-written heading. The live row has been sitting
+    there unread.
+
+    Not counted towards the catalogue's loading or error state: the products
+    are the page, and a banner that fails to arrive should cost it a picture,
+    not its listing.
+  */
+  const hero = useQuery({
+    queryKey: ["public", "banners", "PRODUCTS_HERO"],
+    queryFn: () => publicApi.list("/public/banners", { params: { placement: "PRODUCTS_HERO" } }),
+    staleTime: 5 * 60_000,
+  });
+
   // The bulk-supply block is content, so it comes from its banner placement.
   const dealerCta = useQuery({
     queryKey: ["public", "banners", "DEALER_CTA"],
@@ -98,18 +118,46 @@ export function ProductsPage() {
     path: listingPath("/products", filters),
   });
 
-  return (
-    <div className="mx-auto max-w-(--container-max) pb-16 pl-(--gutter-l) pr-(--gutter-r)">
-      <header className="py-10">
-        <h1 className="font-display text-3xl font-bold text-ink sm:text-4xl">
-          {activeCategory?.name ?? "Our Products"}
-        </h1>
-        <p className="mt-2 max-w-xl text-ink-muted">
-          {activeCategory?.description ??
-            "Discover our range of premium quality teas, crafted with care, passion and trust."}
-        </p>
-      </header>
+  /*
+    One banner, two headings — the arrangement the gallery uses.
 
+    The catalogue index wears the banner as the editor set it. A category
+    listing keeps the same picture, because there is one banner and not one per
+    category, but takes its name and description from the category row — which
+    is the whole reason the admin lets someone write them, and what the
+    hand-written header used to do with `activeCategory`.
+
+    Passed as an overridden banner rather than as props, because `PageHero`
+    already prefers everything a banner carries over its fallbacks: handing it
+    a banner is how you tell it what to draw.
+  */
+  const banner = hero.data?.items?.[0] ?? null;
+  const heroBanner = activeCategory
+    ? {
+        ...(banner ?? {}),
+        title: activeCategory.name,
+        title_highlight: null,
+        subtitle: activeCategory.description || banner?.subtitle || null,
+      }
+    : banner;
+
+  return (
+    <>
+      {/*
+        `title` is the floor under an empty placement, not the heading: a page
+        with no <h1> has no accessible or indexable name, and the catalogue is
+        not going to be nameless because nobody has uploaded a picture.
+
+        A breadcrumb on a category listing only, as the gallery does — the
+        index is one click from the header.
+      */}
+      <PageHero
+        banner={heroBanner}
+        title={activeCategory?.name ?? "Our Products"}
+        breadcrumb={activeCategory ? activeCategory.name : undefined}
+      />
+
+    <div className="mx-auto max-w-(--container-max) pb-16 pt-6 pl-(--gutter-l) pr-(--gutter-r)">
       <CategoryFilterBar
         categories={categories.data}
         active={filters.category}
@@ -190,5 +238,6 @@ export function ProductsPage() {
 
       <BulkSupplyCta banner={dealerCta.data?.items?.[0]} />
     </div>
+    </>
   );
 }

@@ -98,8 +98,20 @@ test("selecting a category navigates, so it is a real shareable URL", () => {
 });
 
 test("a category page gets a breadcrumb, the index does not", () => {
-  assert.match(page, /\{category \? \(/);
-  assert.match(page, /aria-label="Breadcrumb"/);
+  // The breadcrumb itself now lives in `PageHero`, which every other inner
+  // page already wears — the rule it enforces is unchanged, it is just passed
+  // as a prop rather than hand-rolled here.
+  assert.match(page, /breadcrumb=\{category \? category\.name : undefined\}/);
+  assert.match(strip(read("components/layout/PageHero.jsx")), /aria-label="Breadcrumb"/);
+});
+
+test("the gallery wears the banner an editor can already set", () => {
+  // `GALLERY_HERO` was in the API's placement enum and offered by the admin's
+  // Banners screen, and this page read neither — so a gallery banner could be
+  // uploaded and silently ignored. This is the guard on the other half.
+  assert.match(page, /placement: "GALLERY_HERO"/);
+  assert.match(page, /<PageHero/);
+  assert.match(page, /title=\{category\?\.name \?\? "Gallery"\}/, "and still names itself when empty");
 });
 
 test("the lightbox closes when the category changes", () => {

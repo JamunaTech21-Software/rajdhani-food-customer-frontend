@@ -2,7 +2,6 @@ import { createBrowserRouter } from "react-router";
 
 import { SiteLayout } from "../components/layout/SiteLayout.jsx";
 import { AboutPage } from "../pages/AboutPage.jsx";
-import { AccountPage } from "../pages/AccountPage.jsx";
 import { ContactPage } from "../pages/ContactPage.jsx";
 import { DealerPage } from "../pages/DealerPage.jsx";
 import { GalleryPage } from "../pages/GalleryPage.jsx";
@@ -16,7 +15,6 @@ import { ProductsPage } from "../pages/ProductsPage.jsx";
 import { QualityPage } from "../pages/QualityPage.jsx";
 import { RouteErrorPage } from "../pages/RouteErrorPage.jsx";
 import { ScaffoldPage } from "../pages/ScaffoldPage.jsx";
-import { WishlistPage } from "../pages/WishlistPage.jsx";
 import { PAGE_KEYS } from "../lib/pageContent.js";
 
 /**
@@ -31,7 +29,6 @@ export const router = createBrowserRouter([
     children: [
       { path: "/", element: <HomePage /> },
       { path: "/about", element: <AboutPage /> },
-      { path: "/account", element: <AccountPage /> },
       { path: "/contact", element: <ContactPage /> },
       { path: "/dealer", element: <DealerPage /> },
       { path: "/gallery", element: <GalleryPage /> },
@@ -50,7 +47,6 @@ export const router = createBrowserRouter([
         element: <LegalPage pageKey={PAGE_KEYS.privacy} title="Privacy Policy" />,
       },
       { path: "/terms", element: <LegalPage pageKey={PAGE_KEYS.terms} title="Terms of Service" /> },
-      { path: "/wishlist", element: <WishlistPage /> },
       { path: "/scaffold", element: <ScaffoldPage /> },
 
       // Last, and matching everything left. Without it an unmatched URL

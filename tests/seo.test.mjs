@@ -283,7 +283,7 @@ test("every route sets a head", () => {
 test("the head is set above the early returns, not inside the success branch", () => {
   // Every one of these renders a skeleton while its query is pending, which is
   // the state a crawler on a slow connection is most likely to see.
-  for (const page of ["ProductDetailPage", "NewsArticlePage", "AccountPage", "WishlistPage", "HomePage"]) {
+  for (const page of ["ProductDetailPage", "NewsArticlePage", "HomePage"]) {
     const source = strip(read(`pages/${page}.jsx`));
     const body = source.slice(source.indexOf(`export function ${page}`));
 
@@ -302,10 +302,10 @@ test("the layout emits structured data and no head of its own", () => {
   assert.doesNotMatch(layout, /useSeo\(/);
 });
 
-test("the personal pages are kept out of the index", () => {
-  for (const page of ["AccountPage", "WishlistPage"]) {
-    assert.match(strip(read(`pages/${page}.jsx`)), /noindex: true/);
-  }
+test("the robots tag is still wired, though no page sets it today", () => {
+  // `/account` and `/wishlist` were the two noindex pages and both went with
+  // the account feature. The hook keeps the support: the next private page
+  // should not have to rediscover how it is done.
   assert.match(hook, /content: "noindex, follow"/, "follow, so the links out still count");
   assert.match(hook, /removeManagedTag\('meta\[name="robots"\]'\)/, "and removed again elsewhere");
 });

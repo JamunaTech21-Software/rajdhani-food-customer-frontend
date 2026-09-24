@@ -2,7 +2,6 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 
 import { CloudinaryImage } from "./CloudinaryImage.jsx";
-import { WishlistButton } from "./wishlist/WishlistButton.jsx";
 import { cn } from "../lib/cn.js";
 import { SIZES } from "../lib/cloudinary.js";
 import { readableOn } from "@shared/theme/color.js";
@@ -37,10 +36,10 @@ import { readableOn } from "@shared/theme/color.js";
  * catalogue is ever redrawn to match, this variant should absorb it rather
  * than a third appearing.
  *
- * The wishlist button and the badge are kept in **both**. The reference shows
- * neither, but it predates RTPP-69, and `badge_text` is live editable data —
- * dropping them to match a picture would remove a working feature and hide a
- * field the admin still offers.
+ * The badge is kept in **both** variants. The reference shows none, but
+ * `badge_text` is live editable data — dropping it to match a picture would
+ * hide a field the admin still offers. The wishlist button that used to sit
+ * beside it went with the account feature.
  */
 export function ProductCard({
   product,
@@ -73,14 +72,6 @@ export function ProductCard({
           sizes={sizes}
           priority={priority}
           className="size-full transition-transform duration-(--duration-slow) group-hover:scale-105"
-        />
-
-        {/* Over the image, inside the card's stretched link — so the button
-            carries its own stacking context and stops the click reaching it.
-            Without that, saving a product navigates to it. */}
-        <WishlistButton
-          product={product}
-          className={cn("absolute right-2 top-2", compact && "hidden sm:grid")}
         />
 
         {badge ? (

@@ -119,3 +119,22 @@ test("the grid reuses the card the home page already uses", () => {
   // Building a second product card is how the two drift.
   assert.match(page, /import \{ ProductCard \} from "\.\.\/components\/ProductCard\.jsx"/);
 });
+
+test("the catalogue wears the banner an editor can already set", () => {
+  // `PRODUCTS_HERO` was in the API's placement enum and offered by the admin's
+  // Banners screen, and this page read neither — so a banner could be
+  // uploaded, published and returned by the API while the page drew a
+  // hand-written heading over it. It is the third placement found in that
+  // state; this is the guard so it is not a fourth.
+  assert.match(page, /placement: "PRODUCTS_HERO"/);
+  assert.match(page, /<PageHero/);
+
+  // The floor under an empty placement, not the heading: a page with no <h1>
+  // has no accessible or indexable name.
+  assert.match(page, /title=\{activeCategory\?\.name \?\? "Our Products"\}/);
+
+  // A category listing still gets its own name and description, which is the
+  // whole reason the admin lets someone write them.
+  assert.match(page, /title: activeCategory\.name/);
+  assert.match(page, /subtitle: activeCategory\.description/);
+});

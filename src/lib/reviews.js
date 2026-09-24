@@ -1,5 +1,3 @@
-import { z } from "zod";
-
 /**
  * The reviews tab (§10.2, §9.4).
  *
@@ -48,67 +46,10 @@ export function averageRating(meta) {
   return Number.isFinite(average) ? Math.round(average * 10) / 10 : null;
 }
 
-/**
- * The form.
- *
- * Transcribed from `ReviewInput`, lengths included. `rating` is a *number* and
- * the star input must send one: a `"4"` from a radio group's value is a 422,
- * and it is the kind of thing that only shows up once someone submits.
+/*
+ * Everything below this point went with the review form: the zod schema, the
+ * empty defaults, the request body, and the two helpers that decided whether
+ * to offer a write, an edit or a sign-in prompt. Reviews are written and
+ * approved in the admin panel now and arrive here already public, so the only
+ * thing this module still does is turn the list meta into the bars beside it.
  */
-export const reviewSchema = z.object({
-  rating: z
-    .number({ message: "Please choose a rating" })
-    .int()
-    .min(1, "Please choose a rating")
-    .max(5),
-  title: z.string().trim().max(255).optional(),
-  comment: z.string().trim().min(1, "Please tell us what you thought").max(5000),
-});
-
-export const EMPTY_REVIEW = { rating: 0, title: "", comment: "" };
-
-/**
- * The request body.
- *
- * `website` is the honeypot and `recaptcha_token` the v3 token — §14.2 lists
- * "review" alongside the four anonymous forms, *even though this one also
- * requires a customer token*. Neither field is in `ReviewInput`, because that
- * schema is shared with the edit endpoint, which has neither.
- */
-export function toReviewPayload(values, { recaptchaToken } = {}) {
-  const title = values.title?.trim();
-
-  return {
-    rating: Number(values.rating),
-    title: title ? title : undefined,
-    comment: values.comment.trim(),
-    recaptcha_token: recaptchaToken || undefined,
-    website: "",
-  };
-}
-
-/**
- * The customer's own review of this product, if they have one.
- *
- * `/public/my/reviews` returns every status, so this is how the tab knows to
- * offer an edit rather than a second submission — a second POST is a 409,
- * and finding that out by submitting is a poor way to learn it.
- */
-export function ownReviewFor(reviews, productId) {
-  if (!Array.isArray(reviews) || !productId) return null;
-  return reviews.find((review) => review?.product?.id === productId) ?? null;
-}
-
-/**
- * What the tab should offer, given who is looking.
- *
- * Kept here rather than in the component because the four cases are the whole
- * of the feature's behaviour, and a component is a poor place to have to read
- * them from.
- */
-export function submissionState({ session, ownReview }) {
-  if (session === "unknown") return "checking";
-  if (session !== "authenticated") return "sign-in";
-  if (ownReview) return ownReview.status === "PENDING" ? "pending" : "edit";
-  return "write";
-}

@@ -136,6 +136,31 @@ export function AboutPage() {
         emptyTitle="Our story is being written"
         emptyBody="This page is being prepared. In the meantime our teas and our contact details are all here."
       >
+        {/*
+          The About comp's rhythm, measured rather than estimated.
+
+          Scanning the reference for where each full-bleed band starts and
+          where its content actually begins — a 1024px render of a 1280 design,
+          so x1.25 — the bands carry 25 to 48px of padding a side, averaging
+          about 32: Our Company 35/39, Foundations 26/48, the stats band 38/24,
+          Our Strength 25/25, Certifications 36/30. Every band here is adjacent
+          to the next, so what separates two of them is the pair of paddings
+          between: the comp's Our Company to Foundations join is 39 + 26 = 65px.
+
+          `--space-section` is 48px at this width, so ours was 96px for the same
+          join. The token's own note says that is deliberate — "still generous
+          against the comp's ~63px at desktop" — but generous twice over is what
+          made the page feel loose.
+
+          32px a side puts the join at 64, against the comp's 65. Overriding the
+          property rather than editing five sections: it cascades, so the two
+          `PageBlockSection`s, the Foundations band, `StatsBand` and
+          `Certifications` all resolve against it without any of them learning
+          that About exists, and no other page inherits it. The `2xl` step keeps
+          the token's argument that a very wide screen should be given air, since
+          the container cannot be given more width.
+        */}
+        <div className="[--space-section:2rem] 2xl:[--space-section:2.5rem]">
         {/* "Our Company" in the comp, and the one section of the three that
             uses this component which the comp gives the leaf art to. */}
         <PageBlockSection
@@ -175,7 +200,10 @@ export function AboutPage() {
                 heading="Our Mission, Vision & Values"
               />
 
-              <ul className="mt-10 grid gap-6 lg:grid-cols-3">
+              {/* `mt-10` was 40px. The comp sets the cards 17px under the
+                  heading's gold rule — 21px here — so this is the one gap
+                  inside a band that was as far out as the gaps between them. */}
+              <ul className="mt-6 grid gap-6 lg:grid-cols-3">
                 {foundations.map((block) => (
                   <FoundationCard key={block.block_key} block={block} />
                 ))}
@@ -207,6 +235,7 @@ export function AboutPage() {
           // The About comp sets the heading beside the marks, not above them.
           aside
         />
+        </div>
       </PageSections>
     </>
   );
