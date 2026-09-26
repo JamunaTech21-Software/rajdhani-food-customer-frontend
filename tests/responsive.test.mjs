@@ -394,6 +394,8 @@ const NO_768_STEP = [
   ["components/content/FeatureGrid.jsx", "the columns are the caller's — the USP strip asks for four and Quality's commitment grid for two"],
   ["components/content/ProcessTimeline.jsx", "a wrapping flex row, not a grid: it stops wrapping at `sm` when compact and `md` when not, which is its breakpoint"],
   ["components/gallery/GalleryHighlight.jsx", "four counters across 720px is 180px each, and each is a 30px glyph beside a figure and a label — \"Manufacturing Units\" alone wants about 150px, so the tablet keeps two up"],
+  ["components/dealer/HeroChips.jsx", "four chips of two short words, in the hero's `max-w-xl` column rather than the full width — at 640 that column already fits four, and there is no intermediate count between two and four worth a step"],
+  ["pages/DealerPage.jsx", "the application form holds paired fields and keeps the full width until `lg`; the benefit cards go 2 up at `sm` and only reach five at `xl`, where the container stops growing"],
   ["pages/HomePage.jsx", "its skeleton mirrors that strip, and has to keep mirroring it"],
   ["pages/AccountPage.jsx", "a fixed 22rem profile column beside the reviews, which is the same shape the contact page settled on"],
   ["components/product/RatingSummary.jsx", "the average and the bars sit side by side from `sm`; a tablet has no more to give them than a wide phone, and the panel is already half a page at `md`"],
@@ -406,6 +408,8 @@ test("every grid without a 768 step is one that was argued for", () => {
     "components/home/StatsBand.jsx",
     "pages/ProductsPage.jsx",
     "components/gallery/GalleryGrid.jsx",
+    // Two up on a phone, four from 768 — it has its step.
+    "components/dealer/DistributionNetwork.jsx",
     "pages/GalleryPage.jsx",
     "components/home/LatestNews.jsx",
     "pages/NewsPage.jsx",

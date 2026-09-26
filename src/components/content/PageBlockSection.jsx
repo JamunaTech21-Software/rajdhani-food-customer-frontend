@@ -123,6 +123,15 @@ export function PageBlockSection({
   // Merged onto `PageBlockBody`'s root, so a caller can reach the heading with
   // `[&_h2]:…` for a column whose width the block does not know about.
   bodyClassName,
+  // The `lg` column split, when neither default suits. The dealer comp gives
+  // its text barely a quarter of the row because five cards sit beside it,
+  // where About's photograph is happy with 41%.
+  split,
+  // Rendered under the body, inside the *text* column — `children` is the
+  // panel beside it. The dealer comp's brochure button goes here: it belongs
+  // with the copy, and it is not a block CTA because the file it points at is
+  // resolved separately and the button must not exist when it does not.
+  bodyFooter,
   children,
 }) {
   if (!block) return null;
@@ -176,7 +185,8 @@ export function PageBlockSection({
             "mx-auto grid max-w-(--container-max) gap-10",
             framed ? "rounded-xl bg-ground p-5 sm:p-8 lg:p-10" : "pl-(--gutter-l) pr-(--gutter-r)",
             (block.image?.url || children) &&
-              (framed
+              (split ??
+                (framed
                 ? // A narrower text column than the flat band's 41%, because
                   // the panel beside it is a three-column grid rather than one
                   // photograph. At 1024 the 0.7 ratio left each of those three
@@ -184,15 +194,24 @@ export function PageBlockSection({
                   // "Advanced Technology" in 63px is five lines. 0.62 and a
                   // 48px gutter give it 92px, which is what the comp draws.
                   "lg:grid-cols-[0.62fr_minmax(0,1fr)] lg:items-center lg:gap-12"
-                : "lg:grid-cols-[0.7fr_minmax(0,1fr)] lg:items-center lg:gap-28"),
+                : "lg:grid-cols-[0.7fr_minmax(0,1fr)] lg:items-center lg:gap-28")),
           )}
         >
-        <PageBlockBody
-          block={block}
-          headingId={headingId}
-          ornament={ornament}
-          className={cn(reversed && "lg:order-2", bodyClassName)}
-        />
+        {/* Wrapped only when there is a footer, so the flat and framed
+            sections keep the DOM they already had. */}
+        {bodyFooter ? (
+          <div className={cn(reversed && "lg:order-2")}>
+            <PageBlockBody block={block} headingId={headingId} ornament={ornament} className={bodyClassName} />
+            {bodyFooter}
+          </div>
+        ) : (
+          <PageBlockBody
+            block={block}
+            headingId={headingId}
+            ornament={ornament}
+            className={cn(reversed && "lg:order-2", bodyClassName)}
+          />
+        )}
 
         {/* `children` is the panel beside the text — the process strip on
             About's "Our Strength", the feature grid on Quality's commitment.
