@@ -116,3 +116,56 @@ test("no page copy is hardcoded in place of missing content", () => {
     assert.ok(!page.includes(copy), `"${copy}" is hardcoded rather than content-driven`);
   }
 });
+
+// ── The comp's six sections ───────────────────────────────────────────────
+
+const dealerPage = strip(read("pages/DealerPage.jsx"));
+
+test("every section the comp draws reads its own source", () => {
+  // Five of the six did not exist: the page was a hero and a form, and its
+  // docstring said the endpoints were not public yet. They are — RTPP-67
+  // shipped `feature-items`, `process-steps` and `stats` — so the sections are
+  // built and each is wired to the resource the admin already edits.
+  assert.match(dealerPage, /placement: "DEALER_HERO"/);
+  assert.match(dealerPage, /usePageBlocks\(PAGE_KEYS\.dealer\)/);
+  assert.match(dealerPage, /useFeatureItems\("DEALER_BENEFITS"\)/);
+  assert.match(dealerPage, /useProcessSteps\("BECOME_DEALER"\)/);
+  assert.match(dealerPage, /useStats\("DEALER_NETWORK"\)/);
+
+  // `includes` rather than a regex: the needle has parentheses in it, and an
+  // escape that collapses turns them into a capture group that matches
+  // something else entirely.
+  for (const key of ["intro", "network", "requirements", "build_future"]) {
+    assert.ok(dealerPage.includes(`blockFor(all, "${key}")`), `${key} is read`);
+  }
+});
+
+test("the page hero is the shared one, not a second copy of it", () => {
+  // It used to define its own, with a flat `bg-ink` scrim at whatever opacity
+  // an editor set and no floor under it — where `PageHero` holds 0.85 and
+  // turns the wash into a gradient only at `lg`. Two heroes is two places for
+  // that guard to be missing from.
+  assert.match(dealerPage, /<PageHero/);
+  assert.doesNotMatch(dealerPage, /function Hero\(/);
+});
+
+test("the map is decoration, and no dealer address is plotted on it", () => {
+  // There is no coordinate on any dealer or location resource: the only
+  // latitude/longitude in the API is the company's own office, on
+  // SiteSettings. `dealer_applications` rows are applicants — some rejected —
+  // and are never public. So the map is an editor's image on the `network`
+  // block, drawn aria-hidden, and nothing here reads an address.
+  const network = strip(read("components/dealer/DistributionNetwork.jsx"));
+
+  assert.match(network, /block\?\.image/, "the map comes from the block, not an asset in the bundle");
+  assert.match(network, /aria-hidden="true"/);
+  assert.doesNotMatch(network, /latitude|longitude|marker|pin|address/i);
+});
+
+test("the application form and its dependent dropdowns are untouched", () => {
+  // The page was rebuilt around this form; it was not rebuilt.
+  assert.match(dealerPage, /<ApplicationForm onSuccess=\{setResult\} \/>/);
+  assert.match(dealerPage, /<DealerSuccessModal/);
+  assert.match(form, /districts/);
+  assert.match(form, /upazila/i);
+});

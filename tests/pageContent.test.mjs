@@ -56,7 +56,7 @@ test("the page keys are the backend's own", () => {
   // come from somewhere an editor can reach. The key is the backend's in the
   // same sense as the rest: `page_key` is a free string there, and
   // `/public/page-blocks/gallery` answers 200 with an empty list, not a 404.
-  assert.deepEqual(Object.values(PAGE_KEYS), ["about", "gallery", "quality", "privacy", "terms"]);
+  assert.deepEqual(Object.values(PAGE_KEYS), ["about", "dealer", "gallery", "quality", "privacy", "terms"]);
 });
 
 // ── Block lookup ──────────────────────────────────────────────────────────

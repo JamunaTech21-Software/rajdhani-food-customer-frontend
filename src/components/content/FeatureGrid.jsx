@@ -47,8 +47,75 @@ function markStyle(colour, tone) {
  * and the dealer benefits, because it is the same payload each time. It lived
  * inside `UspStrip` until the other sections had an endpoint to read.
  */
-export function FeatureItem({ item, size = 44, tone = "solid", markClassName }) {
+export function FeatureItem({ item, size = 44, tone = "solid", markClassName, layout = "row" }) {
   const background = item.icon_bg_color || undefined;
+
+  /*
+    The dealer comp's benefit card: a bordered white tile with the mark, the
+    title and the description stacked and centred, rather than the icon-beside-
+    text row every other caller draws.
+
+    A branch rather than a second component, for the reason `Stat`'s inline
+    variant is one: the part worth sharing is `markStyle` — the contrast guard
+    that keeps a glyph legible on whatever colour an editor picked — and the
+    uploaded-icon-beats-named-icon rule. Both are easy to get subtly wrong
+    twice.
+  */
+  if (layout === "stacked") {
+    /*
+      Measured off the dealer comp, which is a 1055px render of a 1280 design,
+      so x1.2133 throughout. Its five cards run x337..463, x476..602 and so on:
+      126px wide on a 12px pitch, 175px tall, and the description inside card 3
+      insets 14px from each edge.
+
+      That gives `px-4 py-5` (16/20) and the gaps below — 36px of glyph, 28 to
+      the title, 16 to the copy. The card's own width is not set here: five of
+      them in the grid come to 154px at 1280, which is the number the comp
+      draws.
+
+      **No disc.** The mark is a bare green glyph — the tinted circle every
+      other caller puts behind one is not in this comp, and on a white card
+      inside a white section it would add a third tone to a card that has two.
+      `markStyle` is still applied so an editor's `icon_bg_color` colours the
+      glyph rather than being ignored.
+    */
+    const chosen = markStyle(background, tone);
+
+    return (
+      <li className="flex h-full flex-col items-center rounded-lg border border-line bg-surface px-4 py-5 text-center">
+        <span
+          className={cn("grid shrink-0 place-items-center text-brand", markClassName)}
+          style={chosen ? { color: chosen.backgroundColor } : undefined}
+        >
+          {item.icon?.url ? (
+            <CloudinaryImage
+              src={item.icon.url}
+              alt=""
+              width={36}
+              height={36}
+              className="size-9"
+              imgClassName="object-contain"
+            />
+          ) : (
+            <Icon name={item.icon_name} size={36} />
+          )}
+        </span>
+
+        <span
+          data-feature-title
+          className="mt-7 block text-sm font-semibold leading-snug text-brand"
+        >
+          {item.title}
+        </span>
+
+        {item.description ? (
+          <span data-feature-text className="mt-4 block text-xs leading-relaxed text-ink-muted">
+            {item.description}
+          </span>
+        ) : null}
+      </li>
+    );
+  }
 
   return (
     // A tighter gutter on a phone: two of these share 358px of content in the
@@ -168,15 +235,24 @@ export function FeatureGrid({
   ruled = false,
   tone,
   markClassName,
+  layout,
 }) {
   if (!items?.length) return null;
 
   return (
     // `gap-6` and the ruled layout's `gap-0` are the same property, so the
     // gap is chosen rather than overridden — see the note on `RULED`.
-    <ul className={cn("grid", ruled ? RULED : "gap-6", columns, className)}>
+    // `items-stretch` is the default, which is what makes stacked cards in a
+    // row share a height whatever their descriptions run to.
+    <ul className={cn("grid", ruled ? RULED : "gap-6", columns, className, "[&>*]:min-w-0")}>
       {items.map((item) => (
-        <FeatureItem key={item.id} item={item} tone={tone} markClassName={markClassName} />
+        <FeatureItem
+          key={item.id}
+          item={item}
+          tone={tone}
+          markClassName={markClassName}
+          layout={layout}
+        />
       ))}
     </ul>
   );

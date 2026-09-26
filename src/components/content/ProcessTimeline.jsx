@@ -17,6 +17,50 @@ import { cn } from "../../lib/cn.js";
  * numbering from the index would renumber a step the moment another was
  * inserted above it.
  */
+/**
+ * The dealer comp's step: a white disc with the glyph, the number in a ringed
+ * circle *under* it, then the title and the line of description.
+ *
+ * No photograph at all, which is what separates it from the other three — the
+ * five stages of an application are not things anyone has a picture of, and
+ * the comp draws marks rather than pretending otherwise. `step.image` is
+ * ignored here even when a row has one.
+ */
+function CircleStep({ step, separated }) {
+  return (
+    <li className="relative flex min-w-0 flex-1 flex-col items-center text-center">
+      <div className="relative flex w-full flex-col items-center">
+        <span className="grid size-16 place-items-center rounded-full bg-surface text-brand shadow-card sm:size-20">
+          <Icon name={step.icon_name} size={30} />
+        </span>
+
+        <span className="mt-3 grid size-7 place-items-center rounded-full border border-brand/40 bg-surface text-[0.7rem] font-semibold tabular-nums text-brand">
+          {String(step.step_number).padStart(2, "0")}
+        </span>
+
+        {/* Level with the middle of the disc, not with the numbers — the comp
+            runs the rule between the marks. `top-8`/`sm:top-10` is half of the
+            disc, so the two stay in step if the disc is ever resized. */}
+        {separated ? (
+          <span
+            aria-hidden="true"
+            className="absolute left-full top-8 hidden w-(--process-gap) -translate-y-1/2 items-center text-brand/70 sm:top-10 lg:flex"
+          >
+            <span className="h-0 flex-1 border-t border-brand/25" />
+            <ChevronRight size={14} strokeWidth={2.5} className="-ml-0.5 shrink-0" />
+          </span>
+        ) : null}
+      </div>
+
+      <h3 className="mt-3 text-sm font-semibold text-ink sm:text-base">{step.title}</h3>
+
+      {step.description ? (
+        <p className="mt-1 text-xs leading-relaxed text-ink-muted sm:text-sm">{step.description}</p>
+      ) : null}
+    </li>
+  );
+}
+
 function Step({ step, compact, card, separated }) {
   const image = step.image;
 
@@ -173,6 +217,17 @@ export function ProcessTimeline({ steps, compact = false, variant = "default", c
   if (!steps?.length) return null;
 
   const card = variant === "card";
+  const circle = variant === "circle";
+
+  if (circle) {
+    return (
+      <ol className={cn(CARD_TRACK, "gap-y-10", className)}>
+        {steps.map((step, index) => (
+          <CircleStep key={step.id} step={step} separated={index < steps.length - 1} />
+        ))}
+      </ol>
+    );
+  }
 
   return (
     <ol
