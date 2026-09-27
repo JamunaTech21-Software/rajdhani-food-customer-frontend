@@ -32,7 +32,7 @@ const MINIMUM_PROTECTION = 0.85;
  * covers the window before one exists, because a page with no `<h1>` is a page
  * with no accessible or indexable name. Everything an editor sets wins over it.
  */
-export function PageHero({ banner, title, breadcrumb, lead, ornament = false }) {
+export function PageHero({ banner, title, breadcrumb, lead, ornament = false, children }) {
   const overlay = Math.max(
     MINIMUM_PROTECTION,
     Math.min(Math.max(banner?.overlay_opacity ?? 55, 0), 100) / 100,
@@ -170,6 +170,13 @@ export function PageHero({ banner, title, breadcrumb, lead, ornament = false }) 
           {lead ? (
             <p className="mt-5 text-sm leading-relaxed text-ink-inverse/85 sm:text-base">{lead}</p>
           ) : null}
+
+          {/* Anything a page wants under its copy and still inside the banner —
+              the dealer page's four chips. Inside the text column rather than
+              below it, because the column is where the scrim protects the
+              contrast; the right of a banner is whatever photograph an editor
+              uploaded. */}
+          {children}
         </div>
       </div>
     </section>

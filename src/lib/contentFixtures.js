@@ -321,3 +321,161 @@ export const GALLERY_STATS = [
   { id: "fixture-gallery-stat-3", value: "200+", label: "Team Members", icon_name: "users" },
   { id: "fixture-gallery-stat-4", value: "64+", label: "Districts Covered", icon_name: "globe" },
 ];
+
+/*
+ * ── Dealer / Distributor ──────────────────────────────────────────────────
+ *
+ * Live today: the `DEALER_HERO` banner, the `intro` block, and four
+ * `DEALER_BENEFITS` items. Empty: the `network`, `requirements` and
+ * `build_future` blocks, the `BECOME_DEALER` steps and the `DEALER_NETWORK`
+ * counters — so five of the page's six sections had nothing to draw.
+ *
+ * The comp's own copy, so the page can be designed against it. Real rows win
+ * per resource the moment they exist.
+ */
+
+/** The hero chips — `intro.bullet_points`, which the live block leaves empty. */
+export const DEALER_HERO_CHIPS = [
+  "Premium Quality Products",
+  "Trusted Brand in Bangladesh",
+  "Attractive Margins",
+  "Strong Support Network",
+];
+
+export const DEALER_BLOCKS = {
+  intro: {
+    block_key: "intro",
+    eyebrow: null,
+    heading: "Why Partner With Us?",
+    subheading: null,
+    body:
+      "<p>We are committed to building long-term relationships with our dealers and distributors by providing the best quality products, reliable supply, and complete support to grow your business.</p>",
+    bullet_points: DEALER_HERO_CHIPS,
+    cta_label: null,
+    cta_url: null,
+    image: null,
+  },
+
+  network: {
+    block_key: "network",
+    eyebrow: null,
+    heading: "Our Distribution Network",
+    subheading:
+      "We are expanding across Bangladesh and looking for passionate partners to grow together.",
+    body: null,
+    bullet_points: [],
+    cta_label: null,
+    cta_url: null,
+    /*
+      The client's own map, supplied for this band — a real Bangladesh
+      silhouette with the designer's pins and the wordmark, not something
+      drawn here. In `static/` for the same reason as the quality lab photo:
+      `public/` is reference material that never ships.
+
+      1906x825 and **opaque** — 24-bit, no alpha — so its white background is
+      a real rectangle rather than nothing. `DistributionNetwork` blends it
+      rather than the asset being edited; see the note there.
+
+      Still a stand-in: this is the `network` block's image field, so an
+      editor's upload replaces it without any code change.
+    */
+    image: { url: "/dealer-network-map.png", alt: "", width: 1906, height: 825 },
+  },
+
+  requirements: {
+    block_key: "requirements",
+    eyebrow: null,
+    heading: "Dealer / Distributor Requirements",
+    subheading: null,
+    body: null,
+    bullet_points: [
+      "Valid Trade License",
+      "TIN Certificate (For Companies)",
+      "Business Experience (Preferred)",
+      "Suitable Storage & Delivery Capability",
+      "Commitment to Our Brand Values",
+    ],
+    cta_label: null,
+    cta_url: null,
+    image: null,
+  },
+
+  build_future: {
+    block_key: "build_future",
+    eyebrow: null,
+    heading: "Let’s Build a Strong Future",
+    subheading: null,
+    body:
+      "<p>Together we can bring the finest tea to every home and create lasting success.</p>",
+    bullet_points: [],
+    cta_label: null,
+    cta_url: null,
+    image: {
+      url: `${CDN}/v1789971727/rajdhani/products/k0crweijy0gzmbtebntj.png`,
+      alt: "",
+      width: 1200,
+      height: 900,
+    },
+  },
+};
+
+/** `PublicProcessStep[]` — `group=BECOME_DEALER`, ordered by `step_number`. */
+export const DEALER_PROCESS_STEPS = [
+  {
+    id: "fixture-dealer-step-1",
+    step_number: 1,
+    title: "Submit Application",
+    description: "Fill out the dealer/distributor application form online or offline.",
+    icon_name: "file-text",
+    image: null,
+  },
+  {
+    id: "fixture-dealer-step-2",
+    step_number: 2,
+    title: "Verification",
+    description: "Our team will verify your information and business background.",
+    icon_name: "check-circle",
+    image: null,
+  },
+  {
+    id: "fixture-dealer-step-3",
+    step_number: 3,
+    title: "Approval",
+    description: "Once approved, you will receive dealer/distributor confirmation.",
+    icon_name: "handshake",
+    image: null,
+  },
+  {
+    id: "fixture-dealer-step-4",
+    step_number: 4,
+    title: "Place Your Order",
+    description: "Start your initial order and get our premium products.",
+    icon_name: "package",
+    image: null,
+  },
+  {
+    id: "fixture-dealer-step-5",
+    step_number: 5,
+    title: "Grow Your Business",
+    description: "Enjoy continuous support and grow your business with us.",
+    icon_name: "sparkles",
+    image: null,
+  },
+];
+
+/** `PublicStatCounter[]` — `group=DEALER_NETWORK`. */
+export const DEALER_NETWORK_STATS = [
+  { id: "fixture-dealer-stat-1", value: "64+", label: "Districts Covered", icon_name: "globe" },
+  { id: "fixture-dealer-stat-2", value: "500+", label: "Active Partners", icon_name: "handshake" },
+  { id: "fixture-dealer-stat-3", value: "12+", label: "Regional Offices", icon_name: "factory" },
+  { id: "fixture-dealer-stat-4", value: "1000+", label: "Retail Outlets", icon_name: "users" },
+];
+
+/** `PublicFeatureItem[]` — `section=DEALER_BENEFITS`, live but only four rows. */
+export const DEALER_BENEFIT_ITEMS = [
+  { id: "fixture-dealer-benefit-1", title: "High Quality Products", description: "Premium quality tea blends crafted to perfection.", icon_name: "award", icon_bg_color: null, icon: null },
+  { id: "fixture-dealer-benefit-2", title: "Attractive Profit Margins", description: "Competitive pricing with excellent profit potential.", icon_name: "tags", icon_bg_color: null, icon: null },
+  { id: "fixture-dealer-benefit-3", title: "Marketing Support", description: "Promotional materials, branding & campaigns to boost your sales.", icon_name: "shield-check", icon_bg_color: null, icon: null },
+  { id: "fixture-dealer-benefit-4", title: "Timely Delivery", description: "Reliable supply chain ensuring on-time delivery every time.", icon_name: "truck", icon_bg_color: null, icon: null },
+  { id: "fixture-dealer-benefit-5", title: "Dedicated Support", description: "A dedicated team always ready to support you.", icon_name: "users", icon_bg_color: null, icon: null },
+];

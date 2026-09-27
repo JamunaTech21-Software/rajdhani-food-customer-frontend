@@ -119,6 +119,32 @@ function QualityStamp() {
 */
 const MOBILE_SECTION_HEADING = "max-sm:[&_h2]:text-[clamp(1.25rem,7.2vw,1.875rem)]";
 
+/*
+  This page's headings are green, not ink.
+
+  Histogramming the dark pixels of the comp's headings — "Our Quality Process"
+  and "Our Commitment to Quality" — puts both at #004008 to #004010, which is
+  `--color-brand-deep` (#0d3411) to within a few digits. `SectionHeading` and
+  `PageBlockBody` both default to `text-ink` (#1a1a1a), a neutral near-black,
+  and at 30px of Playfair the difference between a near-black and a deep green
+  is not subtle.
+
+  Not a change to those components: About's comp *does* set its headings in
+  ink, so this is one page's palette rather than a correction to theirs.
+
+  The two sets of card titles go with them. The commitment grid's sample at
+  #072612 and the process steps' at #205030 are both the brand green rather
+  than `brand-deep` — a lighter green for smaller type, which is the usual way
+  round. Certification names stay ink: those sample #2B2E2F, genuinely neutral.
+
+  `[&_h2]` and `[&_h3]` are descendant selectors, so they win on specificity
+  (0,1,1) against the heading's own class (0,1,0) rather than on emission
+  order.
+*/
+const SECTION_HEADING_INK = "[&_h2]:text-brand-deep";
+const CARD_TITLE_INK = "[&_[data-feature-title]]:text-brand";
+const STEP_TITLE_INK = "[&_h3]:text-brand";
+
 /* The assurance panel's heading is longer (31 characters) and its column has
    the panel's padding as well, so it needs its own, smaller figure: 5.4vw is
    17px at 320 and 20px at 375, against the 19px and 23px those widths allow. */
@@ -399,7 +425,7 @@ export function QualityPage() {
           id="commitment"
           framed
           ornament
-          bodyClassName={MOBILE_SECTION_HEADING}
+          bodyClassName={cn(MOBILE_SECTION_HEADING, SECTION_HEADING_INK)}
         >
           {commitmentItems.length ? (
             // Three across at `lg`, as the comp draws them, with its hairline
@@ -420,6 +446,7 @@ export function QualityPage() {
             <FeatureGrid
               items={commitmentItems}
               columns="sm:grid-cols-2 lg:grid-cols-3"
+              className={CARD_TITLE_INK}
               markClassName="size-9 bg-brand text-on-brand sm:size-10"
               ruled
             />
@@ -432,7 +459,7 @@ export function QualityPage() {
               <SectionHeading
                 block={processBlock}
                 id="quality-process-heading"
-                className={MOBILE_SECTION_HEADING}
+                className={cn(MOBILE_SECTION_HEADING, SECTION_HEADING_INK)}
                 heading="Our Quality Process"
                 subheading="Every step is carefully monitored to ensure the highest quality in every cup."
               />
@@ -440,7 +467,7 @@ export function QualityPage() {
               <ProcessTimeline
                 steps={processSteps}
                 variant="card"
-                className="mt-10 sm:mt-12"
+                className={cn("mt-10 sm:mt-12", STEP_TITLE_INK)}
               />
             </div>
           </section>
@@ -451,7 +478,7 @@ export function QualityPage() {
           block={certificationsBlock}
           heading="Certifications & Standards"
           subheading="We comply with international standards to ensure the best quality and safety."
-          headingClassName={MOBILE_SECTION_HEADING}
+          headingClassName={cn(MOBILE_SECTION_HEADING, SECTION_HEADING_INK)}
           columns="lg:grid-cols-6"
         />
 
